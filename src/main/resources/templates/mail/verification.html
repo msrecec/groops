@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org" >
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Groops mail verification</title>
+    <style>
+        body, * {
+            font-family: 'Titillium Web, Roboto, Helvetica, Arial', sans-serif;
+        }
+    </style>
+</head>
+<body style="color: rgba(0, 0, 0, 0.87);">
+<div th:text="'To verify ' + ${verificationPredicate} + ' click this link'"></div>
+<a th:href="@{${link}}" th:text="${link}"></a>
+</body>
+</html>
