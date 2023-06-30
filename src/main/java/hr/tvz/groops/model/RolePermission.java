@@ -18,11 +18,11 @@ import lombok.experimental.SuperBuilder;
 public class RolePermission extends BaseEntity {
     @EmbeddedId
     private RolePermissionId rolePermissionId;
-    @MapsId
+    @MapsId(value = "roleId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", referencedColumnName = "id")
     private Role role;
-    @MapsId
+    @MapsId(value = "permissionId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "permission_id", referencedColumnName = "id")
     private Permission permission;

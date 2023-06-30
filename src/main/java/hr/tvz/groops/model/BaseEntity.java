@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Getter
 @Setter
@@ -16,14 +16,11 @@ import java.time.LocalDateTime;
 @MappedSuperclass
 public abstract class BaseEntity {
     @Column(name = "created_ts")
-    private LocalDateTime createdTs;
-
+    private Instant createdTs;
     @Column(name = "modified_ts")
-    private LocalDateTime modifiedTs;
-
+    private Instant modifiedTs;
     @Column(name = "created_by")
     private String createdBy;
-
     @Column(name = "modified_by")
     private String modifiedBy;
 }

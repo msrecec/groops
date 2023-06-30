@@ -1,5 +1,6 @@
 package hr.tvz.groops.model;
 
+import hr.tvz.groops.model.enums.PermissionEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -12,19 +13,22 @@ import java.util.List;
 @Entity
 @Table(name = "permission", schema = "public", uniqueConstraints = {
         @UniqueConstraint(name = "id", columnNames = "id"),
-        @UniqueConstraint(name = "name", columnNames = "name")
+        @UniqueConstraint(name = "permission", columnNames = "permission")
 })
 @Getter
 @Setter
 @NoArgsConstructor
 @SuperBuilder
 @ToString
-public class Permission extends NamedEntity {
+public class Permission extends BaseEntity {
     @SequenceGenerator(name = "permission_id_seq", sequenceName = "permission_id_seq", allocationSize = 1, schema = "public")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "permission_id_seq")
     @Column(name = "id")
     @Id
     private Long id;
+    @Column(name = "permission")
+    @Enumerated(EnumType.STRING)
+    private PermissionEnum permission;
     @ManyToMany(targetEntity = Role.class)
     @JoinTable(
             name = "role_permission",

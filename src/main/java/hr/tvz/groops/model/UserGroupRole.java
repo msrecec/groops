@@ -1,6 +1,6 @@
 package hr.tvz.groops.model;
 
-import hr.tvz.groops.model.pk.UserRoleId;
+import hr.tvz.groops.model.pk.UserGroupRoleId;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,15 +15,20 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @SuperBuilder
 @ToString
-public class UserRole extends BaseEntity {
+public class UserGroupRole {
     @EmbeddedId
-    private UserRoleId userRoleId;
+    private UserGroupRoleId userGroupRoleId;
     @MapsId(value = "userId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
+    @MapsId(value = "groupId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_id", referencedColumnName = "id")
+    private Group group;
     @MapsId(value = "roleId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", referencedColumnName = "id")
     private Role role;
+
 }

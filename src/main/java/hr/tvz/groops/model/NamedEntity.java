@@ -12,7 +12,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @SuperBuilder
 @MappedSuperclass
-public abstract class NamedEntity {
+public abstract class NamedEntity extends BaseEntity {
     @Column(name = "name")
     String name;
 }

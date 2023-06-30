@@ -8,6 +8,7 @@ CREATE TABLE "user" (
     "first_name" TEXT NOT NULL,
     "last_name" TEXT NOT NULL,
     "date_of_birth" DATE NOT NULL,
+    "description" TEXT DEFAULT NULL,
     "confirmed" BOOLEAN NOT NULL DEFAULT FALSE,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
@@ -22,7 +23,7 @@ CREATE INDEX user_confirmed_idx ON "user"("confirmed") WHERE "confirmed" = FALSE
 
 CREATE TABLE "role" (
     "id" SERIAL,
-    "name" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
@@ -30,11 +31,11 @@ CREATE TABLE "role" (
     CONSTRAINT role_pkey PRIMARY KEY("id")
 );
 
-CREATE UNIQUE INDEX role_un_idx on "role" ("name");
+CREATE UNIQUE INDEX role_un_idx on "role" ("role");
 
 CREATE TABLE "permission" (
     "id" SERIAL,
-    "name" TEXT NOT NULL,
+    "permission" TEXT NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
@@ -42,7 +43,7 @@ CREATE TABLE "permission" (
     CONSTRAINT permission_pkey PRIMARY KEY("id")
 );
 
-CREATE UNIQUE INDEX permission_un_idx on "permission" ("name");
+CREATE UNIQUE INDEX permission_un_idx on "permission" ("permission");
 
 CREATE TABLE "role_permission" (
     "role_id" INTEGER NOT NULL,

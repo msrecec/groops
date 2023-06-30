@@ -21,7 +21,7 @@ import java.util.List;
 @NoArgsConstructor
 @SuperBuilder
 @ToString
-public class User {
+public class User extends BaseEntity {
     @SequenceGenerator(name = "user_id_seq", sequenceName = "user_id_seq", allocationSize = 1, schema = "public")
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_id_seq")
     @Column(name = "id")
@@ -40,8 +40,12 @@ public class User {
     private String lastName;
     @Column(name = "date_of_birth")
     private Date dateOfBirth;
+    @Column(name = "description")
+    private String description;
     @Column(name = "confirmed")
     private Boolean confirmed;
     @ManyToMany(targetEntity = Role.class, mappedBy = "users")
     private List<Role> roles;
+    @ManyToMany(targetEntity = Group.class, mappedBy = "users")
+    private List<Group> groups;
 }
