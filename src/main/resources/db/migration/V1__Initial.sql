@@ -206,7 +206,7 @@ CREATE TABLE "direct_message_like" (
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
-    CONSTRAINT direct_message_like_pkey PRIMARY KEY("id"),
+    CONSTRAINT direct_message_like_pkey PRIMARY KEY("direct_message_id", "user_id"),
     FOREIGN KEY (direct_message_id) REFERENCES direct_message(id),
     FOREIGN KEY (user_id) REFERENCES user(id)
 );
@@ -214,14 +214,13 @@ CREATE TABLE "direct_message_like" (
 CREATE UNIQUE INDEX direct_message_like_un_idx on "direct_message_like" ("direct_message_id", "user_id");
 
 CREATE TABLE "group_message_like" (
-    "id" SERIAL,
     "group_message_id" INTEGER NOT NULL ON DELETE CASCADE,
     "user_id" INTEGER NOT NULL ON DELETE CASCADE,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
-    CONSTRAINT group_message_like_pkey PRIMARY KEY("id"),
+    CONSTRAINT group_message_like_pkey PRIMARY KEY("group_message_id", "user_id"),
     FOREIGN KEY (group_message_id) REFERENCES group_message(id),
     FOREIGN KEY (user_id) REFERENCES user(id)
 );
@@ -229,14 +228,13 @@ CREATE TABLE "group_message_like" (
 CREATE UNIQUE INDEX group_message_like_un_idx on "group_message_like" ("group_message_id", "user_id");
 
 CREATE TABLE "post_like" (
-    "id" SERIAL,
     "post_id" INTEGER NOT NULL ON DELETE CASCADE,
     "user_id" INTEGER NOT NULL ON DELETE CASCADE,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
-    CONSTRAINT post_like_pkey PRIMARY KEY("id"),
+    CONSTRAINT post_like_pkey PRIMARY KEY("post_id", "user_id"),
     FOREIGN KEY (post_id) REFERENCES post(id),
     FOREIGN KEY (user_id) REFERENCES user(id)
 );
