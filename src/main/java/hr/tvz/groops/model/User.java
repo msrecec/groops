@@ -42,10 +42,8 @@ public class User extends BaseEntity {
     private Date dateOfBirth;
     @Column(name = "description")
     private String description;
+    @Column(name = "profile_picture_key")
+    private String profilePictureKey;
     @Column(name = "confirmed")
     private Boolean confirmed;
-    @ManyToMany(targetEntity = Role.class, mappedBy = "users")
-    private List<Role> roles;
-    @ManyToMany(targetEntity = Group.class, mappedBy = "users")
-    private List<Group> groups;
 }

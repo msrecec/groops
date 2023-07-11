@@ -12,7 +12,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @ToString
 @Embeddable
-public class UserGroupRoleId implements Serializable {
-    private Long userGroupId;
-    private Long roleId;
+public class FriendRequestId implements Serializable {
+    private Long senderId;
+    private Long recipientId;
 }

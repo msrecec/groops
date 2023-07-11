@@ -9,7 +9,7 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 @Entity
-@Table(name = "user_role", schema = "public")
+@Table(name = "user_group_role", schema = "public")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -18,14 +18,10 @@ import lombok.experimental.SuperBuilder;
 public class UserGroupRole {
     @EmbeddedId
     private UserGroupRoleId userGroupRoleId;
-    @MapsId(value = "userId")
+    @MapsId(value = "userGroupId")
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user;
-    @MapsId(value = "groupId")
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "group_id", referencedColumnName = "id")
-    private Group group;
+    @JoinColumn(name = "user_group_id", referencedColumnName = "id")
+    private UserGroup userGroup;
     @MapsId(value = "roleId")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", referencedColumnName = "id")

@@ -29,13 +29,4 @@ public class Role extends BaseEntity {
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private RoleEnum role;
-    @ManyToMany(targetEntity = Permission.class, mappedBy = "roles")
-    private List<Permission> permissions;
-    @ManyToMany(targetEntity = User.class)
-    @JoinTable(
-            name = "user_role",
-            joinColumns = {@JoinColumn(name = "role_id")},
-            inverseJoinColumns = {@JoinColumn(name = "user_id")}
-    )
-    private List<User> users;
 }
