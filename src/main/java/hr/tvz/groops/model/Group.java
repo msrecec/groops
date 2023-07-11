@@ -7,8 +7,6 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
-import java.util.List;
-
 @Entity
 @Table(name = "group", schema = "public", uniqueConstraints = {
         @UniqueConstraint(name = "id", columnNames = "id"),

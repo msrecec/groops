@@ -27,4 +27,6 @@ public class FriendRequest extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipient_id", referencedColumnName = "id")
     private User recipient;
+
+
 }

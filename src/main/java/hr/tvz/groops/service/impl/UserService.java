@@ -29,7 +29,6 @@ public class UserService {
     private UserRepository userRepository;
     private RoleRepository roleRepository;
     private PermissionRepository permissionRepository;
-    private UserRoleRepository userRoleRepository;
     private UserGroupRoleRepository userGroupRoleRepository;
     private AuthenticationService authenticationService;
 
@@ -39,7 +38,6 @@ public class UserService {
                        UserRepository userRepository,
                        RoleRepository roleRepository,
                        PermissionRepository permissionRepository,
-                       UserRoleRepository userRoleRepository,
                        UserGroupRoleRepository userGroupRoleRepository,
                        AuthenticationService authenticationService) {
         this.modelMapper = modelMapper;
@@ -47,7 +45,6 @@ public class UserService {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
-        this.userRoleRepository = userRoleRepository;
         this.userGroupRoleRepository = userGroupRoleRepository;
         this.authenticationService = authenticationService;
     }
@@ -75,7 +72,6 @@ public class UserService {
         logger.debug("Updating user...");
         User user = findById(id);
         user.setUsername(command.getUsername());
-        user.setEmail(command.getEmail());
         user.setFirstName(command.getFirstName());
         user.setLastName(command.getLastName());
         user.setDateOfBirth(command.getDateOfBirth());
@@ -95,7 +91,9 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public Page<User> search()
+    public Page<User> search() {
+        return null;
+    }
 
 
 }

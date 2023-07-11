@@ -61,18 +61,6 @@ CREATE TABLE "role_permission" (
     FOREIGN KEY (permission_id) REFERENCES permission(id) ON DELETE CASCADE
 );
 
-CREATE TABLE "user_role" (
-    "user_id" INTEGER NOT NULL,
-    "role_id" INTEGER NOT NULL,
-    "created_by" CHARACTER VARYING(255) NOT NULL,
-    "modified_by" CHARACTER VARYING(255),
-    "created_ts" timestamp(0) with time zone NOT NULL,
-    "modified_ts" timestamp(0) WITH TIME ZONE,
-    CONSTRAINT user_role_pkey PRIMARY KEY("user_id", "role_id"),
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
-    FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE CASCADE
-);
-
 CREATE TABLE "group" (
     "id" SERIAL,
     "name" TEXT NOT NULL,

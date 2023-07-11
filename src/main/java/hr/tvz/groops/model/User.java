@@ -9,7 +9,6 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.sql.Date;
-import java.util.List;
 
 @Entity
 @Table(name = "user", schema = "public", uniqueConstraints = {
