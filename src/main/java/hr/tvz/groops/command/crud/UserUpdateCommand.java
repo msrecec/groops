@@ -15,6 +15,6 @@ public class UserUpdateCommand extends UserCommand {
     }
 
     public UserUpdateCommand(String username, String email, String firstName, String lastName, Date dateOfBirth, String description) {
-        super(username, email, firstName, lastName, dateOfBirth, description);
+        super(username, firstName, lastName, dateOfBirth, description);
     }
 }

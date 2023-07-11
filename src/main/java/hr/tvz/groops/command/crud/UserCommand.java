@@ -16,9 +16,8 @@ public abstract class UserCommand {
     public UserCommand() {
     }
 
-    public UserCommand(String username, String email, String firstName, String lastName, Date dateOfBirth, String description) {
+    public UserCommand(String username, String firstName, String lastName, Date dateOfBirth, String description) {
         this.username = username;
-        this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.dateOfBirth = dateOfBirth;
@@ -27,9 +26,6 @@ public abstract class UserCommand {
 
     @NotBlank(message = "username is required")
     private String username;
-    @NotBlank(message = "email is required")
-    @Email(message = "format must be a valid email")
-    private String email;
     @NotBlank(message = "first name is required")
     private String firstName;
     @NotBlank(message = "last name is required")
