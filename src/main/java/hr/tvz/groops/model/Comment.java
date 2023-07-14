@@ -20,6 +20,8 @@ public class Comment extends BaseEntity {
     @Column(name = "id")
     @Id
     private Long id;
+    @Column(name = "text")
+    private String text;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;

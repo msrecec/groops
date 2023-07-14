@@ -7,6 +7,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
+
 @Entity
 @Table(name = "user_group", schema = "public")
 @Getter
@@ -26,4 +28,11 @@ public class UserGroup extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "group_id", referencedColumnName = "id")
     private Group group;
+    @ManyToMany(targetEntity = Role.class)
+    @JoinTable(
+            name = "user_group_role",
+            joinColumns = {@JoinColumn(name = "user_group_id")},
+            inverseJoinColumns = {@JoinColumn(name = "role_id")}
+    )
+    private List<Role> roles;
 }

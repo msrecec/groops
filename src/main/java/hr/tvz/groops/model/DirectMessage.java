@@ -20,6 +20,8 @@ public class DirectMessage extends BaseEntity {
     @Column(name = "id")
     @Id
     private Long id;
+    @Column(name = "message")
+    private String message;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "friend_id", referencedColumnName = "id")
     private Friend friend;

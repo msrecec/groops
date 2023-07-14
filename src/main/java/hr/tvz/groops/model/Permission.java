@@ -29,4 +29,6 @@ public class Permission extends BaseEntity {
     @Column(name = "permission")
     @Enumerated(EnumType.STRING)
     private PermissionEnum permission;
+    @ManyToMany(targetEntity = Role.class, mappedBy = "permissions")
+    private List<Role> roles;
 }

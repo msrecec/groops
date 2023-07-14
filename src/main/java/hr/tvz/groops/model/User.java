@@ -9,6 +9,7 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
 import java.sql.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "user", schema = "public", uniqueConstraints = {
@@ -45,4 +46,50 @@ public class User extends BaseEntity {
     private String profilePictureKey;
     @Column(name = "confirmed")
     private Boolean confirmed;
+    @OneToMany(targetEntity = GroupRequest.class, mappedBy = "user")
+    private List<GroupRequest> groupRequests;
+
+    @ManyToMany(targetEntity = Group.class)
+    @JoinTable(
+            name = "user_group",
+            joinColumns = {@JoinColumn(name = "user_id")},
+            inverseJoinColumns = {@JoinColumn(name = "group_id")}
+    )
+    private List<Group> groups;
+    @OneToMany(targetEntity = FriendRequest.class, mappedBy = "sender")
+    private List<FriendRequest> sentFriendRequests;
+    @OneToMany(targetEntity = FriendRequest.class, mappedBy = "recipient")
+    private List<FriendRequest> receivedFriendRequests;
+
+    @ManyToMany(targetEntity = User.class)
+    @JoinTable(
+            name = "friend",
+            joinColumns = {@JoinColumn(name = "first_user_id")},
+            inverseJoinColumns = {@JoinColumn(name = "second_user_id")}
+    )
+    private List<User> primaryFriends;
+
+    @ManyToMany(targetEntity = User.class)
+    @JoinTable(
+            name = "friend",
+            joinColumns = {@JoinColumn(name = "second_user_id")},
+            inverseJoinColumns = {@JoinColumn(name = "first_user_id")}
+    )
+    private List<User> secondaryFriends;
+    @OneToMany(targetEntity = DirectMessage.class, mappedBy = "sender")
+    private List<DirectMessage> sentDirectMessages;
+    @OneToMany(targetEntity = DirectMessage.class, mappedBy = "recipient")
+    private List<DirectMessage> receivedDirectMessages;
+    @OneToMany(targetEntity = GroupMessage.class, mappedBy = "sender")
+    private List<GroupMessage> sentGroupMessages;
+    @OneToMany(targetEntity = Post.class, mappedBy = "user")
+    private List<Post> posts;
+    @OneToMany(targetEntity = Comment.class, mappedBy = "user")
+    private List<Comment> comments;
+    @OneToMany(targetEntity = DirectMessageLike.class, mappedBy = "user")
+    private List<DirectMessageLike> directMessageLikes;
+    @OneToMany(targetEntity = GroupMessageLike.class, mappedBy = "user")
+    private List<GroupMessageLike> groupMessageLikes;
+    @OneToMany(targetEntity = PostLike.class, mappedBy = "user")
+    private List<PostLike> postLikes;
 }

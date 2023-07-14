@@ -181,7 +181,7 @@ CREATE TABLE "post" (
     "modified_ts" timestamp(0) WITH TIME ZONE,
     CONSTRAINT post_pkey PRIMARY KEY("id"),
     FOREIGN KEY (sender_id) REFERENCES user(id),
-    FOREIGN KEY (recipient_id) REFERENCES user(id)
+    FOREIGN KEY (group_id) REFERENCES group(id)
 );
 
 CREATE TABLE "comment" (
