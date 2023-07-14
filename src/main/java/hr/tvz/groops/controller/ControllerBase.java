@@ -8,7 +8,7 @@ import hr.tvz.groops.dto.response.ExternalServiceErrorDto;
 import hr.tvz.groops.exception.ExceptionEnum;
 import hr.tvz.groops.exception.ExternalServiceException;
 import hr.tvz.groops.exception.InternalServerException;
-import jakarta.persistence.EntityNotFoundException;
+import javax.persistence.EntityNotFoundException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.postgresql.util.PSQLException;
@@ -193,8 +193,8 @@ public abstract class ControllerBase {
         logger.error(ExceptionEnum.TRANSACTION_SYSTEM_EXCEPTION.getFullMessage(), ex);
         String message = ex.getMessage();
         String constraint = null;
-        if (ex.getRootCause() instanceof jakarta.validation.ConstraintViolationException) {
-            constraint = ((jakarta.validation.ConstraintViolationException) ex.getRootCause())
+        if (ex.getRootCause() instanceof javax.validation.ConstraintViolationException) {
+            constraint = ((javax.validation.ConstraintViolationException) ex.getRootCause())
                     .getConstraintViolations().stream().map(
                             v -> v.getPropertyPath() + " " + v.getMessage()
                     ).collect(Collectors.toList()).toString();

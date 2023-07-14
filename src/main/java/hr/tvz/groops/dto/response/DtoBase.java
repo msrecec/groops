@@ -1,6 +1,5 @@
-package hr.tvz.groops.model;
+package hr.tvz.groops.dto.response;
 
-import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -14,13 +13,9 @@ import java.time.Instant;
 @NoArgsConstructor
 @SuperBuilder
 @MappedSuperclass
-public abstract class BaseEntity {
-    @Column(name = "created_ts")
+public abstract class DtoBase {
     private Instant createdTs;
-    @Column(name = "modified_ts")
     private Instant modifiedTs;
-    @Column(name = "created_by")
     private String createdBy;
-    @Column(name = "modified_by")
     private String modifiedBy;
 }

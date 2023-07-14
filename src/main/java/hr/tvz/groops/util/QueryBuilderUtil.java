@@ -6,7 +6,6 @@ import hr.tvz.groops.command.search.BaseEntitySearchCommand;
 import hr.tvz.groops.exception.ExceptionEnum;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.QBaseEntity;
-import hr.tvz.groops.model.QNamedEntity;
 
 import java.math.BigDecimal;
 import java.text.ParseException;
@@ -475,10 +474,6 @@ public class QueryBuilderUtil {
                 like(builder, baseEntity.modifiedBy, command.getModifiedBy());
             }
         }
-    }
-
-    public static void buildCreatedModifiedAndIdConditions(Map<String, Object> form, QNamedEntity namedEntity, BooleanBuilder builder) {
-        buildCreatedModifiedAndIdConditions(form, namedEntity._super, builder);
     }
 
     public static void buildCreatedModifiedAndIdConditions(Map<String, Object> form, QBaseEntity baseEntity, BooleanBuilder builder) {

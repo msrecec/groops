@@ -1,5 +1,7 @@
 package hr.tvz.groops.utils;
 
+import hr.tvz.groops.exception.InternalServerException;
+import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,4 +36,20 @@ public class SecurityUtil {
 
         return principal.toString();
     }
+
+    @NotNull
+    public static GroopsUserDataToken getCurrentLoggedInUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null) {
+            throw new InternalServerException("No authentication", new Throwable());
+        }
+
+        if (!(authentication instanceof GroopsUserDataToken)) {
+            throw new InternalServerException("Invalid authentication type", new Throwable());
+        }
+
+        return (GroopsUserDataToken) authentication;
+    }
+
 }

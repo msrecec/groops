@@ -1,7 +1,7 @@
 package hr.tvz.groops.model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
+import javax.persistence.*;
+import javax.validation.constraints.Email;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

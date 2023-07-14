@@ -1,7 +1,7 @@
 package hr.tvz.groops.model;
 
 import hr.tvz.groops.model.enums.RoleEnum;
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

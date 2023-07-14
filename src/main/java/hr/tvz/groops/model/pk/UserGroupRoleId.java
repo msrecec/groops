@@ -1,6 +1,6 @@
 package hr.tvz.groops.model.pk;
 
-import jakarta.persistence.Embeddable;
+import javax.persistence.Embeddable;
 import lombok.*;
 
 import java.io.Serializable;

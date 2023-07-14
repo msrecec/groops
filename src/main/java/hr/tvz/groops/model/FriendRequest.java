@@ -2,7 +2,7 @@ package hr.tvz.groops.model;
 
 import hr.tvz.groops.model.pk.FriendRequestId;
 import hr.tvz.groops.model.pk.GroupRequestId;
-import jakarta.persistence.*;
+import javax.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

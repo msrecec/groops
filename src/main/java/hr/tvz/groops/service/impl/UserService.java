@@ -1,13 +1,18 @@
 package hr.tvz.groops.service.impl;
 
-import hr.tvz.groops.command.crud.UserCreateCommand;
-import hr.tvz.groops.command.crud.UserUpdateCommand;
+import hr.tvz.groops.command.crud.UserCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
+import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.model.User;
-import hr.tvz.groops.repository.*;
+import hr.tvz.groops.repository.PermissionRepository;
+import hr.tvz.groops.repository.RoleRepository;
+import hr.tvz.groops.repository.UserGroupRoleRepository;
+import hr.tvz.groops.repository.UserRepository;
+import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import hr.tvz.groops.utils.TimeUtils;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
+import javax.persistence.EntityNotFoundException;
+import javax.validation.Valid;
+import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,9 +22,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static hr.tvz.groops.constants.CrudExceptionEnum.USER_NOT_FOUND_BY_ID;
+import static hr.tvz.groops.util.MapUtil.commandToEntity;
 
 @Service
 public class UserService {
@@ -50,48 +58,68 @@ public class UserService {
     }
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT)
-    public User create(@Valid UserCreateCommand command) {
+    public UserDto register(@Valid UserCommand command) {
         logger.debug("Creating user...");
-        User user = User.builder()
-                .username(command.getUsername())
-                .password(passwordEncoder.encode(command.getPassword()))
-                .email(command.getEmail())
-                .firstName(command.getFirstName())
-                .lastName(command.getLastName())
-                .dateOfBirth(command.getDateOfBirth())
-                .description(command.getDescription())
-                .confirmed(false)
-                .createdBy(authenticationService.getCurrentLoggedInUserUsername())
-                .createdTs(TimeUtils.now())
-                .build();
-        return userRepository.save(user);
+        Instant now = Instant.now();
+
+        // todo add password validation
+        // todo add email validation -> optional
+        // todo add date of birth validation
+        // todo add first name and last name validation
+        // todo add username validation
+
+        User user = commandToEntity(command, new User());
+        user.setCreatedTs(now);
+        user.setCreatedBy(authenticationService.getCurrentLoggedInUserUsername());
+
+        // todo send registration confirmation email
+
+        return modelMapper.map(userRepository.save(user), UserDto.class);
     }
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT)
-    public User update(Long id, @Valid UserUpdateCommand command) {
+    public UserDto update(Long id, @Valid UserCommand command) {
         logger.debug("Updating user...");
-        User user = findById(id);
-        user.setUsername(command.getUsername());
-        user.setFirstName(command.getFirstName());
-        user.setLastName(command.getLastName());
-        user.setDateOfBirth(command.getDateOfBirth());
-        user.setDescription(command.getDescription());
+        User user = findUserEntityById(id);
+        // todo add password validation and confirmation email
+        // todo add email validation -> optional
+        // todo add date of birth validation
+        // todo add first name and last name validation
+        // todo add username validation
+        // todo add email change confirmation email
+        commandToEntity(command, user);
         user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         user.setModifiedTs(TimeUtils.now());
-        return userRepository.save(user);
+        return modelMapper.map(userRepository.save(user), UserDto.class);
     }
 
-    public User findById(Long id) {
+    public UserDto findById(Long id) {
         logger.debug("Fetching user with id {} ...", id);
-        return userRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_BY_ID.getMessageComposed(id)));
+        User user = findUserEntityById(id);
+        return modelMapper.map(user, UserDto.class);
     }
 
-    public List<User> findAll() {
+    private @NotNull User findUserEntityById(@NotNull Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_BY_ID.getMessageComposed(id)));
+    }
+
+    public UserDto getCurrent() {
+        logger.debug("Fetching current user...");
+        GroopsUserDataToken groopsUserDataToken = authenticationService.getCurrentLoggedInUser();
+        return findById(groopsUserDataToken.getId());
+    }
+
+    public List<UserDto> findAll() {
         logger.debug("Fetching all users...");
-        return userRepository.findAll();
+        return userRepository.findAll()
+                .stream()
+                .map(u -> modelMapper.map(u, UserDto.class))
+                .collect(Collectors.toList());
     }
 
-    public Page<User> search() {
+    public Page<UserDto> searchUsers() {
+//        QUser
         return null;
     }
 
