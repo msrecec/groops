@@ -57,8 +57,8 @@ CREATE TABLE "role_permission" (
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
     CONSTRAINT role_permission_pkey PRIMARY KEY("role_id", "permission_id"),
-    FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE CASCADE,
-    FOREIGN KEY (permission_id) REFERENCES permission(id) ON DELETE CASCADE
+    FOREIGN KEY (role_id) REFERENCES "role"(id) ON DELETE CASCADE,
+    FOREIGN KEY (permission_id) REFERENCES "permission"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE "group" (
@@ -81,8 +81,8 @@ CREATE TABLE "group_request" (
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
     CONSTRAINT group_request_pkey PRIMARY KEY("group_id", "user_id"),
-    FOREIGN KEY (group_id) REFERENCES group(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
+    FOREIGN KEY (group_id) REFERENCES "group"(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE "user_group" (
@@ -93,12 +93,12 @@ CREATE TABLE "user_group" (
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
-    CONSTRAINT user_group_role_pkey PRIMARY KEY("id"),
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
-    FOREIGN KEY (group_id) REFERENCES group(id) ON DELETE CASCADE
+    CONSTRAINT user_group_pkey PRIMARY KEY("id"),
+    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES "group"(id) ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX user_group_un_idx on "user_group" ("user_id", "group_id");
+CREATE UNIQUE INDEX "user_group_un_idx" ON "user_group" ("user_id", "group_id");
 
 CREATE TABLE "user_group_role" (
     "user_group_id" INTEGER NOT NULL,
@@ -108,8 +108,8 @@ CREATE TABLE "user_group_role" (
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
     CONSTRAINT user_group_role_pkey PRIMARY KEY("user_group_id", "role_id"),
-    FOREIGN KEY (user_group_id) REFERENCES user_group(id) ON DELETE CASCADE,
-    FOREIGN KEY (role_id) REFERENCES role(id) ON DELETE CASCADE
+    FOREIGN KEY (user_group_id) REFERENCES "user_group"(id) ON DELETE CASCADE,
+    FOREIGN KEY (role_id) REFERENCES "role"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE "friend_request" (
@@ -120,8 +120,8 @@ CREATE TABLE "friend_request" (
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
     CONSTRAINT friend_request_pkey PRIMARY KEY("recipient_id", "sender_id"),
-    FOREIGN KEY (sender_id) REFERENCES user(id) ON DELETE CASCADE,
-    FOREIGN KEY (recipient_id) REFERENCES user(id) ON DELETE CASCADE
+    FOREIGN KEY (sender_id) REFERENCES "user"(id) ON DELETE CASCADE,
+    FOREIGN KEY (recipient_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE "friend" (
@@ -133,39 +133,40 @@ CREATE TABLE "friend" (
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
     CONSTRAINT friend_pkey PRIMARY KEY("id"),
-    FOREIGN KEY (first_user_id) REFERENCES user(id),
-    FOREIGN KEY (second_user_id) REFERENCES user(id)
+    FOREIGN KEY (first_user_id) REFERENCES "user"(id),
+    FOREIGN KEY (second_user_id) REFERENCES "user"(id)
 );
 
-CREATE UNIQUE INDEX friend_un_idx on "direct_message_like" ("first_user_id", "second_user_id");
+CREATE UNIQUE INDEX friend_un_idx on "friend" ("first_user_id", "second_user_id");
 
 CREATE TABLE "direct_message" (
     "id" SERIAL,
     "message" TEXT,
-    "friend_id" INTEGER NOT NULL ON DELETE CASCADE,
-    "sender_id" INTEGER NOT NULL ON DELETE CASCADE,
-    "recipient_id" INTEGER NOT NULL ON DELETE CASCADE,
+    "friend_id" INTEGER NOT NULL,
+    "sender_id" INTEGER NOT NULL,
+    "recipient_id" INTEGER NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
     CONSTRAINT direct_message_pkey PRIMARY KEY("id"),
-    FOREIGN KEY (sender_id) REFERENCES user(id),
-    FOREIGN KEY (recipient_id) REFERENCES user(id)
+    FOREIGN KEY (friend_id) REFERENCES "friend"(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES "user"(id) ON DELETE CASCADE,
+    FOREIGN KEY (recipient_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE "group_message" (
     "id" SERIAL,
     "message" TEXT,
-    "group_id" INTEGER NOT NULL ON DELETE CASCADE,
-    "sender_id" INTEGER NOT NULL ON DELETE CASCADE,
+    "group_id" INTEGER NOT NULL,
+    "sender_id" INTEGER NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
     CONSTRAINT group_message_pkey PRIMARY KEY("id"),
-    FOREIGN KEY (group_id) REFERENCES group(id),
-    FOREIGN KEY (sender_id) REFERENCES user(id)
+    FOREIGN KEY (group_id) REFERENCES "group"(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE "post" (
@@ -173,70 +174,70 @@ CREATE TABLE "post" (
     "media_key" TEXT,
     "media_type" TEXT,
     "text" TEXT,
-    "user_id" INTEGER NOT NULL ON DELETE CASCADE,
-    "group_id" INTEGER NOT NULL ON DELETE CASCADE,
+    "user_id" INTEGER NOT NULL,
+    "group_id" INTEGER NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
     CONSTRAINT post_pkey PRIMARY KEY("id"),
-    FOREIGN KEY (sender_id) REFERENCES user(id),
-    FOREIGN KEY (group_id) REFERENCES group(id)
+    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE,
+    FOREIGN KEY (group_id) REFERENCES "group"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE "comment" (
     "id" SERIAL,
     "text" TEXT,
-    "user_id" INTEGER NOT NULL ON DELETE CASCADE,
-    "post_id" INTEGER NOT NULL ON DELETE CASCADE,
+    "user_id" INTEGER NOT NULL,
+    "post_id" INTEGER NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
     CONSTRAINT comment_pkey PRIMARY KEY("id"),
-    FOREIGN KEY (user_id) REFERENCES user(id),
-    FOREIGN KEY (post_id) REFERENCES post(id)
+    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES "post"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE "direct_message_like" (
     "id" SERIAL,
-    "direct_message_id" INTEGER NOT NULL ON DELETE CASCADE,
-    "user_id" INTEGER NOT NULL ON DELETE CASCADE,
+    "direct_message_id" INTEGER NOT NULL,
+    "user_id" INTEGER NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
     CONSTRAINT direct_message_like_pkey PRIMARY KEY("direct_message_id", "user_id"),
-    FOREIGN KEY (direct_message_id) REFERENCES direct_message(id),
-    FOREIGN KEY (user_id) REFERENCES user(id)
+    FOREIGN KEY (direct_message_id) REFERENCES "direct_message"(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE UNIQUE INDEX direct_message_like_un_idx on "direct_message_like" ("direct_message_id", "user_id");
 
 CREATE TABLE "group_message_like" (
-    "group_message_id" INTEGER NOT NULL ON DELETE CASCADE,
-    "user_id" INTEGER NOT NULL ON DELETE CASCADE,
+    "group_message_id" INTEGER NOT NULL,
+    "user_id" INTEGER NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
     CONSTRAINT group_message_like_pkey PRIMARY KEY("group_message_id", "user_id"),
-    FOREIGN KEY (group_message_id) REFERENCES group_message(id),
-    FOREIGN KEY (user_id) REFERENCES user(id)
+    FOREIGN KEY (group_message_id) REFERENCES "group_message"(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE UNIQUE INDEX group_message_like_un_idx on "group_message_like" ("group_message_id", "user_id");
 
 CREATE TABLE "post_like" (
-    "post_id" INTEGER NOT NULL ON DELETE CASCADE,
-    "user_id" INTEGER NOT NULL ON DELETE CASCADE,
+    "post_id" INTEGER NOT NULL,
+    "user_id" INTEGER NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
     CONSTRAINT post_like_pkey PRIMARY KEY("post_id", "user_id"),
-    FOREIGN KEY (post_id) REFERENCES post(id),
-    FOREIGN KEY (user_id) REFERENCES user(id)
+    FOREIGN KEY (post_id) REFERENCES "post"(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE UNIQUE INDEX post_like_un_idx on "post_like" ("post_id", "user_id");

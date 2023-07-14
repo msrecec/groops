@@ -1,23 +1,30 @@
 package hr.tvz.groops.service.impl;
 
+import com.querydsl.core.BooleanBuilder;
 import hr.tvz.groops.command.crud.UserCommand;
+import hr.tvz.groops.command.search.UserSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.dto.response.UserDto;
+import hr.tvz.groops.model.QUser;
 import hr.tvz.groops.model.User;
 import hr.tvz.groops.repository.PermissionRepository;
 import hr.tvz.groops.repository.RoleRepository;
 import hr.tvz.groops.repository.UserGroupRoleRepository;
 import hr.tvz.groops.repository.UserRepository;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
+import hr.tvz.groops.util.QueryBuilderUtil;
 import hr.tvz.groops.utils.TimeUtils;
+
 import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
+
 import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -69,6 +76,7 @@ public class UserService {
         // todo add username validation
 
         User user = commandToEntity(command, new User());
+        user.setConfirmed(false);
         user.setCreatedTs(now);
         user.setCreatedBy(authenticationService.getCurrentLoggedInUserUsername());
 
@@ -118,9 +126,29 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public Page<UserDto> searchUsers() {
-//        QUser
-        return null;
+    public Page<UserDto> searchUsers(UserSearchCommand command, Pageable pageable) {
+        QUser user = QUser.user;
+        BooleanBuilder builder = new BooleanBuilder();
+        QueryBuilderUtil.buildCreatedModifiedAndIdConditions(command, user._super, user.id, builder);
+        QueryBuilderUtil.like(builder, user.username, command.getUsername());
+        QueryBuilderUtil.like(builder, user.email, command.getEmail());
+        QueryBuilderUtil.like(builder, user.firstName, command.getFirstName());
+        QueryBuilderUtil.like(builder, user.lastName, command.getLastName());
+        QueryBuilderUtil.gte(builder, user.dateOfBirth, command.getDateOfBirthFrom());
+        QueryBuilderUtil.lte(builder, user.dateOfBirth, command.getDateOfBirthTo());
+        QueryBuilderUtil.like(builder, user.description, command.getDescription());
+        QueryBuilderUtil.equals(builder, user.confirmed, command.getConfirmed());
+
+        return userRepository.findAll(builder.getValue() != null ? builder.getValue() : builder, pageable)
+                .map(u -> modelMapper.map(u, UserDto.class));
+    }
+
+    @Transactional
+    public void deleteCurrent() {
+        logger.debug("Deleting current user...");
+        GroopsUserDataToken token = authenticationService.getCurrentLoggedInUser();
+        User user = findUserEntityById(token.getId());
+        userRepository.delete(user);
     }
 
 

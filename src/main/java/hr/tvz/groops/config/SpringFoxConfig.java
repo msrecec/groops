@@ -62,7 +62,7 @@ public class SpringFoxConfig {
                 .securityContexts(Arrays.asList(securityContext()))
                 .securitySchemes(Arrays.asList(apiKey()))
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("hr.triplus.plm.controller"))
+                .apis(RequestHandlerSelectors.basePackage("hr.tvz.groops.controller"))
                 .paths(PathSelectors.any())
                 .build();
     }
@@ -88,7 +88,7 @@ public class SpringFoxConfig {
                 .useDefaultResponseMessages(false)
                 .host(BASE_URL_DEFAULT)
                 .select()
-                .apis(RequestHandlerSelectors.basePackage("hr.triplus.plm.controller"))
+                .apis(RequestHandlerSelectors.basePackage("hr.tvz.groops.controller"))
                 .paths(PathSelectors.any())
                 .build();
     }
@@ -110,11 +110,11 @@ public class SpringFoxConfig {
 
     private ApiInfo apiInfo() {
         return new ApiInfo(
-                "PLM project api",
-                "API for plm logistics department.",
+                "Groops project api",
+                "API for groops.",
                 "1.0",
                 "Terms of service",
-                new Contact("Mislav Srečec", "https://www.3plus.hr/", "msrecec@3plus.hr"),
+                new Contact("Mislav Srečec", "https://www.tvz.hr/", "msrecec@tvz.hr"),
                 "License of API",
                 "API license URL",
                 Collections.emptyList());
