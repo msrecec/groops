@@ -1,4 +1,4 @@
-package hr.tvz.groops.command.search;
+package hr.tvz.groops.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -6,14 +6,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 
-import java.util.Optional;
-
-@Getter
-@Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-public class NamedEntitySearchCommand extends BaseEntitySearchCommand {
-    private Optional<String> name;
+@Getter
+@Setter
+public class CausedErrorDto extends ErrorDto {
+    private String cause;
 }
-

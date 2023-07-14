@@ -3,7 +3,6 @@ package hr.tvz.groops.util;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.*;
 import hr.tvz.groops.command.search.BaseEntitySearchCommand;
-import hr.tvz.groops.command.search.NamedEntitySearchCommand;
 import hr.tvz.groops.exception.ExceptionEnum;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.QBaseEntity;
@@ -450,13 +449,6 @@ public class QueryBuilderUtil {
                 }
             }
         }
-    }
-
-    public static void buildCreatedModifiedAndIdConditions(NamedEntitySearchCommand command, QNamedEntity namedEntity, NumberPath<Long> id, BooleanBuilder builder) {
-        if (isSet(command.getName())) {
-            like(builder, namedEntity.name, command.getName());
-        }
-        buildCreatedModifiedAndIdConditions(command, namedEntity._super, id, builder);
     }
 
     public static void buildCreatedModifiedAndIdConditions(BaseEntitySearchCommand command, QBaseEntity baseEntity, NumberPath<Long> id, BooleanBuilder builder) {
