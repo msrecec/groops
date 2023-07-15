@@ -12,13 +12,9 @@ import hr.tvz.groops.repository.RoleRepository;
 import hr.tvz.groops.repository.UserGroupRoleRepository;
 import hr.tvz.groops.repository.UserRepository;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
+import hr.tvz.groops.service.Searchable;
 import hr.tvz.groops.util.QueryBuilderUtil;
 import hr.tvz.groops.utils.TimeUtils;
-
-import javax.persistence.EntityNotFoundException;
-import javax.validation.Valid;
-
-import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,15 +25,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.validation.Valid;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static hr.tvz.groops.constants.CrudExceptionEnum.USER_NOT_FOUND_BY_ID;
 import static hr.tvz.groops.util.MapUtil.commandToEntity;
 
 @Service
-public class UserService {
+public class UserService implements Searchable {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
     private ModelMapper modelMapper;
     private PasswordEncoder passwordEncoder;
@@ -88,7 +84,7 @@ public class UserService {
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT)
     public UserDto update(Long id, @Valid UserCommand command) {
         logger.debug("Updating user...");
-        User user = findUserEntityById(id);
+        User user = findUserEntityById(id, userRepository);
         // todo add password validation and confirmation email
         // todo add email validation -> optional
         // todo add date of birth validation
@@ -103,13 +99,8 @@ public class UserService {
 
     public UserDto findById(Long id) {
         logger.debug("Fetching user with id {} ...", id);
-        User user = findUserEntityById(id);
+        User user = findUserEntityById(id, userRepository);
         return modelMapper.map(user, UserDto.class);
-    }
-
-    private @NotNull User findUserEntityById(@NotNull Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_BY_ID.getMessageComposed(id)));
     }
 
     public UserDto getCurrent() {
@@ -126,7 +117,7 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
-    public Page<UserDto> searchUsers(UserSearchCommand command, Pageable pageable) {
+    public Page<UserDto> search(UserSearchCommand command, Pageable pageable) {
         QUser user = QUser.user;
         BooleanBuilder builder = new BooleanBuilder();
         QueryBuilderUtil.buildCreatedModifiedAndIdConditions(command, user._super, user.id, builder);
@@ -147,7 +138,14 @@ public class UserService {
     public void deleteCurrent() {
         logger.debug("Deleting current user...");
         GroopsUserDataToken token = authenticationService.getCurrentLoggedInUser();
-        User user = findUserEntityById(token.getId());
+        User user = findUserEntityById(token.getId(), userRepository);
+        userRepository.delete(user);
+    }
+
+    @Transactional
+    public void deleteById(Long id) {
+        logger.debug("Deleting current user with id {}", id);
+        User user = findUserEntityById(id, userRepository);
         userRepository.delete(user);
     }
 

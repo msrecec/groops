@@ -23,39 +23,45 @@ public class UserController extends ControllerBase {
     }
 
     @GetMapping
-    List<UserDto> findAll() {
+    List<UserDto> findAllUsers() {
         return userService.findAll();
     }
 
     @GetMapping("/{id}")
-    UserDto findById(@PathVariable("id") Long id) {
+    UserDto findUserById(@PathVariable("id") Long id) {
         return userService.findById(id);
     }
 
     @GetMapping("/current")
-    UserDto findCurrent() {
+    UserDto findCurrentUser() {
         return userService.getCurrent();
     }
 
     @PostMapping("/register")
-    UserDto register(@RequestBody @Valid UserCommand command) {
+    UserDto registerUser(@RequestBody @Valid UserCommand command) {
         return userService.register(command);
     }
 
     @PutMapping("/{id}")
-    UserDto update(@RequestBody @Valid UserCommand command, @PathVariable("id") Long id) {
+    UserDto updateUser(@RequestBody @Valid UserCommand command, @PathVariable("id") Long id) {
         return userService.update(id, command);
     }
 
     @PostMapping("/search")
-    Page<UserDto> search(@RequestBody UserSearchCommand command) {
-        return userService.searchUsers(command, command.getPageable());
+    Page<UserDto> searchUser(@RequestBody UserSearchCommand command) {
+        return userService.search(command, command.getPageable());
     }
 
     @DeleteMapping("/current")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    void deleteCurrent() {
+    void deleteCurrentUser() {
         userService.deleteCurrent();
+    }
+
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void deleteUserById(@PathVariable("id") Long id) {
+        userService.deleteById(id);
     }
 
 }
