@@ -4,8 +4,6 @@ import hr.tvz.groops.model.enums.RoleEnum;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
-import java.util.Optional;
-
 @Getter
 @Setter
 @SuperBuilder
@@ -13,5 +11,5 @@ import java.util.Optional;
 @NoArgsConstructor
 @ToString
 public class RoleCommand {
-    private Optional<RoleEnum> role;
+    private RoleEnum role;
 }

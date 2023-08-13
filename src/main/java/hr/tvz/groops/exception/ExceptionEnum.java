@@ -43,7 +43,9 @@ public enum ExceptionEnum {
     SCHEDULER_CONFIGURATION_EXCEPTION(39, "Something went wrong with scheduler configuration initialization"),
     NOTIFICATION_EXCEPTION(40, "Something went wrong when sending notification"),
     SUBSCRIPTION_ID_NOT_NULL(41, "Subscription id must not be null"),
-    CLASS_CAST_EXCEPTION(42, "Class cast exception");
+    CLASS_CAST_EXCEPTION(42, "Class cast exception"),
+    INVALID_PASSWORD_EXCEPTION(43, "Invalid password"),
+    INVALID_DATE_OF_BIRTH_EXCEPTION(44, "Invalid date of birth");
     private final int code;
     private final String clientMessage;
 

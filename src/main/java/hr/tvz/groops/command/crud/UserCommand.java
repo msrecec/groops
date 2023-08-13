@@ -1,13 +1,12 @@
 package hr.tvz.groops.command.crud;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.sql.Date;
-import java.util.Optional;
 
 @Getter
 @Setter
@@ -15,12 +14,17 @@ import java.util.Optional;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class UserCommand {
-    private Optional<@NotBlank(message = "username is required") String> username;
-    private Optional<@NotBlank(message = "email is required") @Email(message = "format must be a valid email") String> email;
-    private Optional<@NotBlank(message = "password is required") String> password;
-    private Optional<@NotBlank(message = "first name is required") String> firstName;
-    private Optional<@NotBlank(message = "last name is required") String> lastName;
-    private Optional<@NotNull(message = "date of birth is required") Date> dateOfBirth;
-    private Optional<String> description;
+public abstract class UserCommand {
+    @NotBlank(message = "username is required")
+    private String username;
+    @NotBlank(message = "email is required")
+    @Email(message = "format must be a valid email")
+    private String email;
+    @NotBlank(message = "first name is required")
+    private String firstName;
+    @NotBlank(message = "last name is required")
+    private String lastName;
+    @NotNull(message = "date of birth is required")
+    private Date dateOfBirth;
+    private String description;
 }

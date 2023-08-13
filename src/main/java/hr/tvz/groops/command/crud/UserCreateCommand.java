@@ -1,8 +1,9 @@
 package hr.tvz.groops.command.crud;
 
-import hr.tvz.groops.model.enums.PermissionEnum;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+
+import javax.validation.constraints.NotBlank;
 
 @Getter
 @Setter
@@ -10,6 +11,7 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class PermissionCommand {
-    private PermissionEnum permission;
+public class UserCreateCommand {
+    @NotBlank(message = "password is required")
+    private String password;
 }

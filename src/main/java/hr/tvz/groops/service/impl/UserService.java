@@ -1,20 +1,19 @@
 package hr.tvz.groops.service.impl;
 
 import com.querydsl.core.BooleanBuilder;
-import hr.tvz.groops.command.crud.UserCommand;
+import hr.tvz.groops.command.crud.UserCreateCommand;
+import hr.tvz.groops.command.crud.UserUpdateCommand;
 import hr.tvz.groops.command.search.UserSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.dto.response.UserDto;
+import hr.tvz.groops.exception.ExceptionEnum;
 import hr.tvz.groops.model.QUser;
 import hr.tvz.groops.model.User;
-import hr.tvz.groops.repository.PermissionRepository;
-import hr.tvz.groops.repository.RoleRepository;
-import hr.tvz.groops.repository.UserGroupRoleRepository;
-import hr.tvz.groops.repository.UserRepository;
+import hr.tvz.groops.repository.*;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import hr.tvz.groops.service.Searchable;
 import hr.tvz.groops.util.QueryBuilderUtil;
-import hr.tvz.groops.utils.TimeUtils;
+import hr.tvz.groops.util.SecurityUtil;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,74 +26,80 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
 import java.time.Instant;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static hr.tvz.groops.util.MapUtil.commandToEntity;
+import static hr.tvz.groops.util.TimeUtils.now;
 
 @Service
 public class UserService implements Searchable {
     private static final Logger logger = LoggerFactory.getLogger(UserService.class);
-    private ModelMapper modelMapper;
-    private PasswordEncoder passwordEncoder;
-    private UserRepository userRepository;
-    private RoleRepository roleRepository;
-    private PermissionRepository permissionRepository;
-    private UserGroupRoleRepository userGroupRoleRepository;
-    private AuthenticationService authenticationService;
+    private final ModelMapper modelMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final VerificationPublisherService verificationPublisherService;
+    private final AuthenticationService authenticationService;
 
     @Autowired
     public UserService(ModelMapper modelMapper,
                        PasswordEncoder passwordEncoder,
                        UserRepository userRepository,
-                       RoleRepository roleRepository,
-                       PermissionRepository permissionRepository,
-                       UserGroupRoleRepository userGroupRoleRepository,
+                       VerificationPublisherService verificationPublisherService,
                        AuthenticationService authenticationService) {
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
-        this.roleRepository = roleRepository;
-        this.permissionRepository = permissionRepository;
-        this.userGroupRoleRepository = userGroupRoleRepository;
+        this.verificationPublisherService = verificationPublisherService;
         this.authenticationService = authenticationService;
     }
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT)
-    public UserDto register(@Valid UserCommand command) {
+    public UserDto register(@Valid UserCreateCommand command) {
         logger.debug("Creating user...");
-        Instant now = Instant.now();
-
-        // todo add password validation
-        // todo add email validation -> optional
-        // todo add date of birth validation
-        // todo add first name and last name validation
-        // todo add username validation
-
-        User user = commandToEntity(command, new User());
+        Instant now = now();
+        User user = modelMapper.map(command, User.class);
+        user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
+        validateUser(user);
         user.setConfirmed(false);
         user.setCreatedTs(now);
         user.setCreatedBy(authenticationService.getCurrentLoggedInUserUsername());
-
-        // todo send registration confirmation email
-
+        verificationPublisherService.verifyEmail(user.getId(), now);
         return modelMapper.map(userRepository.save(user), UserDto.class);
     }
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT)
-    public UserDto update(Long id, @Valid UserCommand command) {
+    public UserDto update(Long id, @Valid UserUpdateCommand command) {
         logger.debug("Updating user...");
+        Instant now = now();
         User user = findUserEntityById(id, userRepository);
-        // todo add password validation and confirmation email
-        // todo add email validation -> optional
-        // todo add date of birth validation
-        // todo add first name and last name validation
-        // todo add username validation
-        // todo add email change confirmation email
-        commandToEntity(command, user);
+        modelMapper.map(command, user);
+
+        if (command.getEmail().compareTo(user.getEmail()) != 0) {
+            user.setConfirmed(false);
+            verificationPublisherService.verifyEmail(user.getId(), now);
+        }
+        if (command.getPassword() != null) {
+            if (!SecurityUtil.isValidPassword(command.getPassword())) {
+                logger.debug(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getFullMessage());
+                throw new IllegalArgumentException(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getShortMessage());
+            }
+            verificationPublisherService.verifyPasswordChange(user.getId());
+        }
         user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
-        user.setModifiedTs(TimeUtils.now());
+        user.setModifiedTs(now());
         return modelMapper.map(userRepository.save(user), UserDto.class);
+    }
+
+    private void validateUser(User user) {
+        if (SecurityUtil.isValidPassword(user.getPasswordHash())) {
+            logger.debug(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getFullMessage());
+            throw new IllegalArgumentException(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getShortMessage());
+        }
+        if (user.getDateOfBirth().compareTo(new Date()) > 0) {
+            logger.debug(ExceptionEnum.INVALID_DATE_OF_BIRTH_EXCEPTION.getFullMessage());
+            throw new IllegalArgumentException(ExceptionEnum.INVALID_DATE_OF_BIRTH_EXCEPTION.getShortMessage());
+        }
     }
 
     public UserDto findById(Long id) {

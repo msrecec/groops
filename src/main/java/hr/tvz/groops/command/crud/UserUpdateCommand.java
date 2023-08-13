@@ -1,6 +1,5 @@
 package hr.tvz.groops.command.crud;
 
-import hr.tvz.groops.model.enums.PermissionEnum;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -10,6 +9,6 @@ import lombok.experimental.SuperBuilder;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class PermissionCommand {
-    private PermissionEnum permission;
+public class UserUpdateCommand extends UserCommand {
+    private String password;
 }

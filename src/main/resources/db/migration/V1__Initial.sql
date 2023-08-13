@@ -1,29 +1,67 @@
 SET TIME ZONE 'UTC';
 
+CREATE TABLE "email_verification_code" (
+    "user_id" INTEGER NOT NULL,
+    "code" TEXT NOT NULL,
+    "created_by" CHARACTER VARYING(255) NOT NULL,
+    "modified_by" CHARACTER VARYING(255),
+    "created_ts" timestamp(0) with time zone NOT NULL,
+    "modified_ts" timestamp(0) WITH TIME ZONE,
+    CONSTRAINT email_verification_code_pkey PRIMARY KEY("id")
+);
+
 CREATE TABLE "user" (
     "id" SERIAL,
     "username" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
+    "password_hash" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "first_name" TEXT NOT NULL,
     "last_name" TEXT NOT NULL,
     "date_of_birth" DATE NOT NULL,
     "description" TEXT DEFAULT NULL,
-    "profile_picture_key" TEXT DEFAULT NULL,
+    "profile_picture_key" INTEGER DEFAULT NULL,
+    "email_verification_code_id" INTEGER DEFAULT NULL,
     "confirmed" BOOLEAN NOT NULL DEFAULT FALSE,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
-    CONSTRAINT user_pkey PRIMARY KEY("id")
+    CONSTRAINT user_pkey PRIMARY KEY("id"),
+    FOREIGN KEY (email_verification_code_id) REFERENCES "email_verification_code"(id)
 );
 
+CREATE UNIQUE INDEX email_verification_code_id_un_idx on "user" ("email_verification_code_id");
+CREATE UNIQUE INDEX user_username_un_idx on "user" ("username");
 CREATE UNIQUE INDEX user_username_un_idx on "user" ("username");
 CREATE UNIQUE INDEX user_email_un_idx on "user"(LOWER("email"));
 
 -- todo add scheduler to delete all unconfirmed users 1 month after creation
 
 CREATE INDEX user_confirmed_idx ON "user"("confirmed") WHERE "confirmed" = FALSE;
+
+CREATE TABLE "changed_email" (
+    "id" SERIAL,
+    "email" TEXT NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    "created_by" CHARACTER VARYING(255) NOT NULL,
+    "modified_by" CHARACTER VARYING(255),
+    "created_ts" timestamp(0) with time zone NOT NULL,
+    "modified_ts" timestamp(0) WITH TIME ZONE,
+    CONSTRAINT changed_email_pkey PRIMARY KEY("id"),
+    FOREIGN KEY (user_id) REFERENCES "changed_email"(id)
+);
+
+CREATE TABLE "changed_password" (
+    "id" SERIAL,
+    "password_hash" TEXT NOT NULL,
+    "user_id" INTEGER NOT NULL,
+    "created_by" CHARACTER VARYING(255) NOT NULL,
+    "modified_by" CHARACTER VARYING(255),
+    "created_ts" timestamp(0) with time zone NOT NULL,
+    "modified_ts" timestamp(0) WITH TIME ZONE,
+    CONSTRAINT changed_password_pkey PRIMARY KEY("id"),
+    FOREIGN KEY (user_id) REFERENCES "changed_password"(id)
+);
 
 CREATE TABLE "role" (
     "id" SERIAL,
@@ -175,6 +213,7 @@ CREATE TABLE "post" (
     "media_type" TEXT,
     "text" TEXT,
     "user_id" INTEGER NOT NULL,
+    "profile_picture_key" TEXT DEFAULT NULL,
     "group_id" INTEGER NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
@@ -241,3 +280,46 @@ CREATE TABLE "post_like" (
 );
 
 CREATE UNIQUE INDEX post_like_un_idx on "post_like" ("post_id", "user_id");
+
+CREATE TABLE IF NOT EXISTS "mail_message" (
+    "id" SERIAL,
+    "subject" TEXT,
+    "message" TEXT,
+    "created_by" CHARACTER VARYING(255) NOT NULL,
+    "modified_by" CHARACTER VARYING(255),
+    "created_ts" timestamp(0) with time zone NOT NULL,
+    "modified_ts" timestamp(0) WITH TIME ZONE,
+    CONSTRAINT mail_message_pkey PRIMARY KEY(id)
+);
+
+CREATE TABLE IF NOT EXISTS "mail" (
+    "id" SERIAL,
+    "recipient_id" INTEGER NOT NULL,
+    "mail_message_id" INTEGER NOT NULL,
+    "sender_id" INTEGER NOT NULL,
+    "mail_status" CHARACTER VARYING(255) NOT NULL,
+    "expires" timestamp(0) with time zone NOT NULL,
+    "created_by" CHARACTER VARYING(255) NOT NULL,
+    "modified_by" CHARACTER VARYING(255),
+    "created_ts" timestamp(0) with time zone NOT NULL,
+    "modified_ts" timestamp(0) WITH TIME ZONE,
+    CONSTRAINT mail_pkey PRIMARY KEY(id),
+    FOREIGN KEY (recipient_id) REFERENCES "user"(id) ON DELETE CASCADE,
+    FOREIGN KEY (sender_id) REFERENCES "user"(id) ON DELETE CASCADE,
+    FOREIGN KEY (mail_message_id) REFERENCES "mail_message"(id) ON DELETE CASCADE
+);
+
+CREATE UNIQUE INDEX mail_mail_message_recipient_sender_un ON "mail"("mail_message_id", "recipient_id", "sender_id");
+CREATE INDEX IF NOT EXISTS mail_mail_status_idx ON "mail"("mail_status");
+
+CREATE TABLE IF NOT EXISTS "mail_exception_log" (
+    "mail_id" INTEGER,
+    "message" TEXT,
+    "stack_trace" TEXT,
+    "created_by" CHARACTER VARYING(255) NOT NULL,
+    "modified_by" CHARACTER VARYING(255),
+    "created_ts" timestamp(0) with time zone NOT NULL,
+    "modified_ts" timestamp(0) WITH TIME ZONE,
+    CONSTRAINT mail_exception_log_pkey PRIMARY KEY(mail_id),
+    FOREIGN KEY (mail_id) REFERENCES "mail"(id) ON DELETE CASCADE
+);

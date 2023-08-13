@@ -2,6 +2,7 @@ package hr.tvz.groops.model;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -14,7 +15,8 @@ import java.util.List;
 @Entity
 @Table(name = "user", schema = "public", uniqueConstraints = {
         @UniqueConstraint(name = "id", columnNames = "id"),
-        @UniqueConstraint(name = "username", columnNames = "username")
+        @UniqueConstraint(name = "username", columnNames = "username"),
+        @UniqueConstraint(name = "email_verification_code", columnNames = "email_verification_code_id")
 })
 @Getter
 @Setter
@@ -29,8 +31,8 @@ public class User extends BaseEntity {
     private Long id;
     @Column(name = "username")
     private String username;
-    @Column(name = "password")
-    private String password;
+    @Column(name = "password_hash")
+    private String passwordHash;
     @Column(name = "email")
     @Email(message = "Value is not a valid email")
     private String email;
@@ -46,9 +48,10 @@ public class User extends BaseEntity {
     private String profilePictureKey;
     @Column(name = "confirmed")
     private Boolean confirmed;
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
+    private EmailVerificationCode emailVerificationCode;
     @OneToMany(targetEntity = GroupRequest.class, mappedBy = "user")
     private List<GroupRequest> groupRequests;
-
     @ManyToMany(targetEntity = Group.class)
     @JoinTable(
             name = "user_group",

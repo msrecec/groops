@@ -1,4 +1,4 @@
-package hr.tvz.groops.utils;
+package hr.tvz.groops.util;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;

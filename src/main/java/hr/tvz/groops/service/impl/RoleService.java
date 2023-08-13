@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 import static hr.tvz.groops.constants.CrudExceptionEnum.ROLE_PERMISSION_NOT_FOUND_BY_ROLE_ID_AND_PERMISSION_ID;
 import static hr.tvz.groops.util.MapUtil.commandToEntity;
+import static hr.tvz.groops.util.TimeUtils.now;
 
 @Service
 public class RoleService implements Searchable {
@@ -52,7 +53,7 @@ public class RoleService implements Searchable {
     @Transactional
     public RoleDto create(RoleCommand command) {
         logger.debug("Creating role...");
-        Instant now = Instant.now();
+        Instant now = now();
         Role role = commandToEntity(command, new Role());
         role.setCreatedBy(authenticationService.getCurrentLoggedInUserUsername());
         role.setCreatedTs(now);
@@ -62,7 +63,7 @@ public class RoleService implements Searchable {
     @Transactional
     public void addPermissionToRole(Long roleId, Long permissionId) {
         logger.debug("Adding permission with id {} to role with id {}", permissionId, roleId);
-        Instant now = Instant.now();
+        Instant now = now();
         Role role = findRoleEntityById(roleId, roleRepository);
         Permission permission = findPermissionEntityById(permissionId, permissionRepository);
         RolePermissionId rolePermissionId = new RolePermissionId();
@@ -87,7 +88,7 @@ public class RoleService implements Searchable {
     @Transactional
     public RoleDto update(RoleCommand command, Long id) {
         logger.debug("Updating role by id {}", id);
-        Instant now = Instant.now();
+        Instant now = now();
         Role role = findRoleEntityById(id, roleRepository);
         commandToEntity(command, role);
         role.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());

@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static hr.tvz.groops.util.MapUtil.commandToEntity;
+import static hr.tvz.groops.util.TimeUtils.now;
 
 @Service
 public class PermissionService implements Searchable {
@@ -41,7 +42,7 @@ public class PermissionService implements Searchable {
     @Transactional
     public PermissionDto create(PermissionCommand command) {
         logger.debug("Creating permission...");
-        Instant now = Instant.now();
+        Instant now = now();
         Permission permission = commandToEntity(command, new Permission());
         permission.setCreatedBy(authenticationService.getCurrentLoggedInUserUsername());
         permission.setCreatedTs(now);
@@ -51,7 +52,7 @@ public class PermissionService implements Searchable {
     @Transactional
     public PermissionDto update(PermissionCommand command, Long id) {
         logger.debug("Updating permission by id {}", id);
-        Instant now = Instant.now();
+        Instant now = now();
         Permission permission = findPermissionEntityById(id, permissionRepository);
         commandToEntity(command, permission);
         permission.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());

@@ -1,6 +1,8 @@
 package hr.tvz.groops.controller;
 
 import hr.tvz.groops.command.crud.UserCommand;
+import hr.tvz.groops.command.crud.UserCreateCommand;
+import hr.tvz.groops.command.crud.UserUpdateCommand;
 import hr.tvz.groops.command.search.UserSearchCommand;
 import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.service.impl.UserService;
@@ -38,12 +40,12 @@ public class UserController extends ControllerBase {
     }
 
     @PostMapping("/register")
-    UserDto registerUser(@RequestBody @Valid UserCommand command) {
+    UserDto registerUser(@RequestBody @Valid UserCreateCommand command) {
         return userService.register(command);
     }
 
     @PutMapping("/{id}")
-    UserDto updateUser(@RequestBody @Valid UserCommand command, @PathVariable("id") Long id) {
+    UserDto updateUser(@RequestBody @Valid UserUpdateCommand command, @PathVariable("id") Long id) {
         return userService.update(id, command);
     }
 
