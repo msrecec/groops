@@ -1,16 +1,19 @@
 package hr.tvz.groops.event.notification.verification;
 
 import hr.tvz.groops.event.notification.NotificationEvent;
+import hr.tvz.groops.service.impl.VerificationVisitorService;
 
 public abstract class VerificationEvent extends NotificationEvent {
-    private final Long userId;
+    private final Long verificationId;
 
-    public VerificationEvent(Object source, Long userId) {
+    public VerificationEvent(Object source, Long verificationId) {
         super(source);
-        this.userId = userId;
+        this.verificationId = verificationId;
     }
 
+    public abstract void accept(VerificationVisitorService verificationVisitorService);
+
     public Long getUserId() {
-        return userId;
+        return verificationId;
     }
 }

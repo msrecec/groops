@@ -11,7 +11,7 @@ import javax.validation.constraints.NotBlank;
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class UserCreateCommand {
+public class UserCreateCommand extends UserCommand {
     @NotBlank(message = "password is required")
     private String password;
 }

@@ -6,9 +6,14 @@ import hr.tvz.groops.command.crud.UserUpdateCommand;
 import hr.tvz.groops.command.search.UserSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.dto.response.UserDto;
+import hr.tvz.groops.event.notification.verification.*;
 import hr.tvz.groops.exception.ExceptionEnum;
+import hr.tvz.groops.exception.InternalServerException;
+import hr.tvz.groops.model.PendingVerification;
 import hr.tvz.groops.model.QUser;
 import hr.tvz.groops.model.User;
+import hr.tvz.groops.model.constants.Constants;
+import hr.tvz.groops.model.enums.VerificationTypeEnum;
 import hr.tvz.groops.repository.*;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import hr.tvz.groops.service.Searchable;
@@ -22,12 +27,15 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.validation.Valid;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static hr.tvz.groops.util.TimeUtils.now;
@@ -38,6 +46,7 @@ public class UserService implements Searchable {
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final PendingVerificationRepository pendingVerificationRepository;
     private final VerificationPublisherService verificationPublisherService;
     private final AuthenticationService authenticationService;
 
@@ -45,11 +54,13 @@ public class UserService implements Searchable {
     public UserService(ModelMapper modelMapper,
                        PasswordEncoder passwordEncoder,
                        UserRepository userRepository,
+                       PendingVerificationRepository pendingVerificationRepository,
                        VerificationPublisherService verificationPublisherService,
                        AuthenticationService authenticationService) {
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
+        this.pendingVerificationRepository = pendingVerificationRepository;
         this.verificationPublisherService = verificationPublisherService;
         this.authenticationService = authenticationService;
     }
@@ -61,10 +72,10 @@ public class UserService implements Searchable {
         User user = modelMapper.map(command, User.class);
         user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
         validateUser(user);
-        user.setConfirmed(false);
+        user.setVerified(false);
         user.setCreatedTs(now);
         user.setCreatedBy(authenticationService.getCurrentLoggedInUserUsername());
-        verificationPublisherService.verifyEmail(user.getId(), now);
+        verificationPublisherService.verifyEmail(user, now, VerificationTypeEnum.MAIL);
         return modelMapper.map(userRepository.save(user), UserDto.class);
     }
 
@@ -76,15 +87,15 @@ public class UserService implements Searchable {
         modelMapper.map(command, user);
 
         if (command.getEmail().compareTo(user.getEmail()) != 0) {
-            user.setConfirmed(false);
-            verificationPublisherService.verifyEmail(user.getId(), now);
+            verificationPublisherService.verifyEmail(user, now, VerificationTypeEnum.MAIL_CHANGE);
         }
         if (command.getPassword() != null) {
             if (!SecurityUtil.isValidPassword(command.getPassword())) {
                 logger.debug(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getFullMessage());
                 throw new IllegalArgumentException(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getShortMessage());
             }
-            verificationPublisherService.verifyPasswordChange(user.getId());
+            user.setVerified(false);
+            verificationPublisherService.verifyPasswordChange(user, now);
         }
         user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         user.setModifiedTs(now());
@@ -133,13 +144,59 @@ public class UserService implements Searchable {
         QueryBuilderUtil.gte(builder, user.dateOfBirth, command.getDateOfBirthFrom());
         QueryBuilderUtil.lte(builder, user.dateOfBirth, command.getDateOfBirthTo());
         QueryBuilderUtil.like(builder, user.description, command.getDescription());
-        QueryBuilderUtil.equals(builder, user.confirmed, command.getConfirmed());
 
         return userRepository.findAll(builder.getValue() != null ? builder.getValue() : builder, pageable)
                 .map(u -> modelMapper.map(u, UserDto.class));
     }
 
-    @Transactional
+    @Transactional(timeout = Constants.DEFAULT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
+    public List<VerificationEvent> findNonVerifiedEmailUserEvents() {
+        List<VerificationEvent> verificationEvents = new ArrayList<>();
+        List<PendingVerification> pendingVerifications = pendingVerificationRepository.findAll();
+        for (PendingVerification pendingVerification : pendingVerifications) {
+            switch (pendingVerification.getVerificationType()) {
+                case PASSWORD_CHANGE:
+                    verificationEvents.add(new PasswordChangeVerificationEvent(this, pendingVerification.getId()));
+                    break;
+                case MAIL:
+                    verificationEvents.add(new MailCreateVerificationEvent(this, pendingVerification.getId()));
+                    break;
+                case MAIL_CHANGE:
+                    verificationEvents.add(new MailChangeVerificationEvent(this, pendingVerification.getId()));
+                    break;
+                default:
+                    throw new InternalServerException("Non supported verification type", new Throwable());
+            }
+        }
+        return verificationEvents;
+    }
+
+    @Transactional(timeout = Constants.SHORT_TIMEOUT)
+    public Long getIdOrCreateJobUserByName(String jobName, String jobMail, String jobDescription) {
+        return userRepository.findIdByUsername(jobName).orElseGet(getJobUserIdSupplier(jobName, jobMail, jobDescription));
+    }
+
+    private Supplier<Long> getJobUserIdSupplier(String jobName, String jobMail, String jobDescription) {
+        return () -> {
+            Instant now = now();
+            User user = User.builder()
+                    .username(jobName)
+                    .passwordHash("empty_hash")
+                    .email(jobMail)
+                    .firstName(jobName)
+                    .lastName(jobName)
+                    .dateOfBirth(new java.sql.Date(now.toEpochMilli()))
+                    .description(jobDescription)
+                    .verified(true)
+                    .createdBy(jobName)
+                    .createdTs(now)
+                    .build();
+            user = userRepository.saveAndFlush(user);
+            return user.getId();
+        };
+    }
+
+    @Transactional(timeout = Constants.DEFAULT_TIMEOUT)
     public void deleteCurrent() {
         logger.debug("Deleting current user...");
         GroopsUserDataToken token = authenticationService.getCurrentLoggedInUser();
@@ -147,7 +204,7 @@ public class UserService implements Searchable {
         userRepository.delete(user);
     }
 
-    @Transactional
+    @Transactional(timeout = Constants.DEFAULT_TIMEOUT)
     public void deleteById(Long id) {
         logger.debug("Deleting current user with id {}", id);
         User user = findUserEntityById(id, userRepository);

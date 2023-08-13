@@ -24,7 +24,7 @@ import java.util.List;
 import static hr.tvz.groops.util.TimeUtils.now;
 
 @Service
-public class MailService {
+public class MailCreatorService {
 
     private final MailRepository mailRepository;
     private final MailExceptionLogRepository mailExceptionLogRepository;
@@ -32,10 +32,10 @@ public class MailService {
     private final Long expiresDays;
 
     @Autowired
-    public MailService(MailRepository mailRepository,
-                       MailExceptionLogRepository mailExceptionLogRepository,
-                       MailMessageRepository mailMessageRepository,
-                       @Value("${plm.mail.expires.days}") Long expiresDays) {
+    public MailCreatorService(MailRepository mailRepository,
+                              MailExceptionLogRepository mailExceptionLogRepository,
+                              MailMessageRepository mailMessageRepository,
+                              @Value("${groops.mail.expires.days}") Long expiresDays) {
         this.mailRepository = mailRepository;
         this.mailExceptionLogRepository = mailExceptionLogRepository;
         this.mailMessageRepository = mailMessageRepository;

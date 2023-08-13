@@ -6,6 +6,7 @@ import hr.tvz.groops.command.search.PermissionSearchCommand;
 import hr.tvz.groops.dto.response.PermissionDto;
 import hr.tvz.groops.model.Permission;
 import hr.tvz.groops.model.QPermission;
+import hr.tvz.groops.model.constants.Constants;
 import hr.tvz.groops.repository.PermissionRepository;
 import hr.tvz.groops.service.Searchable;
 import hr.tvz.groops.util.QueryBuilderUtil;
@@ -39,7 +40,7 @@ public class PermissionService implements Searchable {
         this.authenticationService = authenticationService;
     }
 
-    @Transactional
+    @Transactional(timeout = Constants.DEFAULT_TIMEOUT)
     public PermissionDto create(PermissionCommand command) {
         logger.debug("Creating permission...");
         Instant now = now();
@@ -49,7 +50,7 @@ public class PermissionService implements Searchable {
         return modelMapper.map(permissionRepository.save(permission), PermissionDto.class);
     }
 
-    @Transactional
+    @Transactional(timeout = Constants.DEFAULT_TIMEOUT)
     public PermissionDto update(PermissionCommand command, Long id) {
         logger.debug("Updating permission by id {}", id);
         Instant now = now();
@@ -80,7 +81,7 @@ public class PermissionService implements Searchable {
                 .map(u -> modelMapper.map(u, PermissionDto.class));
     }
 
-    @Transactional
+    @Transactional(timeout = Constants.DEFAULT_TIMEOUT)
     public void deleteById(Long id) {
         logger.debug("Deleting permission by id {}", id);
         Permission permission = findPermissionEntityById(id, permissionRepository);

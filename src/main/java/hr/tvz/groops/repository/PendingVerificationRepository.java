@@ -1,10 +1,10 @@
 package hr.tvz.groops.repository;
 
-import hr.tvz.groops.model.DirectMessageLike;
+import hr.tvz.groops.model.PendingVerification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface DirectMessageLikeRepository extends JpaRepository<DirectMessageLike, Long>, QuerydslPredicateExecutor<DirectMessageLike> {
+public interface PendingVerificationRepository extends JpaRepository<PendingVerification, Long>, QuerydslPredicateExecutor<PendingVerification> {
 }

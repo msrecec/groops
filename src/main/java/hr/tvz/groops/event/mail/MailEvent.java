@@ -3,14 +3,26 @@ package hr.tvz.groops.event.mail;
 import org.springframework.context.ApplicationEvent;
 
 public class MailEvent extends ApplicationEvent {
-    private final Long mailId;
+    private final Long senderId;
+    private final Long recipientId;
+    private final Long mailMessageId;
 
-    public MailEvent(Object source, Long mailId) {
+    public MailEvent(Object source, Long senderId, Long recipientId, Long mailMessageId) {
         super(source);
-        this.mailId = mailId;
+        this.senderId = senderId;
+        this.recipientId = recipientId;
+        this.mailMessageId = mailMessageId;
     }
 
-    public Long getMailId() {
-        return mailId;
+    public Long getSenderId() {
+        return senderId;
+    }
+
+    public Long getRecipientId() {
+        return recipientId;
+    }
+
+    public Long getMailMessageId() {
+        return mailMessageId;
     }
 }

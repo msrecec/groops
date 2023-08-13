@@ -23,5 +23,4 @@ public class UserDto extends DtoBase {
     private Date dateOfBirth;
     private String description;
     private String profilePictureKey;
-    private Boolean confirmed;
 }

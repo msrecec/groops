@@ -10,8 +10,8 @@ public abstract class BaseJob implements Job {
         return JobUtils.getJobName(jobExecutionContext);
     }
 
-    protected String getStringValueByKey(JobExecutionContext jobExecutionContext, String key) {
-        return JobUtils.getStringValueByKey(jobExecutionContext, key);
+    protected Long getStringValueByKey(JobExecutionContext jobExecutionContext, String key) {
+        return JobUtils.getLongValueByKey(jobExecutionContext, key);
     }
 
     public abstract boolean isRunning();

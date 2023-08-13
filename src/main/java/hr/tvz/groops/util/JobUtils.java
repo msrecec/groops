@@ -7,8 +7,8 @@ public class JobUtils {
         return jobExecutionContext.getJobDetail().getKey().getName();
     }
 
-    public static String getStringValueByKey(JobExecutionContext jobExecutionContext, String key) {
-        return jobExecutionContext.getJobDetail().getJobDataMap().getString(key);
+    public static Long getLongValueByKey(JobExecutionContext jobExecutionContext, String key) {
+        return jobExecutionContext.getJobDetail().getJobDataMap().getLong(key);
     }
 
 }

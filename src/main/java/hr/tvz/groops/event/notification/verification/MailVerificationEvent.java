@@ -1,7 +1,7 @@
 package hr.tvz.groops.event.notification.verification;
 
-public class MailVerificationEvent extends VerificationEvent {
-    public MailVerificationEvent(Object source, Long userId) {
-        super(source, userId);
+public abstract class MailVerificationEvent extends VerificationEvent {
+    public MailVerificationEvent(Object source, Long verificationId) {
+        super(source, verificationId);
     }
 }

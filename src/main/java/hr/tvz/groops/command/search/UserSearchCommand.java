@@ -22,5 +22,4 @@ public class UserSearchCommand extends BaseEntitySearchCommand {
     private Optional<Date> dateOfBirthFrom;
     private Optional<Date> dateOfBirthTo;
     private Optional<String> description;
-    private Optional<Boolean> confirmed;
 }

@@ -1,15 +1,5 @@
 SET TIME ZONE 'UTC';
 
-CREATE TABLE "email_verification_code" (
-    "user_id" INTEGER NOT NULL,
-    "code" TEXT NOT NULL,
-    "created_by" CHARACTER VARYING(255) NOT NULL,
-    "modified_by" CHARACTER VARYING(255),
-    "created_ts" timestamp(0) with time zone NOT NULL,
-    "modified_ts" timestamp(0) WITH TIME ZONE,
-    CONSTRAINT email_verification_code_pkey PRIMARY KEY("id")
-);
-
 CREATE TABLE "user" (
     "id" SERIAL,
     "username" TEXT NOT NULL,
@@ -19,48 +9,43 @@ CREATE TABLE "user" (
     "last_name" TEXT NOT NULL,
     "date_of_birth" DATE NOT NULL,
     "description" TEXT DEFAULT NULL,
-    "profile_picture_key" INTEGER DEFAULT NULL,
-    "email_verification_code_id" INTEGER DEFAULT NULL,
-    "confirmed" BOOLEAN NOT NULL DEFAULT FALSE,
+    "profile_picture_key" TEXT DEFAULT NULL,
+    "verified" BOOLEAN NOT NULL DEFAULT FALSE,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
-    CONSTRAINT user_pkey PRIMARY KEY("id"),
-    FOREIGN KEY (email_verification_code_id) REFERENCES "email_verification_code"(id)
+    CONSTRAINT user_pkey PRIMARY KEY("id")
 );
 
-CREATE UNIQUE INDEX email_verification_code_id_un_idx on "user" ("email_verification_code_id");
-CREATE UNIQUE INDEX user_username_un_idx on "user" ("username");
 CREATE UNIQUE INDEX user_username_un_idx on "user" ("username");
 CREATE UNIQUE INDEX user_email_un_idx on "user"(LOWER("email"));
 
 -- todo add scheduler to delete all unconfirmed users 1 month after creation
 
-CREATE INDEX user_confirmed_idx ON "user"("confirmed") WHERE "confirmed" = FALSE;
-
-CREATE TABLE "changed_email" (
+CREATE TABLE "pending_verification" (
     "id" SERIAL,
-    "email" TEXT NOT NULL,
+    "verification_type" TEXT NOT NULL,
     "user_id" INTEGER NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
-    CONSTRAINT changed_email_pkey PRIMARY KEY("id"),
-    FOREIGN KEY (user_id) REFERENCES "changed_email"(id)
+    CONSTRAINT pending_verification_pkey PRIMARY KEY("id"),
+    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
-CREATE TABLE "changed_password" (
-    "id" SERIAL,
-    "password_hash" TEXT NOT NULL,
+CREATE UNIQUE INDEX user_username_un_idx on "verification" ("user_id", "verification_type");
+
+CREATE TABLE "email_verification_code" (
     "user_id" INTEGER NOT NULL,
+    "code" TEXT NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
     "modified_ts" timestamp(0) WITH TIME ZONE,
-    CONSTRAINT changed_password_pkey PRIMARY KEY("id"),
-    FOREIGN KEY (user_id) REFERENCES "changed_password"(id)
+    CONSTRAINT email_verification_code_pkey PRIMARY KEY("user_id"),
+    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
 CREATE TABLE "role" (
@@ -238,35 +223,6 @@ CREATE TABLE "comment" (
     FOREIGN KEY (post_id) REFERENCES "post"(id) ON DELETE CASCADE
 );
 
-CREATE TABLE "direct_message_like" (
-    "id" SERIAL,
-    "direct_message_id" INTEGER NOT NULL,
-    "user_id" INTEGER NOT NULL,
-    "created_by" CHARACTER VARYING(255) NOT NULL,
-    "modified_by" CHARACTER VARYING(255),
-    "created_ts" timestamp(0) with time zone NOT NULL,
-    "modified_ts" timestamp(0) WITH TIME ZONE,
-    CONSTRAINT direct_message_like_pkey PRIMARY KEY("direct_message_id", "user_id"),
-    FOREIGN KEY (direct_message_id) REFERENCES "direct_message"(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
-);
-
-CREATE UNIQUE INDEX direct_message_like_un_idx on "direct_message_like" ("direct_message_id", "user_id");
-
-CREATE TABLE "group_message_like" (
-    "group_message_id" INTEGER NOT NULL,
-    "user_id" INTEGER NOT NULL,
-    "created_by" CHARACTER VARYING(255) NOT NULL,
-    "modified_by" CHARACTER VARYING(255),
-    "created_ts" timestamp(0) with time zone NOT NULL,
-    "modified_ts" timestamp(0) WITH TIME ZONE,
-    CONSTRAINT group_message_like_pkey PRIMARY KEY("group_message_id", "user_id"),
-    FOREIGN KEY (group_message_id) REFERENCES "group_message"(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
-);
-
-CREATE UNIQUE INDEX group_message_like_un_idx on "group_message_like" ("group_message_id", "user_id");
-
 CREATE TABLE "post_like" (
     "post_id" INTEGER NOT NULL,
     "user_id" INTEGER NOT NULL,
@@ -281,7 +237,7 @@ CREATE TABLE "post_like" (
 
 CREATE UNIQUE INDEX post_like_un_idx on "post_like" ("post_id", "user_id");
 
-CREATE TABLE IF NOT EXISTS "mail_message" (
+CREATE TABLE "mail_message" (
     "id" SERIAL,
     "subject" TEXT,
     "message" TEXT,
@@ -292,7 +248,7 @@ CREATE TABLE IF NOT EXISTS "mail_message" (
     CONSTRAINT mail_message_pkey PRIMARY KEY(id)
 );
 
-CREATE TABLE IF NOT EXISTS "mail" (
+CREATE TABLE "mail" (
     "id" SERIAL,
     "recipient_id" INTEGER NOT NULL,
     "mail_message_id" INTEGER NOT NULL,
@@ -310,9 +266,9 @@ CREATE TABLE IF NOT EXISTS "mail" (
 );
 
 CREATE UNIQUE INDEX mail_mail_message_recipient_sender_un ON "mail"("mail_message_id", "recipient_id", "sender_id");
-CREATE INDEX IF NOT EXISTS mail_mail_status_idx ON "mail"("mail_status");
+CREATE INDEX mail_mail_status_idx ON "mail"("mail_status");
 
-CREATE TABLE IF NOT EXISTS "mail_exception_log" (
+CREATE TABLE "mail_exception_log" (
     "mail_id" INTEGER,
     "message" TEXT,
     "stack_trace" TEXT,

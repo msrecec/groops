@@ -46,8 +46,8 @@ public class User extends BaseEntity {
     private String description;
     @Column(name = "profile_picture_key")
     private String profilePictureKey;
-    @Column(name = "confirmed")
-    private Boolean confirmed;
+    @Column(name = "verified")
+    private Boolean verified;
     @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
     private EmailVerificationCode emailVerificationCode;
     @OneToMany(targetEntity = GroupRequest.class, mappedBy = "user")
@@ -63,6 +63,8 @@ public class User extends BaseEntity {
     private List<FriendRequest> sentFriendRequests;
     @OneToMany(targetEntity = FriendRequest.class, mappedBy = "recipient")
     private List<FriendRequest> receivedFriendRequests;
+    @OneToMany(targetEntity = PendingVerification.class, mappedBy = "user")
+    private List<PendingVerification> pendingVerifications;
 
     @ManyToMany(targetEntity = User.class)
     @JoinTable(
@@ -89,10 +91,6 @@ public class User extends BaseEntity {
     private List<Post> posts;
     @OneToMany(targetEntity = Comment.class, mappedBy = "user")
     private List<Comment> comments;
-    @OneToMany(targetEntity = DirectMessageLike.class, mappedBy = "user")
-    private List<DirectMessageLike> directMessageLikes;
-    @OneToMany(targetEntity = GroupMessageLike.class, mappedBy = "user")
-    private List<GroupMessageLike> groupMessageLikes;
     @OneToMany(targetEntity = PostLike.class, mappedBy = "user")
     private List<PostLike> postLikes;
 }
