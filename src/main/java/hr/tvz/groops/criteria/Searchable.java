@@ -1,4 +1,4 @@
-package hr.tvz.groops.service;
+package hr.tvz.groops.criteria;
 
 import hr.tvz.groops.model.Permission;
 import hr.tvz.groops.model.Role;

@@ -1,11 +1,11 @@
-package hr.tvz.groops.service.impl;
+package hr.tvz.groops.service.mail;
 
 import hr.tvz.groops.event.mail.MailEvent;
 import hr.tvz.groops.model.Mail;
 import hr.tvz.groops.model.constants.Constants;
 import hr.tvz.groops.model.enums.MailStatusEnum;
 import hr.tvz.groops.repository.MailRepository;
-import hr.tvz.groops.service.MailClientService;
+import hr.tvz.groops.service.AuthenticationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -3,7 +3,7 @@ package hr.tvz.groops.controller;
 import hr.tvz.groops.command.crud.PermissionCommand;
 import hr.tvz.groops.command.search.PermissionSearchCommand;
 import hr.tvz.groops.dto.response.PermissionDto;
-import hr.tvz.groops.service.impl.PermissionService;
+import hr.tvz.groops.service.PermissionService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;

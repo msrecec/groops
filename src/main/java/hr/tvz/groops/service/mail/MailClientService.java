@@ -1,4 +1,4 @@
-package hr.tvz.groops.service;
+package hr.tvz.groops.service.mail;
 
 import javax.mail.MessagingException;
 

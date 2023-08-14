@@ -1,4 +1,4 @@
-package hr.tvz.groops.service.impl;
+package hr.tvz.groops.service;
 
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import org.jetbrains.annotations.NotNull;

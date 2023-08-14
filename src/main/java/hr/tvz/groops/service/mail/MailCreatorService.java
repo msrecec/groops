@@ -1,4 +1,4 @@
-package hr.tvz.groops.service.impl;
+package hr.tvz.groops.service.mail;
 
 import hr.tvz.groops.model.Mail;
 import hr.tvz.groops.model.MailExceptionLog;

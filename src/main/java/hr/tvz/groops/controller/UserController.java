@@ -1,11 +1,10 @@
 package hr.tvz.groops.controller;
 
-import hr.tvz.groops.command.crud.UserCommand;
 import hr.tvz.groops.command.crud.UserCreateCommand;
 import hr.tvz.groops.command.crud.UserUpdateCommand;
 import hr.tvz.groops.command.search.UserSearchCommand;
 import hr.tvz.groops.dto.response.UserDto;
-import hr.tvz.groops.service.impl.UserService;
+import hr.tvz.groops.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;

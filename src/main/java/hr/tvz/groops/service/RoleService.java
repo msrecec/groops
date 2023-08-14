@@ -1,8 +1,9 @@
-package hr.tvz.groops.service.impl;
+package hr.tvz.groops.service;
 
 import com.querydsl.core.BooleanBuilder;
 import hr.tvz.groops.command.crud.RoleCommand;
 import hr.tvz.groops.command.search.RoleSearchCommand;
+import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.RoleDto;
 import hr.tvz.groops.model.Permission;
 import hr.tvz.groops.model.QRole;
@@ -13,7 +14,6 @@ import hr.tvz.groops.model.pk.RolePermissionId;
 import hr.tvz.groops.repository.PermissionRepository;
 import hr.tvz.groops.repository.RolePermissionRepository;
 import hr.tvz.groops.repository.RoleRepository;
-import hr.tvz.groops.service.Searchable;
 import hr.tvz.groops.util.QueryBuilderUtil;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;

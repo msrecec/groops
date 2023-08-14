@@ -1,6 +1,6 @@
 package hr.tvz.groops.event.notification.verification;
 
-import hr.tvz.groops.service.impl.VerificationVisitorService;
+import hr.tvz.groops.service.verification.VerificationVisitorService;
 
 public class PasswordChangeVerificationEvent extends VerificationEvent {
     public PasswordChangeVerificationEvent(Object source, Long verificationId) {

@@ -1,4 +1,4 @@
-package hr.tvz.groops.service.impl;
+package hr.tvz.groops.service.verification;
 
 import hr.tvz.groops.event.notification.verification.MailChangeVerificationEvent;
 import hr.tvz.groops.event.notification.verification.MailVerificationEvent;

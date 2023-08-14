@@ -1,10 +1,11 @@
-package hr.tvz.groops.service.impl;
+package hr.tvz.groops.service;
 
 import com.querydsl.core.BooleanBuilder;
 import hr.tvz.groops.command.crud.UserCreateCommand;
 import hr.tvz.groops.command.crud.UserUpdateCommand;
 import hr.tvz.groops.command.search.UserSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
+import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.event.notification.verification.*;
 import hr.tvz.groops.exception.ExceptionEnum;
@@ -16,7 +17,7 @@ import hr.tvz.groops.model.constants.Constants;
 import hr.tvz.groops.model.enums.VerificationTypeEnum;
 import hr.tvz.groops.repository.*;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
-import hr.tvz.groops.service.Searchable;
+import hr.tvz.groops.service.verification.VerificationPublisherService;
 import hr.tvz.groops.util.QueryBuilderUtil;
 import hr.tvz.groops.util.SecurityUtil;
 import org.modelmapper.ModelMapper;

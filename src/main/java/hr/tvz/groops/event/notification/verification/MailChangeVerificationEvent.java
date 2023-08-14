@@ -1,6 +1,6 @@
 package hr.tvz.groops.event.notification.verification;
 
-import hr.tvz.groops.service.impl.VerificationVisitorService;
+import hr.tvz.groops.service.verification.VerificationVisitorService;
 
 public class MailChangeVerificationEvent extends MailVerificationEvent {
     public MailChangeVerificationEvent(Object source, Long verificationId) {

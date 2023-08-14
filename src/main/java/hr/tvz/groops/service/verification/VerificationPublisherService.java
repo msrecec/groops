@@ -1,4 +1,4 @@
-package hr.tvz.groops.service.impl;
+package hr.tvz.groops.service.verification;
 
 import hr.tvz.groops.event.notification.verification.MailChangeVerificationEvent;
 import hr.tvz.groops.event.notification.verification.MailCreateVerificationEvent;
@@ -11,6 +11,7 @@ import hr.tvz.groops.model.constants.Constants;
 import hr.tvz.groops.model.enums.VerificationTypeEnum;
 import hr.tvz.groops.repository.EmailVerificationCodeRepository;
 import hr.tvz.groops.repository.PendingVerificationRepository;
+import hr.tvz.groops.service.AuthenticationService;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;

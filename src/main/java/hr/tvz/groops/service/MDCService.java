@@ -1,4 +1,4 @@
-package hr.tvz.groops.service.impl;
+package hr.tvz.groops.service;
 
 
 import org.slf4j.MDC;

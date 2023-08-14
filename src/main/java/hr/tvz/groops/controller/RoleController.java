@@ -3,7 +3,7 @@ package hr.tvz.groops.controller;
 import hr.tvz.groops.command.crud.RoleCommand;
 import hr.tvz.groops.command.search.RoleSearchCommand;
 import hr.tvz.groops.dto.response.RoleDto;
-import hr.tvz.groops.service.impl.RoleService;
+import hr.tvz.groops.service.RoleService;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;

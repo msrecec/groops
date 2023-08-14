@@ -1,6 +1,5 @@
-package hr.tvz.groops.service.impl;
+package hr.tvz.groops.service.mail;
 
-import hr.tvz.groops.service.MailClientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;

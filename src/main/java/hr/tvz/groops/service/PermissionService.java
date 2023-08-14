@@ -1,14 +1,14 @@
-package hr.tvz.groops.service.impl;
+package hr.tvz.groops.service;
 
 import com.querydsl.core.BooleanBuilder;
 import hr.tvz.groops.command.crud.PermissionCommand;
 import hr.tvz.groops.command.search.PermissionSearchCommand;
+import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.PermissionDto;
 import hr.tvz.groops.model.Permission;
 import hr.tvz.groops.model.QPermission;
 import hr.tvz.groops.model.constants.Constants;
 import hr.tvz.groops.repository.PermissionRepository;
-import hr.tvz.groops.service.Searchable;
 import hr.tvz.groops.util.QueryBuilderUtil;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
