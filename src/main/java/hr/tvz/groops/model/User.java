@@ -48,8 +48,6 @@ public class User extends BaseEntity {
     private String profilePictureKey;
     @Column(name = "verified")
     private Boolean verified;
-    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.REMOVE}, orphanRemoval = true)
-    private EmailVerificationCode emailVerificationCode;
     @OneToMany(targetEntity = GroupRequest.class, mappedBy = "user")
     private List<GroupRequest> groupRequests;
     @ManyToMany(targetEntity = Group.class)

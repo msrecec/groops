@@ -7,15 +7,18 @@ import hr.tvz.groops.command.search.UserSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.UserDto;
-import hr.tvz.groops.event.notification.verification.*;
+import hr.tvz.groops.event.notification.verification.MailChangeVerificationEvent;
+import hr.tvz.groops.event.notification.verification.MailCreateVerificationEvent;
+import hr.tvz.groops.event.notification.verification.PasswordChangeVerificationEvent;
+import hr.tvz.groops.event.notification.verification.VerificationEvent;
 import hr.tvz.groops.exception.ExceptionEnum;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.PendingVerification;
 import hr.tvz.groops.model.QUser;
 import hr.tvz.groops.model.User;
 import hr.tvz.groops.model.constants.Constants;
-import hr.tvz.groops.model.enums.VerificationTypeEnum;
-import hr.tvz.groops.repository.*;
+import hr.tvz.groops.repository.PendingVerificationRepository;
+import hr.tvz.groops.repository.UserRepository;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import hr.tvz.groops.service.verification.VerificationPublisherService;
 import hr.tvz.groops.util.QueryBuilderUtil;
@@ -76,9 +79,11 @@ public class UserService implements Searchable {
         user.setVerified(false);
         user.setCreatedTs(now);
         user.setCreatedBy(authenticationService.getCurrentLoggedInUserUsername());
-        verificationPublisherService.verifyEmail(user, now, VerificationTypeEnum.MAIL);
+        verificationPublisherService.verifyEmailCreate(user, now);
         return modelMapper.map(userRepository.save(user), UserDto.class);
     }
+
+    // todo add resend verification token for mail, change mail and change password
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT)
     public UserDto update(Long id, @Valid UserUpdateCommand command) {
@@ -88,7 +93,7 @@ public class UserService implements Searchable {
         modelMapper.map(command, user);
 
         if (command.getEmail().compareTo(user.getEmail()) != 0) {
-            verificationPublisherService.verifyEmail(user, now, VerificationTypeEnum.MAIL_CHANGE);
+            verificationPublisherService.verifyEmailChange(user, now);
         }
         if (command.getPassword() != null) {
             if (!SecurityUtil.isValidPassword(command.getPassword())) {
@@ -159,7 +164,7 @@ public class UserService implements Searchable {
                 case PASSWORD_CHANGE:
                     verificationEvents.add(new PasswordChangeVerificationEvent(this, pendingVerification.getId()));
                     break;
-                case MAIL:
+                case MAIL_CREATE:
                     verificationEvents.add(new MailCreateVerificationEvent(this, pendingVerification.getId()));
                     break;
                 case MAIL_CHANGE:

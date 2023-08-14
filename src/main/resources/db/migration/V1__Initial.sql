@@ -35,18 +35,7 @@ CREATE TABLE "pending_verification" (
     FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX user_username_un_idx on "verification" ("user_id", "verification_type");
-
-CREATE TABLE "email_verification_code" (
-    "user_id" INTEGER NOT NULL,
-    "code" TEXT NOT NULL,
-    "created_by" CHARACTER VARYING(255) NOT NULL,
-    "modified_by" CHARACTER VARYING(255),
-    "created_ts" timestamp(0) with time zone NOT NULL,
-    "modified_ts" timestamp(0) WITH TIME ZONE,
-    CONSTRAINT email_verification_code_pkey PRIMARY KEY("user_id"),
-    FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
-);
+CREATE UNIQUE INDEX user_username_un_idx on "pending_verification" ("user_id", "verification_type");
 
 CREATE TABLE "role" (
     "id" SERIAL,

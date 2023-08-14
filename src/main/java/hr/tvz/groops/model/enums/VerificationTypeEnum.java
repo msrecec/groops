@@ -1,5 +1,5 @@
 package hr.tvz.groops.model.enums;
 
 public enum VerificationTypeEnum {
-    MAIL, MAIL_CHANGE, PASSWORD_CHANGE
+    MAIL_CREATE, MAIL_CHANGE, PASSWORD_CHANGE
 }
