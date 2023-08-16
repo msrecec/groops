@@ -84,7 +84,12 @@ public abstract class JWTService implements TokenService {
 
     @Override
     public @Nullable String getTokenFromRequest(@NotNull HttpServletRequest httpServletRequest) {
-        return getTokenFromRequestHeader(httpServletRequest);
+        String token = getTokenFromRequestHeader(httpServletRequest);
+        if (token != null) {
+            return token;
+        }
+        String tokenB64 = getTokenFromRequestParameter(httpServletRequest);
+        return tokenB64 != null ? getFromBase64(tokenB64) : null;
     }
 
     @Nullable
@@ -110,9 +115,16 @@ public abstract class JWTService implements TokenService {
     }
 
 
+    @Override
     @Nullable
-    protected String getTokenFromRequestHeader(@NotNull HttpServletRequest httpServletRequest) {
+    public String getTokenFromRequestHeader(@NotNull HttpServletRequest httpServletRequest) {
         return httpServletRequest.getHeader(this.jwtConfig.getHeaderName());
+    }
+
+    @Override
+    @Nullable
+    public String getTokenFromRequestParameter(@NotNull HttpServletRequest httpServletRequest) {
+        return httpServletRequest.getHeader(this.jwtConfig.getParameterName());
     }
 
     private String getFromBase64(String value) {

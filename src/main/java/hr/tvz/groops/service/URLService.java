@@ -22,7 +22,7 @@ public class URLService {
     @Autowired
     public URLService(Environment environment,
                           @Value("${server.servlet.contextPath}") String contextPath,
-                          @Value("${plm.hostname.base.default}") String hostnameBase,
+                          @Value("${groops.hostname.base.default}") String hostnameBase,
                           @Value("${server.port}") String serverPort) {
         this.environment = environment;
         this.contextPath = contextPath;

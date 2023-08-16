@@ -8,46 +8,70 @@ import hr.tvz.groops.event.notification.verification.PasswordChangeVerificationE
 import hr.tvz.groops.model.User;
 import hr.tvz.groops.repository.UserRepository;
 import hr.tvz.groops.security.constants.RoleConstants;
+import hr.tvz.groops.service.AuthenticationService;
+import hr.tvz.groops.service.URLService;
+import hr.tvz.groops.service.mail.MailCreatorService;
 import hr.tvz.groops.service.token.JWTService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
+import static hr.tvz.groops.util.TimeUtils.now;
 
 @Service
 public class VerificationVisitorService implements Searchable {
     private final JWTService mailChangeJWTService;
     private final JWTService mailCreateJWTService;
     private final JWTService passwordChangeJWTService;
+    private final MailCreatorService mailCreatorService;
+    private final AuthenticationService authenticationService;
+    private final URLService urlService;
     private final UserRepository userRepository;
 
     @Autowired
     public VerificationVisitorService(JWTService mailChangeJWTService,
                                       JWTService mailCreateJWTService,
                                       JWTService passwordChangeJWTService,
+                                      MailCreatorService mailCreatorService,
+                                      AuthenticationService authenticationService,
+                                      URLService urlService,
                                       UserRepository userRepository) {
         this.mailChangeJWTService = mailChangeJWTService;
         this.mailCreateJWTService = mailCreateJWTService;
         this.passwordChangeJWTService = passwordChangeJWTService;
+        this.mailCreatorService = mailCreatorService;
+        this.authenticationService = authenticationService;
+        this.urlService = urlService;
         this.userRepository = userRepository;
     }
 
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void visitMailCreateVerification(MailVerificationEvent mailVerificationEvent) {
-        User user = findUserEntityById(mailVerificationEvent.getUserId(), userRepository);
-        mailCreateJWTService.generateToken(user.getUsername(), user.getEmail(), List.of(RoleConstants.ROLE_MAIL_CREATE));
+        User recipient = findUserEntityById(mailVerificationEvent.getUserId(), userRepository);
+        String tokenB64 = mailCreateJWTService.generateTokenBase64(recipient.getUsername(), recipient.getEmail(), RoleConstants.ROLE_MAIL_CREATE);
+        String baseURL = urlService.getApplicationBaseURL() + "?=" + tokenB64;
+        String currentUser = authenticationService.getCurrentLoggedInUserUsername();
+        User sender = findUserEntityByUsername(currentUser, userRepository);
+        mailCreatorService.createAndPublishMails(sender, "confirm email", baseURL, baseURL, currentUser, now(), recipient);
     }
 
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void visitMailChangeVerification(MailChangeVerificationEvent mailChangeVerificationEvent) {
-        User user = findUserEntityById(mailChangeVerificationEvent.getUserId(), userRepository);
-        mailChangeJWTService.generateToken(user.getUsername(), user.getEmail(), List.of(RoleConstants.ROLE_MAIL_CREATE));
+        User recipient = findUserEntityById(mailChangeVerificationEvent.getUserId(), userRepository);
+        String tokenB64 = mailChangeJWTService.generateTokenBase64(recipient.getUsername(), recipient.getEmail(), RoleConstants.ROLE_MAIL_CHANGE);
+        String baseURL = urlService.getApplicationBaseURL() + "?=" + tokenB64;
+        String currentUser = authenticationService.getCurrentLoggedInUserUsername();
+        User sender = findUserEntityByUsername(currentUser, userRepository);
+        mailCreatorService.createAndPublishMails(sender, "confirm email", baseURL, baseURL, currentUser, now(), recipient);
     }
 
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void visitPasswordVerification(PasswordChangeVerificationEvent passwordChangeVerificationEvent) {
-        User user = findUserEntityById(passwordChangeVerificationEvent.getUserId(), userRepository);
-        passwordChangeJWTService.generateToken(user.getUsername(), user.getEmail(), List.of(RoleConstants.ROLE_MAIL_CREATE));
+        User recipient = findUserEntityById(passwordChangeVerificationEvent.getUserId(), userRepository);
+        String tokenB64 = passwordChangeJWTService.generateTokenBase64(recipient.getUsername(), recipient.getEmail(), RoleConstants.ROLE_PASSWORD_CHANGE);
+        String baseURL = urlService.getApplicationBaseURL() + "?=" + tokenB64;
+        String currentUser = authenticationService.getCurrentLoggedInUserUsername();
+        User sender = findUserEntityByUsername(currentUser, userRepository);
+        mailCreatorService.createAndPublishMails(sender, "confirm email", baseURL, baseURL, currentUser, now(), recipient);
     }
 }

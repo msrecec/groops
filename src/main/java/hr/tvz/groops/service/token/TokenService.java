@@ -21,6 +21,10 @@ public interface TokenService {
     @Nullable
     String getTokenFromRequest(@NotNull HttpServletRequest httpServletRequest);
 
+    String getTokenFromRequestParameter(@NotNull HttpServletRequest httpServletRequest);
+
+    String getTokenFromRequestHeader(@NotNull HttpServletRequest httpServletRequest);
+
     boolean requestTokenHasInvalidFormat(@NotNull String requestToken);
 
     @Nullable
