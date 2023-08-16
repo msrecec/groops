@@ -41,12 +41,24 @@ public class TemplateController extends ControllerBase {
     @GetMapping("/mail/create")
     @PreAuthorize("hasAuthority('" + RoleConstants.ROLE_MAIL_CREATE + "')")
     String mailCreateView(HttpServletRequest request, HttpServletResponse response, Model model) {
-        String token = mailCreateJWTService.getTokenFromRequest(request);
-        if (token == null) {
-            throw new IllegalArgumentException("Can't confirm email due to missing token");
-        }
         userService.confirmEmailCreate();
         return "confirmed email";
     }
+
+    @GetMapping("/mail/change")
+    @PreAuthorize("hasAuthority('" + RoleConstants.ROLE_MAIL_CREATE + "')")
+    String mailChangeView(HttpServletRequest request, HttpServletResponse response, Model model) {
+        userService.confirmEmailChange();
+        return "confirmed email change";
+    }
+
+    @GetMapping("/password/change")
+    @PreAuthorize("hasAuthority('" + RoleConstants.ROLE_MAIL_CREATE + "')")
+    String passwordChangeView(HttpServletRequest request, HttpServletResponse response, Model model) {
+        userService.confirmPasswordChange();
+        return "confirmed password change";
+    }
+
+    // todo add password reset
 
 }

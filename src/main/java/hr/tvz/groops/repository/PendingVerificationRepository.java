@@ -18,4 +18,6 @@ public interface PendingVerificationRepository extends JpaRepository<PendingVeri
 
     @Query("SELECT pv.id FROM PendingVerification pv WHERE pv.user = :user")
     List<Long> findIdsByUser(@Param("user") User user);
+
+    List<PendingVerification> findByUser(User user);
 }

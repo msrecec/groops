@@ -1,10 +1,11 @@
 package hr.tvz.groops.event.notification.verification;
 
 import hr.tvz.groops.service.verification.VerificationVisitorService;
+import org.jetbrains.annotations.NotNull;
 
 public class PasswordChangeVerificationEvent extends VerificationEvent {
-    public PasswordChangeVerificationEvent(Object source, Long verificationId) {
-        super(source, verificationId);
+    public PasswordChangeVerificationEvent(Object source, @NotNull Long verificationId, @NotNull Long userId) {
+        super(source, verificationId, userId);
     }
 
     @Override

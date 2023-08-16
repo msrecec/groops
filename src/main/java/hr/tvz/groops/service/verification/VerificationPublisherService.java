@@ -51,7 +51,7 @@ public class VerificationPublisherService {
                 .createdTs(now)
                 .build();
         pendingVerification = pendingVerificationRepository.saveAndFlush(pendingVerification);
-        sendEmailCreateVerificationEventAfterSuccessfulCommit(pendingVerification.getId());
+        sendEmailCreateVerificationEventAfterSuccessfulCommit(pendingVerification.getId(), pendingVerification.getUser().getId());
     }
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
@@ -71,7 +71,7 @@ public class VerificationPublisherService {
                 .createdTs(now)
                 .build();
         pendingVerification = pendingVerificationRepository.saveAndFlush(pendingVerification);
-        sendEmailChangeVerificationEventAfterSuccessfulCommit(pendingVerification.getId());
+        sendEmailChangeVerificationEventAfterSuccessfulCommit(pendingVerification.getId(), pendingVerification.getUser().getId());
     }
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
@@ -84,32 +84,32 @@ public class VerificationPublisherService {
                 .createdTs(now)
                 .build();
         pendingVerification = pendingVerificationRepository.saveAndFlush(pendingVerification);
-        sendPasswordVerificationEventAfterSuccessfulCommit(pendingVerification.getId());
+        sendPasswordVerificationEventAfterSuccessfulCommit(pendingVerification.getId(), pendingVerification.getUser().getId());
     }
 
-    private void sendEmailCreateVerificationEventAfterSuccessfulCommit(@NotNull Long pendingVerificationId) {
+    private void sendEmailCreateVerificationEventAfterSuccessfulCommit(@NotNull Long pendingVerificationId, @NotNull Long userId) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                applicationEventPublisher.publishEvent(new MailCreateVerificationEvent(this, pendingVerificationId));
+                applicationEventPublisher.publishEvent(new MailCreateVerificationEvent(this, pendingVerificationId, userId));
             }
         });
     }
 
-    private void sendEmailChangeVerificationEventAfterSuccessfulCommit(@NotNull Long pendingVerificationId) {
+    private void sendEmailChangeVerificationEventAfterSuccessfulCommit(@NotNull Long pendingVerificationId, @NotNull Long userId) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                applicationEventPublisher.publishEvent(new MailChangeVerificationEvent(this, pendingVerificationId));
+                applicationEventPublisher.publishEvent(new MailChangeVerificationEvent(this, pendingVerificationId, userId));
             }
         });
     }
 
-    private void sendPasswordVerificationEventAfterSuccessfulCommit(@NotNull Long pendingVerificationId) {
+    private void sendPasswordVerificationEventAfterSuccessfulCommit(@NotNull Long pendingVerificationId, @NotNull Long userId) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCommit() {
-                applicationEventPublisher.publishEvent(new PasswordChangeVerificationEvent(this, pendingVerificationId));
+                applicationEventPublisher.publishEvent(new PasswordChangeVerificationEvent(this, pendingVerificationId, userId));
             }
         });
     }

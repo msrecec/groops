@@ -26,7 +26,12 @@ public interface UserRepository extends JpaRepository<User, Long>, QuerydslPredi
     @Query(value = "SELECT u.id FROM User u WHERE u.username = :username")
     Optional<Long> findIdByUsernameLockByPessimisticWrite(@Param("username") String username);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @QueryHints({@QueryHint(name = "javax.persistence.query.timeout", value = SHORT_TIMEOUT_MS)})
+    @Query(value = "SELECT u FROM User u WHERE u.username=:username")
     Optional<User> findByUsernameLockByPessimisticWrite(String username);
+
+    Optional<User> findByUsername(String username);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({@QueryHint(name = "javax.persistence.query.timeout", value = SHORT_TIMEOUT_MS)})
