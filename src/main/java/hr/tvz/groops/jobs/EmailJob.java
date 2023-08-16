@@ -31,6 +31,7 @@ public class EmailJob extends BaseJob implements ApplicationListener<MailEvent>,
 
     private static final Logger logger = LoggerFactory.getLogger(EmailJob.class);
     public static final String EMAIL_SCHEDULER_JOB_IDENTITY = "emailJob";
+    public static final String EMAIL_SCHEDULER_JOB_DESCRIPTION = "Email job";
     private final BlockingQueue<MailEvent> mailQueue = new LinkedBlockingQueue<>();
     private final MailJobService emailJobService;
     private final MailCreatorService mailCreatorService;

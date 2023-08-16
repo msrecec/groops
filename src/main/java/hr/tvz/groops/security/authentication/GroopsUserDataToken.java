@@ -9,6 +9,7 @@ import java.util.Collection;
 
 @Getter
 public class GroopsUserDataToken extends UsernamePasswordAuthenticationToken {
+    @NotNull
     private final String username;
     @NotNull
     private final String email;

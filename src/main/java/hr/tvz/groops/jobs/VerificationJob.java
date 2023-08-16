@@ -26,6 +26,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class VerificationJob extends BaseJob implements ApplicationListener<VerificationEvent>, InitializingBean {
     private static final Logger logger = LoggerFactory.getLogger(VerificationJob.class);
     public static final String VERIFICATION_SCHEDULER_JOB_IDENTITY = "verificationJob";
+    public static final String VERIFICATION_SCHEDULER_JOB_DESCRIPTION = "Verification job";
     private final BlockingQueue<VerificationEvent> verificationEventQueue = new LinkedBlockingQueue<>();
     private final VerificationVisitorService verificationVisitorService;
     private final UserService userService;
