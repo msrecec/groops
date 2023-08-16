@@ -1,11 +1,11 @@
 package hr.tvz.groops.service.verification;
 
+import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.event.notification.verification.MailChangeVerificationEvent;
 import hr.tvz.groops.event.notification.verification.MailCreateVerificationEvent;
 import hr.tvz.groops.event.notification.verification.PasswordChangeVerificationEvent;
 import hr.tvz.groops.model.PendingVerification;
 import hr.tvz.groops.model.User;
-import hr.tvz.groops.model.constants.TimeoutConstants;
 import hr.tvz.groops.model.enums.VerificationTypeEnum;
 import hr.tvz.groops.repository.PendingVerificationRepository;
 import hr.tvz.groops.service.AuthenticationService;

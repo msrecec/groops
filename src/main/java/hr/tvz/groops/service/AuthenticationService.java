@@ -1,6 +1,7 @@
 package hr.tvz.groops.service;
 
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
+import hr.tvz.groops.util.SecurityUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,8 +27,12 @@ public class AuthenticationService {
 
     @NotNull
     public String getCurrentLoggedInUserUsername() {
-//        return SecurityUtil.getCurrentLoggedInUserUsername();
-        return "test";
+        return SecurityUtil.getCurrentLoggedInUserUsername();
+    }
+
+    @NotNull
+    public String getCurrentLoggedInUserEmail() {
+        return SecurityUtil.getCurrentLoggedInUserEmail();
     }
 
     public boolean andMatchesAny(HttpServletRequest request) {
@@ -47,7 +52,7 @@ public class AuthenticationService {
     public GroopsUserDataToken getCurrentLoggedInUser() {
 //        return SecurityUtil.getCurrentLoggedInUser();
         Set<String> rolesAndPermissions = new HashSet<>();
-        return new GroopsUserDataToken("test", null, getRoles(rolesAndPermissions), 1L, "test@mail.com");
+        return new GroopsUserDataToken("test", null, getRoles(rolesAndPermissions), "test@mail.com");
     }
 
     private Set<SimpleGrantedAuthority> getRoles(Collection<String> roles) {

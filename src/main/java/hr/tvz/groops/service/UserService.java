@@ -4,6 +4,7 @@ import com.querydsl.core.BooleanBuilder;
 import hr.tvz.groops.command.crud.UserCreateCommand;
 import hr.tvz.groops.command.crud.UserUpdateCommand;
 import hr.tvz.groops.command.search.UserSearchCommand;
+import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.event.notification.verification.MailChangeVerificationEvent;
@@ -15,7 +16,6 @@ import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.PendingVerification;
 import hr.tvz.groops.model.QUser;
 import hr.tvz.groops.model.User;
-import hr.tvz.groops.model.constants.TimeoutConstants;
 import hr.tvz.groops.repository.PendingVerificationRepository;
 import hr.tvz.groops.repository.UserRepository;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
@@ -88,7 +88,7 @@ public class UserService implements Searchable {
     public UserDto update(Long id, @Valid UserUpdateCommand command) {
         logger.debug("Updating user...");
         Instant now = now();
-        User user = findUserEntityById(id, userRepository);
+        User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
         modelMapper.map(command, user);
 
         if (command.getEmail().compareTo(user.getEmail()) != 0) {
@@ -107,6 +107,27 @@ public class UserService implements Searchable {
         return modelMapper.map(userRepository.save(user), UserDto.class);
     }
 
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public void confirmEmailCreate() {
+        User user = findUserEntityByUsername(authenticationService.getCurrentLoggedInUserUsername(), userRepository);
+        pendingVerificationRepository.findIdsByUser(user);
+        String newEmail = authenticationService.getCurrentLoggedInUserEmail();
+        user.setEmail(newEmail);
+        user.setModifiedTs(now());
+        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
+        userRepository.save(user);
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public void confirmEmailChange() {
+        User user = findUserEntityByUsername(authenticationService.getCurrentLoggedInUserUsername(), userRepository);
+        String newEmail = authenticationService.getCurrentLoggedInUserEmail();
+        user.setEmail(newEmail);
+        user.setModifiedTs(now());
+        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
+        userRepository.save(user);
+    }
+
     private void validateUser(User user) {
         if (SecurityUtil.isValidPassword(user.getPasswordHash())) {
             logger.debug(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getFullMessage());
@@ -120,7 +141,7 @@ public class UserService implements Searchable {
 
     public UserDto findById(Long id) {
         logger.debug("Fetching user with id {} ...", id);
-        User user = findUserEntityById(id, userRepository);
+        User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
         return modelMapper.map(user, UserDto.class);
     }
 
@@ -157,6 +178,7 @@ public class UserService implements Searchable {
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
     public List<VerificationEvent> findNonVerifiedEmailUserEvents() {
         List<VerificationEvent> verificationEvents = new ArrayList<>();
+        List<User> users = userRepository.findAllUnverifiedLockByPessimisticWrite();
         List<PendingVerification> pendingVerifications = pendingVerificationRepository.findAll();
         for (PendingVerification pendingVerification : pendingVerifications) {
             switch (pendingVerification.getVerificationType()) {
@@ -177,8 +199,8 @@ public class UserService implements Searchable {
     }
 
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
-    public Long getIdOrCreateJobUserByName(String jobName, String jobMail, String jobDescription) {
-        return userRepository.findIdByUsername(jobName).orElseGet(getJobUserIdSupplier(jobName, jobMail, jobDescription));
+    public Long getIdOrCreateJobUserByNameLockByPessimisticWrite(String jobName, String jobMail, String jobDescription) {
+        return userRepository.findIdByUsernameLockByPessimisticWrite(jobName).orElseGet(getJobUserIdSupplier(jobName, jobMail, jobDescription));
     }
 
     private Supplier<Long> getJobUserIdSupplier(String jobName, String jobMail, String jobDescription) {
@@ -212,7 +234,7 @@ public class UserService implements Searchable {
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void deleteById(Long id) {
         logger.debug("Deleting user with id {}", id);
-        User user = findUserEntityById(id, userRepository);
+        User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
         userRepository.delete(user);
     }
 

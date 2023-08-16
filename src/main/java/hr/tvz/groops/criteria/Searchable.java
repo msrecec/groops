@@ -21,13 +21,13 @@ public interface Searchable {
         return permissionRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(PERMISSION_NOT_FOUND_BY_ID.getMessageComposed(id)));
     }
 
-    default @NotNull User findUserEntityById(@NotNull Long id, @NotNull UserRepository userRepository) {
-        return userRepository.findById(id)
+    default @NotNull User findUserEntityByIdLockByPessimisticWrite(@NotNull Long id, @NotNull UserRepository userRepository) {
+        return userRepository.findByIdLockByPessimisticWrite(id)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_BY_ID.getMessageComposed(id)));
     }
 
     default @NotNull User findUserEntityByUsername(@NotNull String username, @NotNull UserRepository userRepository) {
-        return userRepository.findByUsername(username)
+        return userRepository.findByUsernameLockByPessimisticWrite(username)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_BY_USERNAME.getMessageComposed(username)));
     }
 }

@@ -1,4 +1,4 @@
-package hr.tvz.groops.model.constants;
+package hr.tvz.groops.constants;
 
 public class JWTConstants {
     public static final String USERNAME = "u";

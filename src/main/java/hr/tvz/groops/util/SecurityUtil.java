@@ -57,6 +57,20 @@ public class SecurityUtil {
         return (GroopsUserDataToken) authentication;
     }
 
+    public static @NotNull String getCurrentLoggedInUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null) {
+            throw new InternalServerException("No authentication", new Throwable());
+        }
+
+        if (!(authentication instanceof GroopsUserDataToken)) {
+            throw new InternalServerException("Invalid authentication type", new Throwable());
+        }
+
+        return ((GroopsUserDataToken) authentication).getEmail();
+    }
+
     /**
      * Source: <a href="https://www.geeksforgeeks.org/how-to-validate-a-password-using-regular-expressions-in-java/">How to validate a password</a>
      *

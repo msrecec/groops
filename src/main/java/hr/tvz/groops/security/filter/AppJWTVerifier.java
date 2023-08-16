@@ -1,20 +1,13 @@
 package hr.tvz.groops.security.filter;
 
-import hr.tvz.groops.model.constants.JWTConstants;
-import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import hr.tvz.groops.service.AuthenticationService;
 import hr.tvz.groops.service.token.JWTService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwtException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
-import java.util.Collection;
 
 @Component
 public class AppJWTVerifier extends JWTVerifier {

@@ -1,6 +1,6 @@
 package hr.tvz.groops.security.filter;
 
-import hr.tvz.groops.model.constants.JWTConstants;
+import hr.tvz.groops.constants.JWTConstants;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import hr.tvz.groops.service.token.JWTService;
 import io.jsonwebtoken.Claims;

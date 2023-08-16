@@ -1,8 +1,8 @@
 package hr.tvz.groops.service.mail;
 
+import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.event.mail.MailEvent;
 import hr.tvz.groops.model.Mail;
-import hr.tvz.groops.model.constants.TimeoutConstants;
 import hr.tvz.groops.model.enums.MailStatusEnum;
 import hr.tvz.groops.repository.MailRepository;
 import hr.tvz.groops.service.AuthenticationService;
