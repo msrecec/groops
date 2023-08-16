@@ -5,7 +5,7 @@ import hr.tvz.groops.event.notification.verification.MailCreateVerificationEvent
 import hr.tvz.groops.event.notification.verification.PasswordChangeVerificationEvent;
 import hr.tvz.groops.model.PendingVerification;
 import hr.tvz.groops.model.User;
-import hr.tvz.groops.model.constants.Constants;
+import hr.tvz.groops.model.constants.TimeoutConstants;
 import hr.tvz.groops.model.enums.VerificationTypeEnum;
 import hr.tvz.groops.repository.PendingVerificationRepository;
 import hr.tvz.groops.service.AuthenticationService;
@@ -39,7 +39,7 @@ public class VerificationPublisherService {
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
-    @Transactional(timeout = Constants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
+    @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
     public void verifyEmailCreate(@NotNull User user, @NotNull Instant now) {
         logger.debug("Generating pending verification for mail create and sending mail...");
         String currentUser = authenticationService.getCurrentLoggedInUserUsername();
@@ -54,7 +54,7 @@ public class VerificationPublisherService {
         sendEmailCreateVerificationEventAfterSuccessfulCommit(pendingVerification.getId());
     }
 
-    @Transactional(timeout = Constants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
+    @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
     public void verifyEmailChange(@NotNull User user, @NotNull Instant now) {
         logger.debug("Generating pending verification from mail change and sending mail...");
         VerificationTypeEnum verificationType = VerificationTypeEnum.MAIL_CHANGE;
@@ -74,7 +74,7 @@ public class VerificationPublisherService {
         sendEmailChangeVerificationEventAfterSuccessfulCommit(pendingVerification.getId());
     }
 
-    @Transactional(timeout = Constants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
+    @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
     public void verifyPasswordChange(@NotNull User user, @NotNull Instant now) {
         logger.debug("Sending password change event...");
         PendingVerification pendingVerification = PendingVerification.builder()

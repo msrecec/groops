@@ -25,4 +25,9 @@ public interface Searchable {
         return userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_BY_ID.getMessageComposed(id)));
     }
+
+    default @NotNull User findUserEntityByUsername(@NotNull String username, @NotNull UserRepository userRepository) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_BY_USERNAME.getMessageComposed(username)));
+    }
 }

@@ -95,4 +95,13 @@ public class SecurityUtil {
                 .collect(Collectors.toSet());
     }
 
+
+    public static boolean hasAuthentication() {
+        return SecurityContextHolder.getContext().getAuthentication() != null;
+    }
+
+    public static boolean hasPrincipal() {
+        return SecurityContextHolder.getContext().getAuthentication().getPrincipal() != null;
+    }
+
 }

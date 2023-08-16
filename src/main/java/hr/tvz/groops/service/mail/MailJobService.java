@@ -2,7 +2,7 @@ package hr.tvz.groops.service.mail;
 
 import hr.tvz.groops.event.mail.MailEvent;
 import hr.tvz.groops.model.Mail;
-import hr.tvz.groops.model.constants.Constants;
+import hr.tvz.groops.model.constants.TimeoutConstants;
 import hr.tvz.groops.model.enums.MailStatusEnum;
 import hr.tvz.groops.repository.MailRepository;
 import hr.tvz.groops.service.AuthenticationService;
@@ -41,7 +41,7 @@ public class MailJobService {
         this.authenticationService = authenticationService;
     }
 
-    @Transactional(timeout = Constants.DEFAULT_TIMEOUT)
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void sendMailFromEvent(MailEvent emailEvent) {
         Instant now = now();
         String currentUser = authenticationService.getCurrentLoggedInUserUsername();

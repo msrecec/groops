@@ -13,4 +13,6 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long>, QuerydslPredicateExecutor<User> {
     @Query(value = "SELECT u.id FROM User u WHERE u.username = :username")
     Optional<Long> findIdByUsername(@Param("username") String username);
+
+    Optional<User> findByUsername(String username);
 }

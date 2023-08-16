@@ -4,7 +4,7 @@ import hr.tvz.groops.model.Mail;
 import hr.tvz.groops.model.MailExceptionLog;
 import hr.tvz.groops.model.MailMessage;
 import hr.tvz.groops.model.User;
-import hr.tvz.groops.model.constants.Constants;
+import hr.tvz.groops.model.constants.TimeoutConstants;
 import hr.tvz.groops.model.enums.MailStatusEnum;
 import hr.tvz.groops.repository.MailExceptionLogRepository;
 import hr.tvz.groops.repository.MailMessageRepository;
@@ -42,7 +42,7 @@ public class MailCreatorService {
         this.expiresDays = expiresDays;
     }
 
-    @Transactional(timeout = Constants.DEFAULT_TIMEOUT, propagation = Propagation.MANDATORY)
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT, propagation = Propagation.MANDATORY)
     public MailMessage createMails(User sender, String subject, String htmlMessage, String txtMessage, String createdBy, Instant createdTs, User... recipients) {
         MailMessage mailMessage = MailMessage.builder()
                 .subject(subject)
@@ -79,7 +79,7 @@ public class MailCreatorService {
         return mailRepository.findIdSenderIdRecipientIdMailMessageIdByMailStatus(mailStatus);
     }
 
-    @Transactional(timeout = Constants.SHORT_TIMEOUT, propagation = Propagation.MANDATORY)
+    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT, propagation = Propagation.MANDATORY)
     public void createMailExceptionForMail(Mail mail, String message, String stackTrace, String createdBy, Instant createdTs) {
         MailExceptionLog mailExceptionLog = MailExceptionLog.builder()
                 .mail(mail)
@@ -92,12 +92,12 @@ public class MailCreatorService {
         mailExceptionLogRepository.save(mailExceptionLog);
     }
 
-    @Transactional(timeout = Constants.MEDIUM_TIMEOUT)
+    @Transactional(timeout = TimeoutConstants.MEDIUM_TIMEOUT)
     public void deleteAllExpired() {
         mailRepository.deleteAllExpired(now());
     }
 
-    @Transactional(timeout = Constants.MEDIUM_TIMEOUT)
+    @Transactional(timeout = TimeoutConstants.MEDIUM_TIMEOUT)
     public void deleteAllUnlinkedMailMessages() {
         mailMessageRepository.deleteAllUnlinked();
     }

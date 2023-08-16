@@ -4,7 +4,6 @@ import com.querydsl.core.BooleanBuilder;
 import hr.tvz.groops.command.crud.UserCreateCommand;
 import hr.tvz.groops.command.crud.UserUpdateCommand;
 import hr.tvz.groops.command.search.UserSearchCommand;
-import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.event.notification.verification.MailChangeVerificationEvent;
@@ -16,7 +15,7 @@ import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.PendingVerification;
 import hr.tvz.groops.model.QUser;
 import hr.tvz.groops.model.User;
-import hr.tvz.groops.model.constants.Constants;
+import hr.tvz.groops.model.constants.TimeoutConstants;
 import hr.tvz.groops.repository.PendingVerificationRepository;
 import hr.tvz.groops.repository.UserRepository;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
@@ -69,7 +68,7 @@ public class UserService implements Searchable {
         this.authenticationService = authenticationService;
     }
 
-    @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT)
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
     public UserDto register(@Valid UserCreateCommand command) {
         logger.debug("Creating user...");
         Instant now = now();
@@ -85,7 +84,7 @@ public class UserService implements Searchable {
 
     // todo add resend verification token for mail, change mail and change password
 
-    @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT)
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
     public UserDto update(Long id, @Valid UserUpdateCommand command) {
         logger.debug("Updating user...");
         Instant now = now();
@@ -128,7 +127,7 @@ public class UserService implements Searchable {
     public UserDto getCurrent() {
         logger.debug("Fetching current user...");
         GroopsUserDataToken groopsUserDataToken = authenticationService.getCurrentLoggedInUser();
-        return findById(groopsUserDataToken.getId());
+        return modelMapper.map(findUserEntityByUsername(groopsUserDataToken.getUsername(), userRepository), UserDto.class);
     }
 
     public List<UserDto> findAll() {
@@ -155,7 +154,7 @@ public class UserService implements Searchable {
                 .map(u -> modelMapper.map(u, UserDto.class));
     }
 
-    @Transactional(timeout = Constants.DEFAULT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
     public List<VerificationEvent> findNonVerifiedEmailUserEvents() {
         List<VerificationEvent> verificationEvents = new ArrayList<>();
         List<PendingVerification> pendingVerifications = pendingVerificationRepository.findAll();
@@ -177,7 +176,7 @@ public class UserService implements Searchable {
         return verificationEvents;
     }
 
-    @Transactional(timeout = Constants.SHORT_TIMEOUT)
+    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
     public Long getIdOrCreateJobUserByName(String jobName, String jobMail, String jobDescription) {
         return userRepository.findIdByUsername(jobName).orElseGet(getJobUserIdSupplier(jobName, jobMail, jobDescription));
     }
@@ -202,17 +201,17 @@ public class UserService implements Searchable {
         };
     }
 
-    @Transactional(timeout = Constants.DEFAULT_TIMEOUT)
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void deleteCurrent() {
         logger.debug("Deleting current user...");
         GroopsUserDataToken token = authenticationService.getCurrentLoggedInUser();
-        User user = findUserEntityById(token.getId(), userRepository);
+        User user = findUserEntityByUsername(token.getUsername(), userRepository);
         userRepository.delete(user);
     }
 
-    @Transactional(timeout = Constants.DEFAULT_TIMEOUT)
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void deleteById(Long id) {
-        logger.debug("Deleting current user with id {}", id);
+        logger.debug("Deleting user with id {}", id);
         User user = findUserEntityById(id, userRepository);
         userRepository.delete(user);
     }

@@ -9,7 +9,7 @@ import hr.tvz.groops.model.Permission;
 import hr.tvz.groops.model.QRole;
 import hr.tvz.groops.model.Role;
 import hr.tvz.groops.model.RolePermission;
-import hr.tvz.groops.model.constants.Constants;
+import hr.tvz.groops.model.constants.TimeoutConstants;
 import hr.tvz.groops.model.pk.RolePermissionId;
 import hr.tvz.groops.repository.PermissionRepository;
 import hr.tvz.groops.repository.RolePermissionRepository;
@@ -51,7 +51,7 @@ public class RoleService implements Searchable {
         this.authenticationService = authenticationService;
     }
 
-    @Transactional(timeout = Constants.DEFAULT_TIMEOUT)
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public RoleDto create(RoleCommand command) {
         logger.debug("Creating role...");
         Instant now = now();
@@ -61,7 +61,7 @@ public class RoleService implements Searchable {
         return modelMapper.map(roleRepository.save(role), RoleDto.class);
     }
 
-    @Transactional(timeout = Constants.DEFAULT_TIMEOUT)
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void addPermissionToRole(Long roleId, Long permissionId) {
         logger.debug("Adding permission with id {} to role with id {}", permissionId, roleId);
         Instant now = now();
@@ -79,14 +79,14 @@ public class RoleService implements Searchable {
         rolePermissionRepository.save(rolePermission);
     }
 
-    @Transactional(timeout = Constants.DEFAULT_TIMEOUT)
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void removePermissionFromRole(Long roleId, Long permissionId) {
         logger.debug("Removing permission with id {} to role with id {}", permissionId, roleId);
         RolePermission rolePermission = rolePermissionRepository.findByRoleIdAndPermissionId(roleId, permissionId).orElseThrow(() -> new EntityNotFoundException(ROLE_PERMISSION_NOT_FOUND_BY_ROLE_ID_AND_PERMISSION_ID.getMessageComposed(roleId, permissionId)));
         rolePermissionRepository.delete(rolePermission);
     }
 
-    @Transactional(timeout = Constants.DEFAULT_TIMEOUT)
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public RoleDto update(RoleCommand command, Long id) {
         logger.debug("Updating role by id {}", id);
         Instant now = now();
@@ -117,7 +117,7 @@ public class RoleService implements Searchable {
                 .map(u -> modelMapper.map(u, RoleDto.class));
     }
 
-    @Transactional(timeout = Constants.DEFAULT_TIMEOUT)
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void deleteById(Long id) {
         logger.debug("Deleting role by id {}", id);
         Role role = findRoleEntityById(id, roleRepository);

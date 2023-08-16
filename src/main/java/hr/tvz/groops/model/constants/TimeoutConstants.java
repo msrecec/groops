@@ -3,7 +3,7 @@ package hr.tvz.groops.model.constants;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class Constants {
+public class TimeoutConstants {
     public static final int MS = 1000;
     public static final int TINY_TIMEOUT = 5;
 

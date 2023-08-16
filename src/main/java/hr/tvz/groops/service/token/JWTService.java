@@ -82,6 +82,11 @@ public abstract class JWTService implements TokenService {
         return Date.from(Instant.now().plusSeconds(seconds));
     }
 
+    @Override
+    public @Nullable String getTokenFromRequest(@NotNull HttpServletRequest httpServletRequest) {
+        return getTokenFromRequestHeader(httpServletRequest);
+    }
+
     @Nullable
     protected String getCookieValueFromBase64(String cookieName, Cookie[] cookies) {
         for (Cookie cookie : cookies) {
