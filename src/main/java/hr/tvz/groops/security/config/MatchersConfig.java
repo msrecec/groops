@@ -9,8 +9,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import java.util.ArrayList;
 import java.util.List;
 
-import static hr.tvz.groops.constants.URLConstants.MAIL_CHANGE_TEMPLATE_URL;
-import static hr.tvz.groops.constants.URLConstants.REFRESH_TOKEN_URL;
+import static hr.tvz.groops.constants.URLConstants.*;
 
 @Configuration
 public class MatchersConfig {
@@ -18,7 +17,8 @@ public class MatchersConfig {
     public List<RequestMatcher> getAndRequestMatchers() {
         List<RequestMatcher> matchers = new ArrayList<>();
         matchers.add(new AndRequestMatcher(new AntPathRequestMatcher(MAIL_CHANGE_TEMPLATE_URL)));
-        matchers.add(new AndRequestMatcher(new AntPathRequestMatcher(REFRESH_TOKEN_URL)));
+        matchers.add(new AndRequestMatcher(new AntPathRequestMatcher(MAIL_CREATE_TEMPLATE_URL)));
+        matchers.add(new AndRequestMatcher(new AntPathRequestMatcher(PASSWORD_CHANGE_TEMPLATE_URL)));
         return matchers;
     }
 }

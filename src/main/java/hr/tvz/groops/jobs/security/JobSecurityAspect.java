@@ -9,24 +9,14 @@ import org.aspectj.lang.annotation.Before;
 import org.quartz.JobExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-
-import static hr.tvz.groops.jobs.config.SchedulerConfig.JOB_ID_KEY;
 
 @Aspect
 @Component
 public class JobSecurityAspect {
     private static final Logger logger = LoggerFactory.getLogger(JobSecurityAspect.class);
-    private final String mail;
-
-    @Autowired
-    public JobSecurityAspect(@Value("${spring.mail.username}") String mail) {
-        this.mail = mail;
-    }
 
     @Before("@annotation(hr.tvz.groops.jobs.annotation.JobSecurityContext)")
     public void beforeJobExecution(JoinPoint joinPoint) {
@@ -34,13 +24,13 @@ public class JobSecurityAspect {
             if (arg instanceof JobExecutionContext) {
                 JobExecutionContext jobExecutionContext = (JobExecutionContext) arg;
                 String jobName = JobUtils.getJobName(jobExecutionContext);
-                Long jobId = JobUtils.getLongValueByKey(jobExecutionContext, JOB_ID_KEY);
+                String jobMail = JobUtils.getJobEmail(jobExecutionContext);
                 if (jobName == null) {
                     logger.debug("Cant set security context for job with no name...");
                     return;
                 }
                 logger.debug(String.format("Initializing security context before job with name: %s executes...", jobName));
-                setSecurityContext(jobName, jobId);
+                setSecurityContext(jobName, jobMail);
                 return;
             }
         }
@@ -63,16 +53,16 @@ public class JobSecurityAspect {
         }
     }
 
-    private void setSecurityContext(String jobName, Long jobId) {
+    private void setSecurityContext(String jobName, String jobMail) {
         if (SecurityContextHolder.getContext() == null) {
             logger.debug(String.format("No security context, skipping setting authentication to job with name: %s...", jobName));
             return;
         }
-        SecurityContextHolder.getContext().setAuthentication(getAuthenticationToken(jobName, jobId));
+        SecurityContextHolder.getContext().setAuthentication(getAuthenticationToken(jobName, jobMail));
     }
 
-    private Authentication getAuthenticationToken(String jobName, Long jobId) {
-        return new GroopsUserDataToken(jobName, null, jobId, this.mail);
+    private Authentication getAuthenticationToken(String jobName, String jobMail) {
+        return new GroopsUserDataToken(jobName, null, null, jobMail);
     }
 
     private void clearSecurityContext(String jobName) {
