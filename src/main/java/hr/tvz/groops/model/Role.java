@@ -29,7 +29,7 @@ public class Role extends BaseEntity {
     @Column(name = "role")
     @Enumerated(EnumType.STRING)
     private RoleEnum role;
-    @ManyToMany(targetEntity = Permission.class, fetch = FetchType.EAGER)
+    @ManyToMany(targetEntity = Permission.class)
     @JoinTable(
             name = "role_permission",
             joinColumns = {@JoinColumn(name = "role_id")},
