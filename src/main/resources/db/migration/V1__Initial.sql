@@ -19,7 +19,6 @@ CREATE TABLE "user" (
 );
 
 CREATE UNIQUE INDEX user_username_un_idx on "user" ("username");
-CREATE UNIQUE INDEX user_email_un_idx on "user"(LOWER("email"));
 
 -- todo add scheduler to delete all unconfirmed users 1 month after creation
 
@@ -35,7 +34,7 @@ CREATE TABLE "pending_verification" (
     FOREIGN KEY (user_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX user_username_un_idx on "pending_verification" ("user_id", "verification_type");
+CREATE UNIQUE INDEX user_username_verification_type_un_idx on "pending_verification" ("user_id", "verification_type");
 
 CREATE TABLE "role" (
     "id" SERIAL,
@@ -229,7 +228,8 @@ CREATE UNIQUE INDEX post_like_un_idx on "post_like" ("post_id", "user_id");
 CREATE TABLE "mail_message" (
     "id" SERIAL,
     "subject" TEXT,
-    "message" TEXT,
+    "html_message" TEXT NOT NULL,
+    "txt_message" TEXT NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,

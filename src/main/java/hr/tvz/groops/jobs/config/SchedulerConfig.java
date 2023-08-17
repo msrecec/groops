@@ -2,6 +2,7 @@ package hr.tvz.groops.jobs.config;
 
 import hr.tvz.groops.exception.ExceptionEnum;
 import hr.tvz.groops.exception.InternalServerException;
+import hr.tvz.groops.jobs.EmailJob;
 import hr.tvz.groops.jobs.VerificationJob;
 import hr.tvz.groops.service.UserService;
 import org.apache.commons.validator.routines.EmailValidator;
@@ -25,7 +26,6 @@ import static hr.tvz.groops.jobs.VerificationJob.VERIFICATION_SCHEDULER_JOB_IDEN
 @Configuration
 public class SchedulerConfig {
     private static final Logger logger = LoggerFactory.getLogger(SchedulerConfig.class);
-    public static final String JOB_ID_KEY = "jobId";
     public static final String MAIL_KEY = "mail";
     private final ApplicationContext applicationContext;
     private final UserService userService;
@@ -67,7 +67,7 @@ public class SchedulerConfig {
                 .newJob(VerificationJob.class)
                 .withIdentity(initializeAndLogBeanName(VERIFICATION_SCHEDULER_JOB_IDENTITY))
                 .withDescription(VERIFICATION_SCHEDULER_JOB_DESCRIPTION)
-                .usingJobData(MAIL, jobEmail)
+                .usingJobData(MAIL_KEY, jobEmail)
                 .storeDurably()
                 .requestRecovery()
                 .build();
@@ -91,10 +91,10 @@ public class SchedulerConfig {
         validateJobEmailAddress(jobEmail);
         userService.getIdOrCreateJobUserByNameLockByPessimisticWrite(EMAIL_SCHEDULER_JOB_IDENTITY, jobEmail, EMAIL_SCHEDULER_JOB_DESCRIPTION);
         return JobBuilder
-                .newJob(VerificationJob.class)
+                .newJob(EmailJob.class)
                 .withIdentity(initializeAndLogBeanName(EMAIL_SCHEDULER_JOB_IDENTITY))
                 .withDescription(EMAIL_SCHEDULER_JOB_DESCRIPTION)
-                .usingJobData(MAIL, jobEmail)
+                .usingJobData(MAIL_KEY, jobEmail)
                 .storeDurably()
                 .requestRecovery()
                 .build();

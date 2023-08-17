@@ -19,14 +19,14 @@ public class MailConfig {
     private final Boolean tls;
     private final Boolean debug;
 
-    public MailConfig(@Value("{spring.mail.host}") String host,
-                      @Value("{spring.mail.port}") Integer port,
-                      @Value("{spring.mail.username}") String username,
-                      @Value("{spring.mail.password}") String password,
-                      @Value("{spring.mail.protocol}") String protocol,
-                      @Value("{spring.mail.properties.mail.smtp.auth}") Boolean auth,
-                      @Value("{spring.mail.properties.mail.smtp.starttls.enable}") Boolean tls,
-                      @Value("{spring.mail.properties.debug}") Boolean debug) {
+    public MailConfig(@Value("${spring.mail.host}") String host,
+                      @Value("${spring.mail.port}") Integer port,
+                      @Value("${spring.mail.username}") String username,
+                      @Value("${spring.mail.password}") String password,
+                      @Value("${spring.mail.protocol}") String protocol,
+                      @Value("${spring.mail.properties.mail.smtp.auth}") Boolean auth,
+                      @Value("${spring.mail.properties.mail.smtp.starttls.enable}") Boolean tls,
+                      @Value("${spring.mail.properties.debug}") Boolean debug) {
         this.host = host;
         this.port = port;
         this.username = username;

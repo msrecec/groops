@@ -15,8 +15,7 @@ import java.util.List;
 @Entity
 @Table(name = "user", schema = "public", uniqueConstraints = {
         @UniqueConstraint(name = "id", columnNames = "id"),
-        @UniqueConstraint(name = "username", columnNames = "username"),
-        @UniqueConstraint(name = "email_verification_code", columnNames = "email_verification_code_id")
+        @UniqueConstraint(name = "username", columnNames = "username")
 })
 @Getter
 @Setter

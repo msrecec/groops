@@ -1,7 +1,6 @@
 package hr.tvz.groops.service.mail;
 
 import hr.tvz.groops.constants.TimeoutConstants;
-import hr.tvz.groops.event.mail.MailEvent;
 import hr.tvz.groops.model.Mail;
 import hr.tvz.groops.model.MailExceptionLog;
 import hr.tvz.groops.model.MailMessage;
@@ -12,12 +11,9 @@ import hr.tvz.groops.repository.MailMessageRepository;
 import hr.tvz.groops.repository.MailRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.persistence.Tuple;
 import java.time.Instant;
@@ -33,19 +29,16 @@ public class MailCreatorService {
     private final MailRepository mailRepository;
     private final MailExceptionLogRepository mailExceptionLogRepository;
     private final MailMessageRepository mailMessageRepository;
-    private final ApplicationEventPublisher applicationEventPublisher;
     private final Long expiresDays;
 
     @Autowired
     public MailCreatorService(MailRepository mailRepository,
                               MailExceptionLogRepository mailExceptionLogRepository,
                               MailMessageRepository mailMessageRepository,
-                              ApplicationEventPublisher applicationEventPublisher,
                               @Value("${groops.mail.expires.days}") Long expiresDays) {
         this.mailRepository = mailRepository;
         this.mailExceptionLogRepository = mailExceptionLogRepository;
         this.mailMessageRepository = mailMessageRepository;
-        this.applicationEventPublisher = applicationEventPublisher;
         this.expiresDays = expiresDays;
     }
 
@@ -77,24 +70,8 @@ public class MailCreatorService {
             mails.add(mail);
         }
 
-        List<Mail> mailList = mailRepository.saveAllAndFlush(mails);
-        for (Mail mail : mailList) {
-            sendEmailEventAfterSuccessfulCommit(mail.getRecipient(), mail.getSender(), mail.getMailMessage());
-        }
+        mailRepository.saveAllAndFlush(mails);
         return mailMessage;
-    }
-
-    private void sendEmailEventAfterSuccessfulCommit(User recipient, User sender, MailMessage mailMessage) {
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCommit() {
-                applicationEventPublisher.publishEvent(new MailEvent(this,
-                        sender.getId(),
-                        recipient.getId(),
-                        mailMessage.getId()
-                ));
-            }
-        });
     }
 
 

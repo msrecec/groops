@@ -124,7 +124,7 @@ public abstract class JWTService implements TokenService {
     @Override
     @Nullable
     public String getTokenFromRequestParameter(@NotNull HttpServletRequest httpServletRequest) {
-        return httpServletRequest.getHeader(this.jwtConfig.getParameterName());
+        return httpServletRequest.getParameter(this.jwtConfig.getParameterName());
     }
 
     private String getFromBase64(String value) {

@@ -50,7 +50,7 @@ public class VerificationPublisherService {
                 .createdBy(currentUser)
                 .createdTs(now)
                 .build();
-        pendingVerification = pendingVerificationRepository.saveAndFlush(pendingVerification);
+        pendingVerification = pendingVerificationRepository.save(pendingVerification);
         sendEmailCreateVerificationEventAfterSuccessfulCommit(pendingVerification.getId(), pendingVerification.getUser().getId());
     }
 

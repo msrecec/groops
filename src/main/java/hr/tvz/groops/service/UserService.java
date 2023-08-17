@@ -83,8 +83,9 @@ public class UserService implements Searchable {
         user.setVerified(false);
         user.setCreatedTs(now);
         user.setCreatedBy(authenticationService.getCurrentLoggedInUserUsername());
+        user = userRepository.save(user);
         verificationPublisherService.verifyEmailCreate(user, now);
-        return modelMapper.map(userRepository.save(user), UserDto.class);
+        return modelMapper.map(user, UserDto.class);
     }
 
     // todo add resend verification token for mail, change mail and change password

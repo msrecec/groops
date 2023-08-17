@@ -64,7 +64,7 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilterBefore(mailCreateJWTVerifier, BasicAuthenticationFilter.class)
                 .addFilterBefore(mailChangeJWTVerifier, MailCreateJWTVerifier.class)
                 .addFilterBefore(passwordChangeJWTVerifier, MailChangeJWTVerifier.class)
-                .addFilterAfter(appJWTVerifier, MailCreateJWTVerifier.class)
+                .addFilterBefore(appJWTVerifier, PasswordChangeJWTVerifier.class)
                 .addFilterAfter(mdcFilter, AppJWTVerifier.class)
                 .authorizeRequests()
                 .antMatchers("/**/login/**")
@@ -80,8 +80,6 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
                 .permitAll()
                 .and()
                 .exceptionHandling()
-                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
-                .and()
-                .oauth2Client();
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));
     }
 }
