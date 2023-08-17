@@ -46,14 +46,14 @@ public class TemplateController extends ControllerBase {
     }
 
     @GetMapping("/mail/change")
-    @PreAuthorize("hasAuthority('" + RoleConstants.ROLE_MAIL_CREATE + "')")
+    @PreAuthorize("hasAuthority('" + RoleConstants.ROLE_MAIL_CHANGE + "')")
     String mailChangeView(HttpServletRequest request, HttpServletResponse response, Model model) {
         userService.confirmEmailChange();
         return "confirmed email change";
     }
 
     @GetMapping("/password/change")
-    @PreAuthorize("hasAuthority('" + RoleConstants.ROLE_MAIL_CREATE + "')")
+    @PreAuthorize("hasAuthority('" + RoleConstants.ROLE_PASSWORD_CHANGE + "')")
     String passwordChangeView(HttpServletRequest request, HttpServletResponse response, Model model) {
         userService.confirmPasswordChange();
         return "confirmed password change";

@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceContext;
 import javax.validation.Valid;
 import java.time.Instant;
@@ -95,9 +96,13 @@ public class UserService implements Searchable {
         logger.debug("Updating user...");
         Instant now = now();
         User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
+        String oldEmail = user.getEmail();
         modelMapper.map(command, user);
+        user.setEmail(oldEmail);
 
         if (command.getEmail().compareTo(user.getEmail()) != 0) {
+            Optional<PendingVerification> pending = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.MAIL_CHANGE);
+            pending.ifPresent(pendingVerificationRepository::delete);
             verificationPublisherService.verifyEmailChange(user, now);
         }
         if (command.getPassword() != null) {
@@ -158,7 +163,7 @@ public class UserService implements Searchable {
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
     public void confirmPasswordChange() {
         User user = findUserEntityByUsernameLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserUsername(), userRepository);
-        Optional<PendingVerification> pendingVerification = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.MAIL_CHANGE);
+        Optional<PendingVerification> pendingVerification = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.PASSWORD_CHANGE);
         if (pendingVerification.isEmpty()) {
             throw new IllegalArgumentException("User has already confirmed password change");
         }
