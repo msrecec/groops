@@ -40,7 +40,6 @@ import javax.persistence.PersistenceContext;
 import javax.validation.Valid;
 import java.time.Instant;
 import java.util.*;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static hr.tvz.groops.util.TimeUtils.now;
@@ -169,22 +168,22 @@ public class UserService implements Searchable {
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
     public void confirmEmailCreate() {
         logger.debug("Confirming user mail...");
-        finalizeConfirmation(VerificationTypeEnum.MAIL_CREATE, "User has already confirmed email");
+        confirmationHandler(VerificationTypeEnum.MAIL_CREATE, "User has already confirmed email");
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
     public void confirmEmailChange() {
         logger.debug("Confirming user mail change...");
-        finalizeConfirmation(VerificationTypeEnum.MAIL_CHANGE, "User has already confirmed email change");
+        confirmationHandler(VerificationTypeEnum.MAIL_CHANGE, "User has already confirmed email change");
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
     public void confirmPasswordChange() {
         logger.debug("Confirming user password change...");
-        finalizeConfirmation(VerificationTypeEnum.PASSWORD_CHANGE, "User has already confirmed password change");
+        confirmationHandler(VerificationTypeEnum.PASSWORD_CHANGE, "User has already confirmed password change");
     }
 
-    private void finalizeConfirmation(VerificationTypeEnum verificationTypeEnum, String exceptionMessage) {
+    private void confirmationHandler(VerificationTypeEnum verificationTypeEnum, String exceptionMessage) {
         Instant now = now();
         User user = findUserEntityByUsernameLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserUsername(), userRepository);
         Optional<PendingVerification> pendingVerification = pendingVerificationRepository.findByUserAndVerificationType(user, verificationTypeEnum);
@@ -193,12 +192,12 @@ public class UserService implements Searchable {
         }
         pendingVerificationRepository.delete(pendingVerification.get());
         flushAndClear();
+
         List<PendingVerification> pendingVerifications = pendingVerificationRepository.findByUser(user);
-        if (isNotVerifiable(pendingVerifications)) {
-            logger.debug("User {} is not verifiable", user.getUsername());
-            return;
+        if (isVerifiable(pendingVerifications)) {
+            user.setVerified(true);
         }
-        user.setVerified(true);
+
         user.setModifiedTs(now);
         user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         userRepository.save(user);
@@ -209,16 +208,16 @@ public class UserService implements Searchable {
         entityManager.clear();
     }
 
-    private boolean isNotVerifiable(Collection<PendingVerification> pendingVerifications) {
+    private boolean isVerifiable(Collection<PendingVerification> pendingVerifications) {
         for (PendingVerification pendingVerification : pendingVerifications) {
             switch (pendingVerification.getVerificationType()) {
                 case MAIL_CREATE:
                 case MAIL_CHANGE:
                 case PASSWORD_CHANGE:
-                    return true;
+                    return false;
             }
         }
-        return false;
+        return true;
     }
 
     public UserDto findById(Long id) {
