@@ -7,7 +7,6 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @SuperBuilder
 @AllArgsConstructor
-@NoArgsConstructor
 @ToString
 public class UserUpdateCommand extends UserCommand {
 }
