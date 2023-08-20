@@ -11,12 +11,9 @@ import java.util.Collection;
 public class GroopsUserDataToken extends UsernamePasswordAuthenticationToken {
     @NotNull
     private final String username;
-    @NotNull
-    private final String email;
 
-    public GroopsUserDataToken(@NotNull String username, Object credentials, Collection<? extends GrantedAuthority> authorities, @NotNull String email) {
+    public GroopsUserDataToken(@NotNull String username, Object credentials, Collection<? extends GrantedAuthority> authorities) {
         super(username, credentials, authorities);
         this.username = username;
-        this.email = email;
     }
 }

@@ -65,7 +65,7 @@ public class VerificationVisitorService implements Searchable {
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void visitMailCreateVerification(MailVerificationEvent mailVerificationEvent) {
         User recipient = findUserEntityById(mailVerificationEvent.getUserId(), userRepository);
-        String b64Token = mailCreateJWTService.generateTokenBase64(recipient.getUsername(), recipient.getEmail(), RoleConstants.ROLE_MAIL_CREATE);
+        String b64Token = mailCreateJWTService.generateTokenBase64(recipient.getUsername(), RoleConstants.ROLE_MAIL_CREATE);
         String parameter = mailCreateJWTService.getParameterName();
         if (parameter == null) {
             throw new InternalServerException("Parameter must not be null");
@@ -77,7 +77,7 @@ public class VerificationVisitorService implements Searchable {
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void visitMailChangeVerification(MailChangeVerificationEvent mailChangeVerificationEvent) {
         User recipient = findUserEntityById(mailChangeVerificationEvent.getUserId(), userRepository);
-        String b64Token = mailChangeJWTService.generateTokenBase64(recipient.getUsername(), recipient.getEmail(), RoleConstants.ROLE_MAIL_CHANGE);
+        String b64Token = mailChangeJWTService.generateTokenBase64(recipient.getUsername(), RoleConstants.ROLE_MAIL_CHANGE);
         String parameter = mailChangeJWTService.getParameterName();
         if (parameter == null) {
             throw new InternalServerException("Parameter must not be null");
@@ -89,7 +89,7 @@ public class VerificationVisitorService implements Searchable {
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void visitPasswordVerification(PasswordChangeVerificationEvent passwordChangeVerificationEvent) {
         User recipient = findUserEntityById(passwordChangeVerificationEvent.getUserId(), userRepository);
-        String b64Token = passwordChangeJWTService.generateTokenBase64(recipient.getUsername(), recipient.getEmail(), RoleConstants.ROLE_PASSWORD_CHANGE);
+        String b64Token = passwordChangeJWTService.generateTokenBase64(recipient.getUsername(), RoleConstants.ROLE_PASSWORD_CHANGE);
         String parameter = passwordChangeJWTService.getParameterName();
         if (parameter == null) {
             throw new InternalServerException("Parameter must not be null");

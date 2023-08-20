@@ -183,10 +183,8 @@ CREATE TABLE "group_message" (
 CREATE TABLE "post" (
     "id" SERIAL,
     "media_key" TEXT,
-    "media_type" TEXT,
     "text" TEXT,
     "user_id" INTEGER NOT NULL,
-    "profile_picture_key" TEXT DEFAULT NULL,
     "group_id" INTEGER NOT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),

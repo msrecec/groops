@@ -1,5 +1,7 @@
 package hr.tvz.groops.controller;
 
+import hr.tvz.groops.command.crud.EmailUpdateCommand;
+import hr.tvz.groops.command.crud.PasswordUpdateCommand;
 import hr.tvz.groops.command.crud.UserCreateCommand;
 import hr.tvz.groops.command.crud.UserUpdateCommand;
 import hr.tvz.groops.command.search.UserSearchCommand;
@@ -46,6 +48,16 @@ public class UserController extends ControllerBase {
     @PutMapping("/{id}")
     UserDto updateUser(@RequestBody @Valid UserUpdateCommand command, @PathVariable("id") Long id) {
         return userService.update(id, command);
+    }
+
+    @PutMapping("/{id}/change-mail")
+    void updateUserMail(@RequestBody @Valid EmailUpdateCommand command, @PathVariable("id") Long id) {
+        userService.changeMail(id, command.getEmail());
+    }
+
+    @PutMapping("/{id}/change-password")
+    void updateUserPassword(@RequestBody @Valid PasswordUpdateCommand command, @PathVariable("id") Long id) {
+        userService.changePassword(id, command.getPassword());
     }
 
     @PostMapping("/search")

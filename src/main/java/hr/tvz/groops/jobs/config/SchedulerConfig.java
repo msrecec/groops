@@ -26,7 +26,6 @@ import static hr.tvz.groops.jobs.VerificationJob.VERIFICATION_SCHEDULER_JOB_IDEN
 @Configuration
 public class SchedulerConfig {
     private static final Logger logger = LoggerFactory.getLogger(SchedulerConfig.class);
-    public static final String MAIL_KEY = "mail";
     private final ApplicationContext applicationContext;
     private final UserService userService;
     private final String MAIL;
@@ -62,12 +61,11 @@ public class SchedulerConfig {
     public JobDetail verificationJobDetail() {
         String jobEmail = this.MAIL;
         validateJobEmailAddress(jobEmail);
-        userService.getIdOrCreateJobUserByNameLockByPessimisticWrite(VERIFICATION_SCHEDULER_JOB_IDENTITY, jobEmail, VERIFICATION_SCHEDULER_JOB_DESCRIPTION);
+        userService.createJobUserByNameLockByPessimisticWriteIfNotExists(VERIFICATION_SCHEDULER_JOB_IDENTITY, jobEmail, VERIFICATION_SCHEDULER_JOB_DESCRIPTION);
         return JobBuilder
                 .newJob(VerificationJob.class)
                 .withIdentity(initializeAndLogBeanName(VERIFICATION_SCHEDULER_JOB_IDENTITY))
                 .withDescription(VERIFICATION_SCHEDULER_JOB_DESCRIPTION)
-                .usingJobData(MAIL_KEY, jobEmail)
                 .storeDurably()
                 .requestRecovery()
                 .build();
@@ -89,12 +87,11 @@ public class SchedulerConfig {
     public JobDetail mailJobDetail() {
         String jobEmail = this.MAIL;
         validateJobEmailAddress(jobEmail);
-        userService.getIdOrCreateJobUserByNameLockByPessimisticWrite(EMAIL_SCHEDULER_JOB_IDENTITY, jobEmail, EMAIL_SCHEDULER_JOB_DESCRIPTION);
+        userService.createJobUserByNameLockByPessimisticWriteIfNotExists(EMAIL_SCHEDULER_JOB_IDENTITY, jobEmail, EMAIL_SCHEDULER_JOB_DESCRIPTION);
         return JobBuilder
                 .newJob(EmailJob.class)
                 .withIdentity(initializeAndLogBeanName(EMAIL_SCHEDULER_JOB_IDENTITY))
                 .withDescription(EMAIL_SCHEDULER_JOB_DESCRIPTION)
-                .usingJobData(MAIL_KEY, jobEmail)
                 .storeDurably()
                 .requestRecovery()
                 .build();

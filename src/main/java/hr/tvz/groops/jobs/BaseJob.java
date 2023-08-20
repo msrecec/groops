@@ -11,12 +11,6 @@ public abstract class BaseJob implements Job {
         return JobUtils.getJobName(jobExecutionContext);
     }
 
-    @Nullable
-    protected String getJobEmail(JobExecutionContext jobExecutionContext) {
-        return JobUtils.getJobEmail(jobExecutionContext);
-
-    }
-
     protected Long getStringValueByKey(JobExecutionContext jobExecutionContext, String key) {
         return JobUtils.getLongValueByKey(jobExecutionContext, key);
     }

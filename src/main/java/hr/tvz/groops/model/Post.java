@@ -22,8 +22,6 @@ public class Post extends BaseEntity {
     private Long id;
     @Column(name = "media_key")
     private String mediaKey;
-    @Column(name = "media_type")
-    private String mediaType;
     @Column(name = "text")
     private String text;
     @ManyToOne(fetch = FetchType.LAZY)

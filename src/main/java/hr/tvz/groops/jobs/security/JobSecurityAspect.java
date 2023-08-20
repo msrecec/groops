@@ -24,13 +24,12 @@ public class JobSecurityAspect {
             if (arg instanceof JobExecutionContext) {
                 JobExecutionContext jobExecutionContext = (JobExecutionContext) arg;
                 String jobName = JobUtils.getJobName(jobExecutionContext);
-                String jobMail = JobUtils.getJobEmail(jobExecutionContext);
                 if (jobName == null) {
                     logger.debug("Cant set security context for job with no name...");
                     return;
                 }
                 logger.debug(String.format("Initializing security context before job with name: %s executes...", jobName));
-                setSecurityContext(jobName, jobMail);
+                setSecurityContext(jobName);
                 return;
             }
         }
@@ -53,16 +52,16 @@ public class JobSecurityAspect {
         }
     }
 
-    private void setSecurityContext(String jobName, String jobMail) {
+    private void setSecurityContext(String jobName) {
         if (SecurityContextHolder.getContext() == null) {
             logger.debug(String.format("No security context, skipping setting authentication to job with name: %s...", jobName));
             return;
         }
-        SecurityContextHolder.getContext().setAuthentication(getAuthenticationToken(jobName, jobMail));
+        SecurityContextHolder.getContext().setAuthentication(getAuthenticationToken(jobName));
     }
 
-    private Authentication getAuthenticationToken(String jobName, String jobMail) {
-        return new GroopsUserDataToken(jobName, null, null, jobMail);
+    private Authentication getAuthenticationToken(String jobName) {
+        return new GroopsUserDataToken(jobName, null, null);
     }
 
     private void clearSecurityContext(String jobName) {

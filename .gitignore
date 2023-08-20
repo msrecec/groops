@@ -36,3 +36,6 @@ db-build-files/
 /*.log
 /logs
 /tomcat
+
+#maven
+/.mvn

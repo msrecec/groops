@@ -10,5 +10,4 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @ToString
 public class UserUpdateCommand extends UserCommand {
-    private String password;
 }

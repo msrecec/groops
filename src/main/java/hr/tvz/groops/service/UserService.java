@@ -23,6 +23,7 @@ import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import hr.tvz.groops.service.verification.VerificationPublisherService;
 import hr.tvz.groops.util.QueryBuilderUtil;
 import hr.tvz.groops.util.SecurityUtil;
+import org.jetbrains.annotations.NotNull;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,7 +36,6 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
 import javax.persistence.PersistenceContext;
 import javax.validation.Valid;
 import java.time.Instant;
@@ -78,122 +78,18 @@ public class UserService implements Searchable {
     public UserDto register(@Valid UserCreateCommand command) {
         logger.debug("Creating user...");
         Instant now = now();
+
         User user = modelMapper.map(command, User.class);
         user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
-        validateUser(user);
         user.setVerified(false);
         user.setCreatedTs(now);
         user.setCreatedBy(authenticationService.getCurrentLoggedInUserUsername());
+
+        validateUser(user);
         user = userRepository.save(user);
         verificationPublisherService.verifyEmailCreate(user, now);
+
         return modelMapper.map(user, UserDto.class);
-    }
-
-    // todo add resend verification token for mail, change mail and change password
-
-    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public UserDto update(Long id, @Valid UserUpdateCommand command) {
-        logger.debug("Updating user...");
-        Instant now = now();
-        User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
-        String oldEmail = user.getEmail();
-        modelMapper.map(command, user);
-        user.setEmail(oldEmail);
-
-        if (command.getEmail().compareTo(user.getEmail()) != 0) {
-            Optional<PendingVerification> pending = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.MAIL_CHANGE);
-            pending.ifPresent(pendingVerificationRepository::delete);
-            flushAndClear();
-            verificationPublisherService.verifyEmailChange(user, now);
-        }
-        if (command.getPassword() != null) {
-            if (!SecurityUtil.isValidPassword(command.getPassword())) {
-                logger.debug(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getFullMessage());
-                throw new IllegalArgumentException(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getShortMessage());
-            }
-            user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
-            user.setVerified(false);
-            Optional<PendingVerification> pending = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.PASSWORD_CHANGE);
-            pending.ifPresent(pendingVerificationRepository::delete);
-            flushAndClear();
-            verificationPublisherService.verifyPasswordChange(user, now);
-        }
-        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
-        user.setModifiedTs(now());
-        return modelMapper.map(userRepository.save(user), UserDto.class);
-    }
-
-    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public void confirmEmailCreate() {
-        User user = findUserEntityByUsernameLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserUsername(), userRepository);
-        Optional<PendingVerification> pendingVerification = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.MAIL_CREATE);
-        if (pendingVerification.isEmpty()) {
-            throw new IllegalArgumentException("User has already confirmed email");
-        }
-        pendingVerificationRepository.delete(pendingVerification.get());
-        flushAndClear();
-        List<PendingVerification> pendingVerifications = pendingVerificationRepository.findByUser(user);
-        if (isNotVerifiable(pendingVerifications)) {
-            logger.debug("User {} is not verifiable", user.getUsername());
-            return;
-        }
-        user.setVerified(true);
-        user.setModifiedTs(now());
-        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
-        userRepository.save(user);
-    }
-
-    private void flushAndClear() {
-        entityManager.flush();
-        entityManager.clear();
-    }
-
-    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public void confirmEmailChange() {
-        User user = findUserEntityByUsernameLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserUsername(), userRepository);
-        Optional<PendingVerification> pendingVerification = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.MAIL_CHANGE);
-        if (pendingVerification.isEmpty()) {
-            throw new IllegalArgumentException("User has already confirmed email change");
-        }
-        pendingVerificationRepository.delete(pendingVerification.get());
-        flushAndClear();
-        String newEmail = authenticationService.getCurrentLoggedInUserEmail();
-        user.setEmail(newEmail);
-        user.setModifiedTs(now());
-        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
-        userRepository.save(user);
-    }
-
-    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public void confirmPasswordChange() {
-        User user = findUserEntityByUsernameLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserUsername(), userRepository);
-        Optional<PendingVerification> pendingVerification = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.PASSWORD_CHANGE);
-        if (pendingVerification.isEmpty()) {
-            throw new IllegalArgumentException("User has already confirmed password change");
-        }
-        pendingVerificationRepository.delete(pendingVerification.get());
-        flushAndClear();
-        user.setModifiedTs(now());
-        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
-        List<PendingVerification> pendingVerifications = pendingVerificationRepository.findByUser(user);
-        if (isNotVerifiable(pendingVerifications)) {
-            logger.debug("User {} is not verifiable", user.getUsername());
-            userRepository.save(user);
-            return;
-        }
-        user.setVerified(true);
-        userRepository.save(user);
-    }
-
-    private boolean isNotVerifiable(Collection<PendingVerification> pendingVerifications) {
-        for (PendingVerification pendingVerification : pendingVerifications) {
-            switch (pendingVerification.getVerificationType()) {
-                case MAIL_CREATE:
-                case PASSWORD_CHANGE:
-                    return true;
-            }
-        }
-        return false;
     }
 
     private void validateUser(User user) {
@@ -205,6 +101,124 @@ public class UserService implements Searchable {
             logger.debug(ExceptionEnum.INVALID_DATE_OF_BIRTH_EXCEPTION.getFullMessage());
             throw new IllegalArgumentException(ExceptionEnum.INVALID_DATE_OF_BIRTH_EXCEPTION.getShortMessage());
         }
+    }
+
+    // todo add resend verification token for mail, change mail and change password
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public UserDto update(Long id, @Valid UserUpdateCommand command) {
+        logger.debug("Updating user...");
+        Instant now = now();
+        User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
+
+        modelMapper.map(command, user);
+        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
+        user.setModifiedTs(now);
+
+        return modelMapper.map(userRepository.save(user), UserDto.class);
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public void changePassword(@NotNull Long id, @NotNull String password) {
+        logger.debug("Confirming user password change...");
+        Instant now = now();
+        User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
+
+        if (!SecurityUtil.isValidPassword(password)) {
+            logger.debug(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getFullMessage());
+            throw new IllegalArgumentException(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getShortMessage());
+        }
+        if (passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new IllegalArgumentException("New password must be different than the current one");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setVerified(false);
+        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
+        user.setModifiedTs(now);
+        user = userRepository.saveAndFlush(user);
+
+        Optional<PendingVerification> pending = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.PASSWORD_CHANGE);
+        pending.ifPresent(pendingVerificationRepository::delete);
+        flushAndClear();
+        verificationPublisherService.verifyPasswordChange(user, now);
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public void changeMail(@NotNull Long id, @NotNull String email) {
+        logger.debug("Confirming user mail change...");
+        Instant now = now();
+        User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
+
+        if (email.compareTo(user.getEmail()) == 0) {
+            throw new IllegalArgumentException("Email must be different than the current one");
+        }
+
+        user.setEmail(email);
+        user.setVerified(false);
+        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
+        user.setModifiedTs(now);
+        user = userRepository.saveAndFlush(user);
+
+        Optional<PendingVerification> pending = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.MAIL_CHANGE);
+        pending.ifPresent(pendingVerificationRepository::delete);
+        flushAndClear();
+        verificationPublisherService.verifyEmailChange(user, now);
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public void confirmEmailCreate() {
+        logger.debug("Confirming user mail...");
+        finalizeConfirmation(VerificationTypeEnum.MAIL_CREATE, "User has already confirmed email");
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public void confirmEmailChange() {
+        logger.debug("Confirming user mail change...");
+        finalizeConfirmation(VerificationTypeEnum.MAIL_CHANGE, "User has already confirmed email change");
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public void confirmPasswordChange() {
+        logger.debug("Confirming user password change...");
+        finalizeConfirmation(VerificationTypeEnum.PASSWORD_CHANGE, "User has already confirmed password change");
+    }
+
+    private void finalizeConfirmation(VerificationTypeEnum verificationTypeEnum, String exceptionMessage) {
+        Instant now = now();
+        User user = findUserEntityByUsernameLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserUsername(), userRepository);
+        Optional<PendingVerification> pendingVerification = pendingVerificationRepository.findByUserAndVerificationType(user, verificationTypeEnum);
+        if (pendingVerification.isEmpty()) {
+            throw new IllegalArgumentException(exceptionMessage);
+        }
+        pendingVerificationRepository.delete(pendingVerification.get());
+        flushAndClear();
+        List<PendingVerification> pendingVerifications = pendingVerificationRepository.findByUser(user);
+        if (isNotVerifiable(pendingVerifications)) {
+            logger.debug("User {} is not verifiable", user.getUsername());
+            return;
+        }
+        user.setVerified(true);
+        user.setModifiedTs(now);
+        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
+        userRepository.save(user);
+    }
+
+    private void flushAndClear() {
+        entityManager.flush();
+        entityManager.clear();
+    }
+
+    private boolean isNotVerifiable(Collection<PendingVerification> pendingVerifications) {
+        for (PendingVerification pendingVerification : pendingVerifications) {
+            switch (pendingVerification.getVerificationType()) {
+                case MAIL_CREATE:
+                case MAIL_CHANGE:
+                case PASSWORD_CHANGE:
+                    return true;
+            }
+        }
+        return false;
     }
 
     public UserDto findById(Long id) {
@@ -263,28 +277,26 @@ public class UserService implements Searchable {
     }
 
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
-    public Long getIdOrCreateJobUserByNameLockByPessimisticWrite(String jobName, String jobMail, String jobDescription) {
-        return userRepository.findIdByUsernameLockByPessimisticWrite(jobName).orElseGet(getJobUserIdSupplier(jobName, jobMail, jobDescription));
-    }
-
-    private Supplier<Long> getJobUserIdSupplier(String jobName, String jobMail, String jobDescription) {
-        return () -> {
-            Instant now = now();
-            User user = User.builder()
-                    .username(jobName)
-                    .passwordHash("empty_hash")
-                    .email(jobMail)
-                    .firstName(jobName)
-                    .lastName(jobName)
-                    .dateOfBirth(new java.sql.Date(now.toEpochMilli()))
-                    .description(jobDescription)
-                    .verified(true)
-                    .createdBy(jobName)
-                    .createdTs(now)
-                    .build();
-            user = userRepository.saveAndFlush(user);
-            return user.getId();
-        };
+    public void createJobUserByNameLockByPessimisticWriteIfNotExists(String jobName, String jobMail, String jobDescription) {
+        Instant now = now();
+        Optional<Long> userOptional = userRepository.findIdByUsernameLockByPessimisticWrite(jobName);
+        if (userOptional.isPresent()) {
+            logger.info("No need to create user for job with name: {} because the user already exists", jobName);
+            return;
+        }
+        User user = User.builder()
+                .username(jobName)
+                .passwordHash("empty_hash")
+                .email(jobMail)
+                .firstName(jobName)
+                .lastName(jobName)
+                .dateOfBirth(new java.sql.Date(now.toEpochMilli()))
+                .description(jobDescription)
+                .verified(true)
+                .createdBy(jobName)
+                .createdTs(now)
+                .build();
+        userRepository.saveAndFlush(user);
     }
 
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)

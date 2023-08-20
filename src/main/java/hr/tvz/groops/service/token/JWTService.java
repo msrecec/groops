@@ -27,22 +27,13 @@ public abstract class JWTService implements TokenService {
     }
 
     @Override
-    public String generateTokenBase64(@NotNull String username, @NotNull String email, String... roles) {
-        return toBase64(generateToken(username, email, roles));
+    public String generateTokenBase64(@NotNull String username, @NotNull String... roles) {
+        return toBase64(getToken(username, new ArrayList<>(Arrays.asList(roles)), jwtConfig.getTokenExpirationAfterSeconds()));
     }
 
     @Override
-    public String generateTokenBase64(@NotNull String username, @NotNull String email, @NotNull Long subscriptionId, @NotNull String... roles) {
-        return toBase64(getToken(username, email, subscriptionId, new ArrayList<>(Arrays.asList(roles)), jwtConfig.getTokenExpirationAfterSeconds()));
-    }
-
-    private String generateToken(@NotNull String username, @NotNull String email, String... roles) {
-        return generateToken(username, email, new ArrayList<>(Arrays.asList(roles)));
-    }
-
-    @Override
-    public String generateToken(@NotNull String username, @NotNull String email, @NotNull Collection<?> roles) {
-        return getToken(username, email, roles, jwtConfig.getTokenExpirationAfterSeconds());
+    public String generateToken(@NotNull String username, @NotNull Collection<?> roles) {
+        return getToken(username, roles, jwtConfig.getTokenExpirationAfterSeconds());
     }
 
     @Override
@@ -53,14 +44,10 @@ public abstract class JWTService implements TokenService {
                 .parseClaimsJws(parsedToken);
     }
 
-    private String getToken(@NotNull String username, @NotNull String email, @NotNull Collection<?> roles, Long seconds) {
-        return getToken(username, email, null, roles, seconds);
-    }
-
-    private String getToken(@NotNull String username, @NotNull String email, Long subscriptionId, @NotNull Collection<?> roles, Long seconds) {
+    private String getToken(@NotNull String username, @NotNull Collection<?> roles, Long seconds) {
         String token = Jwts.builder()
                 .signWith(secretKey, algo)
-                .setClaims(subscriptionId == null ? getClaims(username, email, roles) : getClaims(username, email, subscriptionId, roles))
+                .setClaims(getClaims(username, roles))
                 .setSubject(username)
                 .setIssuer(jwtConfig.getIssuer())
                 .setExpiration(getExp(seconds))
@@ -70,12 +57,8 @@ public abstract class JWTService implements TokenService {
     }
 
 
-    private Map<String, Object> getClaims(@NotNull String username, @NotNull String email, @NotNull Collection<?> roles) {
-        return Map.of("u", username, "em", email, "r", roles);
-    }
-
-    private Map<String, Object> getClaims(@NotNull String username, @NotNull String email, @NotNull Long subscriptionId, @NotNull Collection<?> roles) {
-        return Map.of("u", username, "em", email, "subid", subscriptionId, "r", roles);
+    private Map<String, Object> getClaims(@NotNull String username, @NotNull Collection<?> roles) {
+        return Map.of("u", username, "r", roles);
     }
 
     private Date getExp(Long seconds) {
