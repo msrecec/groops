@@ -103,6 +103,7 @@ public class UserService implements Searchable {
         if (command.getEmail().compareTo(user.getEmail()) != 0) {
             Optional<PendingVerification> pending = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.MAIL_CHANGE);
             pending.ifPresent(pendingVerificationRepository::delete);
+            flushAndClear();
             verificationPublisherService.verifyEmailChange(user, now);
         }
         if (command.getPassword() != null) {
@@ -110,7 +111,11 @@ public class UserService implements Searchable {
                 logger.debug(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getFullMessage());
                 throw new IllegalArgumentException(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getShortMessage());
             }
+            user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
             user.setVerified(false);
+            Optional<PendingVerification> pending = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.PASSWORD_CHANGE);
+            pending.ifPresent(pendingVerificationRepository::delete);
+            flushAndClear();
             verificationPublisherService.verifyPasswordChange(user, now);
         }
         user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
@@ -127,7 +132,6 @@ public class UserService implements Searchable {
         }
         pendingVerificationRepository.delete(pendingVerification.get());
         flushAndClear();
-
         List<PendingVerification> pendingVerifications = pendingVerificationRepository.findByUser(user);
         if (isNotVerifiable(pendingVerifications)) {
             logger.debug("User {} is not verifiable", user.getUsername());
