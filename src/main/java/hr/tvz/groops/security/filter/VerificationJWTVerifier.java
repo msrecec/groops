@@ -32,11 +32,12 @@ public abstract class VerificationJWTVerifier extends JWTVerifier {
         try {
             Jws<Claims> claimsJws = jwtService.getClaimsFromToken(requestToken);
             Claims body = claimsJws.getBody();
+            Long id = body.get(JWTConstants.ID, Long.class);
             String username = body.get(JWTConstants.USERNAME, String.class);
             var roles = (Collection<String>) body.get(JWTConstants.ROLES);
             Set<SimpleGrantedAuthority> authorities = getRoles(roles);
 
-            Authentication authentication = new GroopsUserDataToken(username, null, authorities);
+            Authentication authentication = new GroopsUserDataToken(id, username, null, authorities);
             setAuthentication(authentication);
 
         } catch (JwtException e) {

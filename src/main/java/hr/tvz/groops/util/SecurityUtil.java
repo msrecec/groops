@@ -43,6 +43,21 @@ public class SecurityUtil {
         return principal.toString();
     }
 
+    public static @NotNull Long getCurrentLoggedInUserId() {
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null) {
+            throw new InternalServerException("No authentication", new Throwable());
+        }
+
+        if (!(authentication instanceof GroopsUserDataToken)) {
+            throw new InternalServerException("Invalid authentication type", new Throwable());
+        }
+
+        return ((GroopsUserDataToken) authentication).getUserId();
+    }
+
     public static @NotNull GroopsUserDataToken getCurrentLoggedInUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

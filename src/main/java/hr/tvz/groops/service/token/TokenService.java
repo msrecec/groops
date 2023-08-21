@@ -10,9 +10,9 @@ import java.util.Collection;
 
 public interface TokenService {
 
-    String generateTokenBase64(@NotNull String username,  @NotNull String... roles);
+    String generateTokenBase64(@NotNull Long id, @NotNull String username, @NotNull String... roles);
 
-    String generateToken(@NotNull String username,  @NotNull Collection<?> roles);
+    String generateToken(@NotNull Long id, @NotNull String username, @NotNull Collection<?> roles);
 
     Jws<Claims> getClaimsFromToken(@NotNull String token);
 

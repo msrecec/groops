@@ -30,6 +30,11 @@ public class AuthenticationService {
         return SecurityUtil.getCurrentLoggedInUserUsername();
     }
 
+    @NotNull
+    public Long getCurrentLoggedInUserId() {
+        return SecurityUtil.getCurrentLoggedInUserId();
+    }
+
     public boolean andMatchesAny(HttpServletRequest request) {
         return anyAndMatches(request);
     }
@@ -47,7 +52,7 @@ public class AuthenticationService {
     public GroopsUserDataToken getCurrentLoggedInUser() {
 //        return SecurityUtil.getCurrentLoggedInUser();
         Set<String> rolesAndPermissions = new HashSet<>();
-        return new GroopsUserDataToken("test", null, getRoles(rolesAndPermissions));
+        return new GroopsUserDataToken(-1L, "test", null, getRoles(rolesAndPermissions));
     }
 
     private Set<SimpleGrantedAuthority> getRoles(Collection<String> roles) {

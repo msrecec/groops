@@ -1,5 +1,6 @@
 package hr.tvz.groops.service.token;
 
+import hr.tvz.groops.constants.JWTConstants;
 import hr.tvz.groops.security.token.JwtConfig;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -27,13 +28,13 @@ public abstract class JWTService implements TokenService {
     }
 
     @Override
-    public String generateTokenBase64(@NotNull String username, @NotNull String... roles) {
-        return toBase64(getToken(username, new ArrayList<>(Arrays.asList(roles)), jwtConfig.getTokenExpirationAfterSeconds()));
+    public String generateTokenBase64(@NotNull Long id, @NotNull String username, @NotNull String... roles) {
+        return toBase64(getToken(id, username, new ArrayList<>(Arrays.asList(roles)), jwtConfig.getTokenExpirationAfterSeconds()));
     }
 
     @Override
-    public String generateToken(@NotNull String username, @NotNull Collection<?> roles) {
-        return getToken(username, roles, jwtConfig.getTokenExpirationAfterSeconds());
+    public String generateToken(@NotNull Long id, @NotNull String username, @NotNull Collection<?> roles) {
+        return getToken(id, username, roles, jwtConfig.getTokenExpirationAfterSeconds());
     }
 
     @Override
@@ -44,10 +45,10 @@ public abstract class JWTService implements TokenService {
                 .parseClaimsJws(parsedToken);
     }
 
-    private String getToken(@NotNull String username, @NotNull Collection<?> roles, Long seconds) {
+    private String getToken(@NotNull Long id, @NotNull String username, @NotNull Collection<?> roles, Long seconds) {
         String token = Jwts.builder()
                 .signWith(secretKey, algo)
-                .setClaims(getClaims(username, roles))
+                .setClaims(getClaims(id, username, roles))
                 .setSubject(username)
                 .setIssuer(jwtConfig.getIssuer())
                 .setExpiration(getExp(seconds))
@@ -57,8 +58,8 @@ public abstract class JWTService implements TokenService {
     }
 
 
-    private Map<String, Object> getClaims(@NotNull String username, @NotNull Collection<?> roles) {
-        return Map.of("u", username, "r", roles);
+    private Map<String, Object> getClaims(@NotNull Long id, @NotNull String username, @NotNull Collection<?> roles) {
+        return Map.of(JWTConstants.ID, id, JWTConstants.USERNAME, username, JWTConstants.ROLES, roles);
     }
 
     private Date getExp(Long seconds) {

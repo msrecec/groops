@@ -1,11 +1,7 @@
 package hr.tvz.groops.criteria;
 
-import hr.tvz.groops.model.Permission;
-import hr.tvz.groops.model.Role;
-import hr.tvz.groops.model.User;
-import hr.tvz.groops.repository.PermissionRepository;
-import hr.tvz.groops.repository.RoleRepository;
-import hr.tvz.groops.repository.UserRepository;
+import hr.tvz.groops.model.*;
+import hr.tvz.groops.repository.*;
 import org.jetbrains.annotations.NotNull;
 
 import javax.persistence.EntityNotFoundException;
@@ -39,5 +35,17 @@ public interface Searchable {
     default @NotNull User findUserEntityByUsername(@NotNull String username, @NotNull UserRepository userRepository) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_BY_USERNAME.getMessageComposed(username)));
+    }
+
+    default @NotNull Group findGroupById(@NotNull Long id, @NotNull GroupRepository groupRepository) {
+        return groupRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(GROUP_NOT_FOUND_BY_ID.getMessageComposed(id)));
+    }
+
+    default @NotNull GroupRequest findGroupRequestByGroupAndUser(@NotNull Group group, @NotNull User user, GroupRequestRepository groupRequestRepository) {
+        return groupRequestRepository.findByGroupAndUser(group, user).orElseThrow(() -> new EntityNotFoundException(GROUP_NOT_FOUND_BY_ID.getMessageComposed(group.getId(), user.getId())));
+    }
+
+    default @NotNull UserGroup findUserGroupByUserAndGroup(@NotNull User user, @NotNull Group group, @NotNull UserGroupRepository userGroupRepository) {
+        return userGroupRepository.findByUserAndGroup(user, group).orElseThrow(() -> new EntityNotFoundException(USER_GROUP_NOT_FOUND_BY_USER_ID_AND_GROUP_ID.getMessageComposed(user.getId(), group.getId())));
     }
 }

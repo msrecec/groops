@@ -26,6 +26,7 @@ import static hr.tvz.groops.jobs.VerificationJob.VERIFICATION_SCHEDULER_JOB_IDEN
 @Configuration
 public class SchedulerConfig {
     private static final Logger logger = LoggerFactory.getLogger(SchedulerConfig.class);
+    public static final String JOB_ID = "id";
     private final ApplicationContext applicationContext;
     private final UserService userService;
     private final String MAIL;
@@ -61,11 +62,12 @@ public class SchedulerConfig {
     public JobDetail verificationJobDetail() {
         String jobEmail = this.MAIL;
         validateJobEmailAddress(jobEmail);
-        userService.createJobUserByNameLockByPessimisticWriteIfNotExists(VERIFICATION_SCHEDULER_JOB_IDENTITY, jobEmail, VERIFICATION_SCHEDULER_JOB_DESCRIPTION);
+        Long jobId = userService.createJobUserByNameLockByPessimisticWriteIfNotExistsAndGetId(VERIFICATION_SCHEDULER_JOB_IDENTITY, jobEmail, VERIFICATION_SCHEDULER_JOB_DESCRIPTION);
         return JobBuilder
                 .newJob(VerificationJob.class)
                 .withIdentity(initializeAndLogBeanName(VERIFICATION_SCHEDULER_JOB_IDENTITY))
                 .withDescription(VERIFICATION_SCHEDULER_JOB_DESCRIPTION)
+                .usingJobData(JOB_ID, jobId)
                 .storeDurably()
                 .requestRecovery()
                 .build();
@@ -83,15 +85,17 @@ public class SchedulerConfig {
                         .inTimeZone(TimeZone.getTimeZone(TIME_ZONE_ID))
                 ).build();
     }
+
     @Bean("mailJobDetail")
     public JobDetail mailJobDetail() {
         String jobEmail = this.MAIL;
         validateJobEmailAddress(jobEmail);
-        userService.createJobUserByNameLockByPessimisticWriteIfNotExists(EMAIL_SCHEDULER_JOB_IDENTITY, jobEmail, EMAIL_SCHEDULER_JOB_DESCRIPTION);
+        Long jobId = userService.createJobUserByNameLockByPessimisticWriteIfNotExistsAndGetId(EMAIL_SCHEDULER_JOB_IDENTITY, jobEmail, EMAIL_SCHEDULER_JOB_DESCRIPTION);
         return JobBuilder
                 .newJob(EmailJob.class)
                 .withIdentity(initializeAndLogBeanName(EMAIL_SCHEDULER_JOB_IDENTITY))
                 .withDescription(EMAIL_SCHEDULER_JOB_DESCRIPTION)
+                .usingJobData(JOB_ID, jobId)
                 .storeDurably()
                 .requestRecovery()
                 .build();

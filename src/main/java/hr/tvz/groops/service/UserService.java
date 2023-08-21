@@ -276,12 +276,12 @@ public class UserService implements Searchable {
     }
 
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
-    public void createJobUserByNameLockByPessimisticWriteIfNotExists(String jobName, String jobMail, String jobDescription) {
+    public Long createJobUserByNameLockByPessimisticWriteIfNotExistsAndGetId(String jobName, String jobMail, String jobDescription) {
         Instant now = now();
         Optional<Long> userOptional = userRepository.findIdByUsernameLockByPessimisticWrite(jobName);
         if (userOptional.isPresent()) {
             logger.info("No need to create user for job with name: {} because the user already exists", jobName);
-            return;
+            return userOptional.get();
         }
         User user = User.builder()
                 .username(jobName)
@@ -295,7 +295,7 @@ public class UserService implements Searchable {
                 .createdBy(jobName)
                 .createdTs(now)
                 .build();
-        userRepository.saveAndFlush(user);
+        return userRepository.saveAndFlush(user).getId();
     }
 
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)

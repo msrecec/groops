@@ -15,7 +15,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @SuperBuilder
 @ToString
-public class UserGroupRole {
+public class UserGroupRole extends BaseEntity {
     @EmbeddedId
     private UserGroupRoleId userGroupRoleId;
     @MapsId(value = "userGroupId")
