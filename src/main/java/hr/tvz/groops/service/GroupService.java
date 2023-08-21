@@ -216,7 +216,7 @@ public class GroupService implements Searchable {
         User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
         Group group = findGroupById(groupId, groupRepository);
         UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
-        UserGroupRole userGroupRole =
+        UserGroupRole userGroupRole = null;
     }
 
 }
