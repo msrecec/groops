@@ -8,7 +8,10 @@ import hr.tvz.groops.dto.response.ExternalServiceErrorDto;
 import hr.tvz.groops.exception.ExceptionEnum;
 import hr.tvz.groops.exception.ExternalServiceException;
 import hr.tvz.groops.exception.InternalServerException;
+
 import javax.persistence.EntityNotFoundException;
+
+import hr.tvz.groops.exception.UnauthorizedException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.postgresql.util.PSQLException;
@@ -27,6 +30,7 @@ import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+
 import java.util.stream.Collectors;
 
 public abstract class ControllerBase {
@@ -134,6 +138,14 @@ public abstract class ControllerBase {
     public ErrorDto accessDeniedException(AccessDeniedException ex) {
         logger.error(ExceptionEnum.ACCESS_DENIED_EXCEPTION.getFullMessage(), ex);
         return new ErrorDto(false, ExceptionEnum.ACCESS_DENIED_EXCEPTION.getFullMessage());
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ResponseBody
+    public ErrorDto unauthorizedException(UnauthorizedException ex) {
+        logger.error(ExceptionEnum.UNAUTHORIZED_EXCEPTION.getFullMessage(), ex);
+        return new ErrorDto(false, ex.getMessage());
     }
 
     @ExceptionHandler(Exception.class)

@@ -45,7 +45,8 @@ public enum ExceptionEnum {
     SUBSCRIPTION_ID_NOT_NULL(41, "Subscription id must not be null"),
     CLASS_CAST_EXCEPTION(42, "Class cast exception"),
     INVALID_PASSWORD_EXCEPTION(43, "Invalid password"),
-    INVALID_DATE_OF_BIRTH_EXCEPTION(44, "Invalid date of birth");
+    INVALID_DATE_OF_BIRTH_EXCEPTION(44, "Invalid date of birth"),
+    UNAUTHORIZED_EXCEPTION(45, "Unauthorized");
     private final int code;
     private final String clientMessage;
 

@@ -31,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -125,6 +126,23 @@ public class UserService implements Searchable {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("Wrong username or password"));
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new IllegalArgumentException("Wrong username or password");
+        }
+        List<PendingVerification> pendingVerifications = pendingVerificationRepository.findByUser(user);
+        List<String> exceptionMessages = new ArrayList<>();
+        for (PendingVerification pendingVerification : pendingVerifications) {
+            switch (pendingVerification.getVerificationType()) {
+                case MAIL_CREATE:
+                    exceptionMessages.add("You must verify email");
+                    break;
+                case MAIL_CHANGE:
+                    exceptionMessages.add("You must verify mail");
+                    break;
+                case PASSWORD_CHANGE:
+                    exceptionMessages.add("You must verify password");
+            }
+        }
+        if (!exceptionMessages.isEmpty()) {
+            throw new AccessDeniedException(String.join("\n", exceptionMessages));
         }
         String token = appJWTService.generateToken(user.getId(), user.getUsername(), new ArrayList<>());
         httpServletResponse.setHeader(appJWTService.getResponseHeader(), token);
