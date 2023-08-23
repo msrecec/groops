@@ -3,11 +3,9 @@ package hr.tvz.groops.service;
 import com.querydsl.core.BooleanBuilder;
 import hr.tvz.groops.command.crud.GroupCommand;
 import hr.tvz.groops.command.search.GroupSearchCommand;
-import hr.tvz.groops.command.search.UserSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.GroupDto;
-import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.enums.RoleEnum;
@@ -103,7 +101,7 @@ public class GroupService implements Searchable {
     public GroupDto update(Long id, GroupCommand command) {
         logger.debug("Updating group with id: {}", id);
         Instant now = now();
-        Group group = findGroupById(id, groupRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(id, groupRepository);
         group.setName(command.getName());
         group.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         group.setModifiedTs(now);
@@ -115,7 +113,7 @@ public class GroupService implements Searchable {
         logger.debug("Adding user with id: {} to group with id: {}", userId, groupId);
         Instant now = now();
         User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
-        Group group = findGroupById(groupId, groupRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
         GroupRequest groupRequest = findGroupRequestByGroupAndUser(group, user, groupRequestRepository);
         groupRequestRepository.delete(groupRequest);
 
@@ -153,7 +151,7 @@ public class GroupService implements Searchable {
     public void rejectGroupRequest(Long userId, Long groupId) {
         logger.debug("Rejecting group join request from user with id: {} for group with id: {}", userId, groupId);
         User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
-        Group group = findGroupById(groupId, groupRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
         GroupRequest groupRequest = findGroupRequestByGroupAndUser(group, user, groupRequestRepository);
         groupRequestRepository.delete(groupRequest);
     }
@@ -163,7 +161,7 @@ public class GroupService implements Searchable {
         logger.debug("Sending request from user with id: {} to join group with id: {}", authenticationService.getCurrentLoggedInUserId(), groupId);
         Instant now = now();
         User user = findUserEntityById(authenticationService.getCurrentLoggedInUserId(), userRepository);
-        Group group = findGroupById(groupId, groupRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
         if (userGroupRepository.existsByUserAndGroup(user, group)) {
             throw new IllegalArgumentException("Can't request to join group you are already a part of");
         }
@@ -187,17 +185,10 @@ public class GroupService implements Searchable {
         return userRepository.findAll(builder.getValue() != null ? builder.getValue() : builder, pageable).map(u -> modelMapper.map(u, GroupDto.class));
     }
 
-    // todo change user role in group
-    // todo add leave group
-    // todo add check if there are other admin users in case the user leaving the group is the only admin
-    // todo can't remove other admins from group
-    // todo maybe check to have another role: superadmin
-    // todo if we are going to use superadmin, we should add ability to transfer credentials to other users
-
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
     public void deleteById(Long groupId) {
         logger.info("Deleting group with id: {}", groupId);
-        Group group = findGroupById(groupId, groupRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
         groupRepository.delete(group);
     }
 
@@ -205,7 +196,7 @@ public class GroupService implements Searchable {
     public void removeUserFromGroup(Long groupId, Long userId) {
         logger.debug("Removing user with id: {} from group with id: {}", userId, groupId);
         User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
-        Group group = findGroupById(groupId, groupRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
         UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
         userGroupRepository.delete(userGroup);
     }
@@ -213,10 +204,60 @@ public class GroupService implements Searchable {
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
     public void changeRole(Long userId, Long groupId, RoleEnum roleEnum) {
         logger.debug("Removing user with id: {} from group with id: {}", userId, groupId);
+        Instant now = now();
         User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
-        Group group = findGroupById(groupId, groupRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
         UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
-        UserGroupRole userGroupRole = null;
+        List<UserGroupRole> userGroupRoles = userGroupRoleRepository.findByUserGroup(userGroup);
+        userGroupRoleRepository.deleteAll(userGroupRoles);
+        UserGroupRole newUserGroupRole = UserGroupRole.builder()
+                .userGroup(userGroup)
+                .role(authorizationService.getOrCreateByRoleEnum(roleEnum, now))
+                .createdBy(authenticationService.getCurrentLoggedInUserUsername())
+                .createdTs(now)
+                .build();
+        userGroupRoleRepository.save(newUserGroupRole);
     }
 
+    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
+    public void kickUser(Long userId, Long groupId) {
+        Instant now = now();
+        User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
+        Role adminRole = authorizationService.getOrCreateAdminRole(now);
+
+        if (user.getId().compareTo(currentUserId) == 0) {
+            throw new IllegalArgumentException("Can't kick yourself out of the group");
+        }
+
+        if (userGroupRoleRepository.existsByUserGroupAndRole(userGroup, adminRole)) {
+            throw new IllegalArgumentException("Can't kick admin from group");
+        }
+
+        logger.info("Kicked user with id: {} from group", user.getId());
+        userGroupRepository.delete(userGroup);
+    }
+
+    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
+    public void leaveGroup(Long groupId) {
+        logger.info("User with id: {} is leaving group...", authenticationService.getCurrentLoggedInUserId());
+        Instant now = now();
+        User currentUser = findUserEntityByIdLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserId(), userRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
+        Role adminRole = authorizationService.getOrCreateAdminRole(now);
+        UserGroup userGroup = findUserGroupByUserAndGroup(currentUser, group, userGroupRepository);
+
+        if (userGroupRoleRepository.existsByUserGroupAndRole(userGroup, adminRole) && userGroupRoleRepository.countAllByGroupAndRole(group, adminRole) == 1) {
+            throw new IllegalArgumentException("Can't leave group because you are the only admin");
+        }
+
+        userGroupRepository.delete(userGroup);
+    }
+
+    
+
 }
+
+

@@ -37,6 +37,10 @@ public interface Searchable {
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_BY_USERNAME.getMessageComposed(username)));
     }
 
+    default @NotNull Group findGroupByIdLockByPessimisticWrite(@NotNull Long id, @NotNull GroupRepository groupRepository) {
+        return groupRepository.findByIdLockByPessimisticWrite(id).orElseThrow(() -> new EntityNotFoundException(GROUP_NOT_FOUND_BY_ID.getMessageComposed(id)));
+    }
+
     default @NotNull Group findGroupById(@NotNull Long id, @NotNull GroupRepository groupRepository) {
         return groupRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(GROUP_NOT_FOUND_BY_ID.getMessageComposed(id)));
     }
@@ -47,5 +51,9 @@ public interface Searchable {
 
     default @NotNull UserGroup findUserGroupByUserAndGroup(@NotNull User user, @NotNull Group group, @NotNull UserGroupRepository userGroupRepository) {
         return userGroupRepository.findByUserAndGroup(user, group).orElseThrow(() -> new EntityNotFoundException(USER_GROUP_NOT_FOUND_BY_USER_ID_AND_GROUP_ID.getMessageComposed(user.getId(), group.getId())));
+    }
+
+    default @NotNull UserGroupRole findUserGroupRoleByUserGroupAndRole(UserGroup userGroup, Role role, UserGroupRoleRepository userGroupRoleRepository) {
+        return userGroupRoleRepository.findByUserGroupAndRole(userGroup, role).orElseThrow(() -> new EntityNotFoundException(USER_GROUP_ROLE_NOT_FOUND_BY_USER_GROUP_AND_ROLE.getMessageComposed(userGroup.getId(), role.getId())));
     }
 }

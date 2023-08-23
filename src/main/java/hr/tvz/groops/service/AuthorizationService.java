@@ -2,9 +2,11 @@ package hr.tvz.groops.service;
 
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
+import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.Permission;
 import hr.tvz.groops.model.Role;
 import hr.tvz.groops.model.RolePermission;
+import hr.tvz.groops.model.UserGroupRole;
 import hr.tvz.groops.model.enums.PermissionEnum;
 import hr.tvz.groops.model.enums.RoleEnum;
 import hr.tvz.groops.repository.RolePermissionRepository;
@@ -121,6 +123,19 @@ public class AuthorizationService implements Searchable {
                     .createdTs(now)
                     .build();
             rolePermissionRepository.save(writeRolePermission);
+        }
+    }
+
+    public Role getOrCreateByRoleEnum(RoleEnum roleEnum, Instant now) {
+        switch (roleEnum) {
+            case ROLE_USER:
+                return getOrCreateUserRole(now);
+            case ROLE_ADMIN:
+                return getOrCreateAdminRole(now);
+            case ROLE_LURKER:
+                return getOrCreateLurkerRole(now);
+            default:
+                throw new InternalServerException("Unsupported role");
         }
     }
 
