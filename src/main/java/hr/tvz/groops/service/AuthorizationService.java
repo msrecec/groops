@@ -3,23 +3,27 @@ package hr.tvz.groops.service;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.exception.InternalServerException;
-import hr.tvz.groops.model.Permission;
-import hr.tvz.groops.model.Role;
-import hr.tvz.groops.model.RolePermission;
-import hr.tvz.groops.model.UserGroupRole;
+import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.enums.PermissionEnum;
 import hr.tvz.groops.model.enums.RoleEnum;
 import hr.tvz.groops.repository.RolePermissionRepository;
 import hr.tvz.groops.repository.RoleRepository;
+import hr.tvz.groops.repository.UserGroupRepository;
+import hr.tvz.groops.repository.UserGroupRoleRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
+
+import static hr.tvz.groops.util.TimeUtils.now;
 
 @Service
 public class AuthorizationService implements Searchable {
@@ -27,14 +31,51 @@ public class AuthorizationService implements Searchable {
     private final RoleRepository roleRepository;
     private final PermissionService permissionService;
     private final RolePermissionRepository rolePermissionRepository;
+    private final UserGroupRepository userGroupRepository;
+    private final UserGroupRoleRepository userGroupRoleRepository;
     private final AuthenticationService authenticationService;
 
     @Autowired
-    public AuthorizationService(RoleRepository roleRepository, PermissionService permissionService, RolePermissionRepository rolePermissionRepository, AuthenticationService authenticationService) {
+    public AuthorizationService(RoleRepository roleRepository,
+                                PermissionService permissionService,
+                                RolePermissionRepository rolePermissionRepository,
+                                UserGroupRepository userGroupRepository,
+                                UserGroupRoleRepository userGroupRoleRepository,
+                                AuthenticationService authenticationService) {
         this.roleRepository = roleRepository;
         this.permissionService = permissionService;
         this.rolePermissionRepository = rolePermissionRepository;
+        this.userGroupRepository = userGroupRepository;
+        this.userGroupRoleRepository = userGroupRoleRepository;
         this.authenticationService = authenticationService;
+    }
+
+    @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
+    public void hasGroupRole(User user, Group group, RoleEnum roleEnum) {
+        Instant now = now();
+        UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
+        Role role = getOrCreateByRoleEnum(roleEnum, now);
+        Optional<UserGroupRole> userGroupRole = userGroupRoleRepository.findByUserGroupAndRole(userGroup, role);
+        if (userGroupRole.isEmpty()) {
+            throw new AccessDeniedException("Unauthorized");
+        }
+    }
+
+    @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
+    public void hasGroupPermission(User user, Group group, PermissionEnum permissionEnum) {
+        Instant now = now();
+        UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
+        Permission permission = permissionService.getOrCreatePermission(permissionEnum, now);
+        List<UserGroupRole> userGroupRoles = userGroupRoleRepository.findByUserGroup(userGroup);
+        for (UserGroupRole userGroupRole : userGroupRoles) {
+            List<RolePermission> rolePermissions = rolePermissionRepository.findByRole(userGroupRole.getRole());
+            for (RolePermission rolePermission : rolePermissions) {
+                if (rolePermission.getPermission().getId().equals(permission.getId())) {
+                    return;
+                }
+            }
+        }
+        throw new AccessDeniedException("Unauthorized");
     }
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)

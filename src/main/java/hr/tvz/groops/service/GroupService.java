@@ -101,7 +101,9 @@ public class GroupService implements Searchable {
     public GroupDto update(Long id, GroupCommand command) {
         logger.debug("Updating group with id: {}", id);
         Instant now = now();
+        User user = findUserEntityByIdLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserId(), userRepository);
         Group group = findGroupByIdLockByPessimisticWrite(id, groupRepository);
+        authorizationService.hasGroupRole(user, group, RoleEnum.ROLE_ADMIN);
         group.setName(command.getName());
         group.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         group.setModifiedTs(now);
@@ -114,6 +116,7 @@ public class GroupService implements Searchable {
         Instant now = now();
         User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
         Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
+        authorizationService.hasGroupRole(user, group, RoleEnum.ROLE_ADMIN);
         GroupRequest groupRequest = findGroupRequestByGroupAndUser(group, user, groupRequestRepository);
         groupRequestRepository.delete(groupRequest);
 
@@ -152,6 +155,7 @@ public class GroupService implements Searchable {
         logger.debug("Rejecting group join request from user with id: {} for group with id: {}", userId, groupId);
         User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
         Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
+        authorizationService.hasGroupRole(user, group, RoleEnum.ROLE_ADMIN);
         GroupRequest groupRequest = findGroupRequestByGroupAndUser(group, user, groupRequestRepository);
         groupRequestRepository.delete(groupRequest);
     }
@@ -188,7 +192,9 @@ public class GroupService implements Searchable {
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
     public void deleteById(Long groupId) {
         logger.info("Deleting group with id: {}", groupId);
+        User user = findUserEntityByIdLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserId(), userRepository);
         Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
+        authorizationService.hasGroupRole(user, group, RoleEnum.ROLE_ADMIN);
         groupRepository.delete(group);
     }
 
@@ -197,6 +203,7 @@ public class GroupService implements Searchable {
         Instant now = now();
         User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
         Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
+        authorizationService.hasGroupRole(user, group, RoleEnum.ROLE_ADMIN);
         Long currentUserId = authenticationService.getCurrentLoggedInUserId();
         UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
         Role adminRole = authorizationService.getOrCreateAdminRole(now);
@@ -218,10 +225,11 @@ public class GroupService implements Searchable {
         logger.debug("Removing user with id: {} from group with id: {}", userId, groupId);
         Instant now = now();
         User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
+        authorizationService.hasGroupRole(user, group, RoleEnum.ROLE_ADMIN);
         if (userId.compareTo(authenticationService.getCurrentLoggedInUserId()) == 0) {
             throw new IllegalArgumentException("Can't change your own role");
         }
-        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
         UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
         List<UserGroupRole> userGroupRoles = userGroupRoleRepository.findByUserGroup(userGroup);
         userGroupRoleRepository.deleteAll(userGroupRoles);

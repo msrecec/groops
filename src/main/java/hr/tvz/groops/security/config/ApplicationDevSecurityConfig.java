@@ -76,8 +76,7 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers(ACTUATOR_PATTERN)
                 .permitAll()
                 .antMatchers("/**")
-//                .authenticated()
-                .permitAll()
+                .authenticated()
                 .and()
                 .exceptionHandling()
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED));
