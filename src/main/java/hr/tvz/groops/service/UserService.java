@@ -132,10 +132,8 @@ public class UserService implements Searchable {
         for (PendingVerification pendingVerification : pendingVerifications) {
             switch (pendingVerification.getVerificationType()) {
                 case MAIL_CREATE:
-                    exceptionMessages.add("You must verify email");
-                    break;
                 case MAIL_CHANGE:
-                    exceptionMessages.add("You must verify mail");
+                    exceptionMessages.add("You must verify email");
                     break;
                 case PASSWORD_CHANGE:
                     exceptionMessages.add("You must verify password");
