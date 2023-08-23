@@ -1,5 +1,6 @@
 package hr.tvz.groops.util;
 
+import hr.tvz.groops.exception.ExceptionEnum;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import org.jetbrains.annotations.NotNull;
@@ -10,7 +11,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -76,30 +79,38 @@ public class SecurityUtil {
      * @param password
      * @return
      */
-    public static boolean isValidPassword(String password) {
-        // Regex to check valid password.
-        String regex = "^(?=.*[0-9])"
-                + "(?=.*[a-z])(?=.*[A-Z])"
-                + "(?=.*[@#$%^&+=])"
-                + "(?=\\S+$).{8,20}$";
-
-        // Compile the ReGex
-        Pattern p = Pattern.compile(regex);
-
-        // If the password is empty
-        // return false
-        if (password == null) {
-            return false;
+    public static void validatePassword(String password) {
+        boolean isValid = true;
+        List<String> exceptionMessages = new ArrayList<>();
+        if (password.length() > 15 || password.length() < 8) {
+            exceptionMessages.add("Password must be less than 20 and more than 8 characters in length.");
+            isValid = false;
         }
-
-        // Pattern class contains matcher() method
-        // to find matching between given password
-        // and regular expression.
-        Matcher m = p.matcher(password);
-
-        // Return if the password
-        // matched the ReGex
-        return m.matches();
+        String upperCaseChars = "(.*[A-Z].*)";
+        if (!password.matches(upperCaseChars)) {
+            exceptionMessages.add("Password must have atleast one uppercase character");
+            isValid = false;
+        }
+        String lowerCaseChars = "(.*[a-z].*)";
+        if (!password.matches(lowerCaseChars)) {
+            exceptionMessages.add("Password must have atleast one lowercase character");
+            isValid = false;
+        }
+        String numbers = "(.*[0-9].*)";
+        if (!password.matches(numbers)) {
+            exceptionMessages.add("Password must have atleast one number");
+            isValid = false;
+        }
+        String specialChars = "(.*[@,#,$,%,!].*$)";
+        if (!password.matches(specialChars)) {
+            exceptionMessages.add("Password must have atleast one special character among @#$%!");
+            isValid = false;
+        }
+        if (isValid) {
+            return;
+        }
+        logger.debug(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getFullMessage());
+        throw new IllegalArgumentException(String.join("\n", exceptionMessages));
     }
 
     public static @NotNull Set<SimpleGrantedAuthority> getRoles(Collection<String> roles) {

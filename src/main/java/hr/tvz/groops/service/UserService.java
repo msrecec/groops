@@ -90,22 +90,16 @@ public class UserService implements Searchable {
         user.setCreatedTs(now);
         user.setCreatedBy(authenticationService.getCurrentLoggedInUserUsername());
 
-        validateUser(user);
-        user = userRepository.save(user);
-        verificationPublisherService.verifyEmailCreate(user, now);
-
-        return modelMapper.map(user, UserDto.class);
-    }
-
-    private void validateUser(User user) {
-        if (SecurityUtil.isValidPassword(user.getPasswordHash())) {
-            logger.debug(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getFullMessage());
-            throw new IllegalArgumentException(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getShortMessage());
-        }
+        SecurityUtil.validatePassword(command.getPassword());
         if (user.getDateOfBirth().compareTo(new Date()) > 0) {
             logger.debug(ExceptionEnum.INVALID_DATE_OF_BIRTH_EXCEPTION.getFullMessage());
             throw new IllegalArgumentException(ExceptionEnum.INVALID_DATE_OF_BIRTH_EXCEPTION.getShortMessage());
         }
+
+        user = userRepository.save(user);
+        verificationPublisherService.verifyEmailCreate(user, now);
+
+        return modelMapper.map(user, UserDto.class);
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
@@ -152,10 +146,7 @@ public class UserService implements Searchable {
         Instant now = now();
         User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
 
-        if (!SecurityUtil.isValidPassword(password)) {
-            logger.debug(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getFullMessage());
-            throw new IllegalArgumentException(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getShortMessage());
-        }
+        SecurityUtil.validatePassword(password);
         if (passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new IllegalArgumentException("New password must be different than the current one");
         }
