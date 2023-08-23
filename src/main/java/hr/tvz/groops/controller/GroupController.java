@@ -1,10 +1,9 @@
 package hr.tvz.groops.controller;
 
-import hr.tvz.groops.command.crud.RoleCommand;
 import hr.tvz.groops.command.crud.GroupCommand;
+import hr.tvz.groops.command.crud.RoleCommand;
 import hr.tvz.groops.command.search.GroupSearchCommand;
 import hr.tvz.groops.dto.response.GroupDto;
-import hr.tvz.groops.model.enums.RoleEnum;
 import hr.tvz.groops.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -49,7 +48,7 @@ public class GroupController extends ControllerBase {
             @PathVariable("groupId") Long groupId,
             @PathVariable("userId") Long userId,
             @RequestBody @Valid RoleCommand command) {
-        groupService.acceptGroupRequest(userId, groupId, command.getRole() != null ? command.getRole() : RoleEnum.ROLE_USER);
+        groupService.acceptGroupRequest(userId, groupId, command.getRole());
     }
 
     @DeleteMapping("/{groupId}/request/user/{userId}")
@@ -76,7 +75,21 @@ public class GroupController extends ControllerBase {
         groupService.deleteById(id);
     }
 
+    @DeleteMapping("/{groupId}/user/{userId}")
+    void kickUser(@PathVariable("groupId") Long groupId, @PathVariable("userId") Long userId) {
+        groupService.kickUser(groupId, userId);
+    }
 
+    @PutMapping("/{groupId}/user/{userId}")
+    void changeUserRole(@PathVariable("groupId") Long groupId,
+                        @PathVariable("userId") Long userId,
+                        @RequestBody RoleCommand command) {
+        groupService.changeUserRole(groupId, userId, command.getRole());
+    }
 
+    @DeleteMapping("/{groupId}")
+    void leaveGroup(@PathVariable("groupId") Long groupId) {
+        groupService.leaveGroup(groupId);
+    }
 
 }

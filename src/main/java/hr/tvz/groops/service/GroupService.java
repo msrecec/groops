@@ -193,34 +193,7 @@ public class GroupService implements Searchable {
     }
 
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
-    public void removeUserFromGroup(Long groupId, Long userId) {
-        logger.debug("Removing user with id: {} from group with id: {}", userId, groupId);
-        User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
-        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
-        UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
-        userGroupRepository.delete(userGroup);
-    }
-
-    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
-    public void changeRole(Long userId, Long groupId, RoleEnum roleEnum) {
-        logger.debug("Removing user with id: {} from group with id: {}", userId, groupId);
-        Instant now = now();
-        User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
-        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
-        UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
-        List<UserGroupRole> userGroupRoles = userGroupRoleRepository.findByUserGroup(userGroup);
-        userGroupRoleRepository.deleteAll(userGroupRoles);
-        UserGroupRole newUserGroupRole = UserGroupRole.builder()
-                .userGroup(userGroup)
-                .role(authorizationService.getOrCreateByRoleEnum(roleEnum, now))
-                .createdBy(authenticationService.getCurrentLoggedInUserUsername())
-                .createdTs(now)
-                .build();
-        userGroupRoleRepository.save(newUserGroupRole);
-    }
-
-    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
-    public void kickUser(Long userId, Long groupId) {
+    public void kickUser(Long groupId, Long userId) {
         Instant now = now();
         User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
         Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
@@ -241,6 +214,27 @@ public class GroupService implements Searchable {
     }
 
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
+    public void changeUserRole(Long groupId, Long userId, RoleEnum roleEnum) {
+        logger.debug("Removing user with id: {} from group with id: {}", userId, groupId);
+        Instant now = now();
+        User user = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
+        if (userId.compareTo(authenticationService.getCurrentLoggedInUserId()) == 0) {
+            throw new IllegalArgumentException("Can't change your own role");
+        }
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
+        UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
+        List<UserGroupRole> userGroupRoles = userGroupRoleRepository.findByUserGroup(userGroup);
+        userGroupRoleRepository.deleteAll(userGroupRoles);
+        UserGroupRole newUserGroupRole = UserGroupRole.builder()
+                .userGroup(userGroup)
+                .role(authorizationService.getOrCreateByRoleEnum(roleEnum, now))
+                .createdBy(authenticationService.getCurrentLoggedInUserUsername())
+                .createdTs(now)
+                .build();
+        userGroupRoleRepository.save(newUserGroupRole);
+    }
+
+    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
     public void leaveGroup(Long groupId) {
         logger.info("User with id: {} is leaving group...", authenticationService.getCurrentLoggedInUserId());
         Instant now = now();
@@ -256,7 +250,6 @@ public class GroupService implements Searchable {
         userGroupRepository.delete(userGroup);
     }
 
-    
 
 }
 
