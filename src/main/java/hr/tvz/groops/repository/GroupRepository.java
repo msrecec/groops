@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.QueryHints;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.LockModeType;
@@ -18,6 +19,6 @@ import static hr.tvz.groops.constants.TimeoutConstants.SHORT_TIMEOUT_MS;
 public interface GroupRepository extends JpaRepository<Group, Long>, QuerydslPredicateExecutor<Group> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @QueryHints({@QueryHint(name = "javax.persistence.query.timeout", value = SHORT_TIMEOUT_MS)})
-    @Query(value = "SELECT g FROM Group g WHERE g.id=:id")
-    Optional<Group> findByIdLockByPessimisticWrite(Long groupId);
+    @Query(value = "SELECT g FROM Group g WHERE g.id=:groupId")
+    Optional<Group> findByIdLockByPessimisticWrite(@Param("groupId") Long groupId);
 }
