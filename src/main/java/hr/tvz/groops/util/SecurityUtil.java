@@ -88,22 +88,22 @@ public class SecurityUtil {
         }
         String upperCaseChars = "(.*[A-Z].*)";
         if (!password.matches(upperCaseChars)) {
-            exceptionMessages.add("Password must have atleast one uppercase character");
+            exceptionMessages.add("Password must have at least one uppercase character");
             isValid = false;
         }
         String lowerCaseChars = "(.*[a-z].*)";
         if (!password.matches(lowerCaseChars)) {
-            exceptionMessages.add("Password must have atleast one lowercase character");
+            exceptionMessages.add("Password must have at least one lowercase character");
             isValid = false;
         }
         String numbers = "(.*[0-9].*)";
         if (!password.matches(numbers)) {
-            exceptionMessages.add("Password must have atleast one number");
+            exceptionMessages.add("Password must have at least one number");
             isValid = false;
         }
         String specialChars = "(.*[@,#,$,%,!].*$)";
         if (!password.matches(specialChars)) {
-            exceptionMessages.add("Password must have atleast one special character among @#$%!");
+            exceptionMessages.add("Password must have at least one special character among @#$%!");
             isValid = false;
         }
         if (isValid) {
