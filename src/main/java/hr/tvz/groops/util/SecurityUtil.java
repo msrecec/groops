@@ -21,8 +21,6 @@ public class SecurityUtil {
 
     public static @NotNull String getCurrentLoggedInUserUsername() {
 
-        // todo check if an exception should be thrown in case there is no username
-
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null) {

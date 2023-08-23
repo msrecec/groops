@@ -1,7 +1,12 @@
 package hr.tvz.groops.security.filter;
 
 import com.google.common.base.Strings;
+import hr.tvz.groops.constants.JWTConstants;
+import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import hr.tvz.groops.service.token.JWTService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.JwtException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -28,8 +33,6 @@ public abstract class JWTVerifier extends OncePerRequestFilter {
         this.jwtService = jwtService;
     }
 
-    abstract protected void handleTokenRequest(HttpServletRequest request, String requestToken) throws IllegalStateException;
-
     @Override
     protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain filterChain) throws ServletException, IOException {
         String requestToken = jwtService.getTokenFromRequest(request);
@@ -39,6 +42,23 @@ public abstract class JWTVerifier extends OncePerRequestFilter {
         }
         handleTokenRequest(request, requestToken);
         filterChain.doFilter(request, response);
+    }
+
+    protected void handleTokenRequest(HttpServletRequest request, String requestToken) throws IllegalStateException {
+        try {
+            Jws<Claims> claimsJws = jwtService.getClaimsFromToken(requestToken);
+            Claims body = claimsJws.getBody();
+            Long id = body.get(JWTConstants.ID, Long.class);
+            String username = body.get(JWTConstants.USERNAME, String.class);
+            var roles = (Collection<String>) body.get(JWTConstants.ROLES);
+            Set<SimpleGrantedAuthority> authorities = getRoles(roles);
+
+            Authentication authentication = new GroopsUserDataToken(id, username, null, authorities);
+            setAuthentication(authentication);
+
+        } catch (JwtException e) {
+            throw new IllegalStateException(String.format(invalidTokenErrorMessage, requestToken));
+        }
     }
 
     protected Set<SimpleGrantedAuthority> getRoles(Collection<String> roles) {

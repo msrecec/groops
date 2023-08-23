@@ -18,6 +18,8 @@ public interface TokenService {
 
     @Nullable
     String getTokenFromRequest(@NotNull HttpServletRequest httpServletRequest);
+    @Nullable
+    String getResponseHeader();
 
     String getTokenFromRequestParameter(@NotNull HttpServletRequest httpServletRequest);
 

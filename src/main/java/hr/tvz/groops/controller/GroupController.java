@@ -83,7 +83,7 @@ public class GroupController extends ControllerBase {
     @PutMapping("/{groupId}/user/{userId}")
     void changeUserRole(@PathVariable("groupId") Long groupId,
                         @PathVariable("userId") Long userId,
-                        @RequestBody RoleCommand command) {
+                        @RequestBody @Valid RoleCommand command) {
         groupService.changeUserRole(groupId, userId, command.getRole());
     }
 

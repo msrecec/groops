@@ -1,9 +1,6 @@
 package hr.tvz.groops.controller;
 
-import hr.tvz.groops.command.crud.EmailUpdateCommand;
-import hr.tvz.groops.command.crud.PasswordUpdateCommand;
-import hr.tvz.groops.command.crud.UserCreateCommand;
-import hr.tvz.groops.command.crud.UserUpdateCommand;
+import hr.tvz.groops.command.crud.*;
 import hr.tvz.groops.command.search.UserSearchCommand;
 import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.service.UserService;
@@ -12,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -48,6 +46,11 @@ public class UserController extends ControllerBase {
     @PutMapping("/{id}")
     UserDto updateUser(@RequestBody @Valid UserUpdateCommand command, @PathVariable("id") Long id) {
         return userService.update(id, command);
+    }
+
+    @PostMapping("/login")
+    void login(@RequestBody @Valid LoginCommand command, HttpServletResponse response) {
+        userService.login(command.getUsername(), command.getPassword(), response);
     }
 
     @PutMapping("/{id}/change-mail")

@@ -20,6 +20,7 @@ import hr.tvz.groops.model.enums.VerificationTypeEnum;
 import hr.tvz.groops.repository.PendingVerificationRepository;
 import hr.tvz.groops.repository.UserRepository;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
+import hr.tvz.groops.service.token.AppJWTService;
 import hr.tvz.groops.service.verification.VerificationPublisherService;
 import hr.tvz.groops.util.QueryBuilderUtil;
 import hr.tvz.groops.util.SecurityUtil;
@@ -37,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.time.Instant;
 import java.util.*;
@@ -53,6 +55,7 @@ public class UserService implements Searchable {
     private final PendingVerificationRepository pendingVerificationRepository;
     private final VerificationPublisherService verificationPublisherService;
     private final AuthenticationService authenticationService;
+    private final AppJWTService appJWTService;
     @PersistenceContext
     private final EntityManager entityManager;
 
@@ -63,6 +66,7 @@ public class UserService implements Searchable {
                        PendingVerificationRepository pendingVerificationRepository,
                        VerificationPublisherService verificationPublisherService,
                        AuthenticationService authenticationService,
+                       AppJWTService appJWTService,
                        EntityManager entityManager) {
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
@@ -70,6 +74,7 @@ public class UserService implements Searchable {
         this.pendingVerificationRepository = pendingVerificationRepository;
         this.verificationPublisherService = verificationPublisherService;
         this.authenticationService = authenticationService;
+        this.appJWTService = appJWTService;
         this.entityManager = entityManager;
     }
 
@@ -102,8 +107,6 @@ public class UserService implements Searchable {
         }
     }
 
-    // todo add resend verification token for mail, change mail and change password
-
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
     public UserDto update(Long id, @Valid UserUpdateCommand command) {
         logger.debug("Updating user...");
@@ -115,6 +118,16 @@ public class UserService implements Searchable {
         user.setModifiedTs(now);
 
         return modelMapper.map(userRepository.save(user), UserDto.class);
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public void login(@NotNull String username, @NotNull String password, HttpServletResponse httpServletResponse) {
+        User user = userRepository.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("Wrong username or password"));
+        if (!passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new IllegalArgumentException("Wrong username or password");
+        }
+        String token = appJWTService.generateToken(user.getId(), user.getUsername(), new ArrayList<>());
+        httpServletResponse.setHeader(appJWTService.getResponseHeader(), token);
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)

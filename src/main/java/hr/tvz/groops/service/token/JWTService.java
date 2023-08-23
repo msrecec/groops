@@ -107,6 +107,12 @@ public abstract class JWTService implements TokenService {
 
     @Override
     @Nullable
+    public String getResponseHeader() {
+        return this.jwtConfig.getHeaderName();
+    }
+
+    @Override
+    @Nullable
     public String getTokenFromRequestParameter(@NotNull HttpServletRequest httpServletRequest) {
         return httpServletRequest.getParameter(this.jwtConfig.getParameterName());
     }
