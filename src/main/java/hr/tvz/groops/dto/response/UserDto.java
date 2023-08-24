@@ -22,5 +22,5 @@ public class UserDto extends DtoBase {
     private String lastName;
     private Date dateOfBirth;
     private String description;
-    private String profilePictureKey;
+    private String profilePictureDownloadLink;
 }
