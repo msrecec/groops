@@ -87,7 +87,7 @@ public class GroupController extends ControllerBase {
         groupService.changeUserRole(groupId, userId, command.getRole());
     }
 
-    @DeleteMapping("/{groupId}")
+    @DeleteMapping("/leave/{groupId}")
     void leaveGroup(@PathVariable("groupId") Long groupId) {
         groupService.leaveGroup(groupId);
     }
