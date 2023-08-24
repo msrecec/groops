@@ -205,7 +205,7 @@ public class GroupService implements Searchable {
         if (command.getIsMember() != null && command.getIsMember().isPresent()) {
             QueryBuilderUtil.equals(builder, group.users.any().id, authenticationService.getCurrentLoggedInUserId());
         }
-        return userRepository.findAll(builder.getValue() != null ? builder.getValue() : builder, pageable).map(u -> modelMapper.map(u, GroupDto.class));
+        return groupRepository.findAll(builder.getValue() != null ? builder.getValue() : builder, pageable).map(u -> modelMapper.map(u, GroupDto.class));
     }
 
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
