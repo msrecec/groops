@@ -159,6 +159,7 @@ public class GroupService implements Searchable {
         UserGroupRoleId userGroupRoleId = new UserGroupRoleId();
         userGroupRoleId.setUserGroupId(userGroup.getId());
         userGroupRoleId.setRoleId(role.getId());
+        userGroupRole.setUserGroupRoleId(userGroupRoleId);
         userGroupRoleRepository.saveAndFlush(userGroupRole);
     }
 
@@ -254,6 +255,7 @@ public class GroupService implements Searchable {
         userGroupRoleId.setUserGroupId(userGroup.getId());
         userGroupRoleId.setRoleId(role.getId());
         UserGroupRole newUserGroupRole = UserGroupRole.builder()
+                .userGroupRoleId(userGroupRoleId)
                 .userGroup(userGroup)
                 .role(role)
                 .createdBy(authenticationService.getCurrentLoggedInUserUsername())

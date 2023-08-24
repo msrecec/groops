@@ -162,6 +162,7 @@ public class AuthorizationService implements Searchable {
             rolePermissionId.setRoleId(role.getId());
             rolePermissionId.setPermissionId(permission.getId());
             RolePermission writeRolePermission = RolePermission.builder()
+                    .rolePermissionId(rolePermissionId)
                     .role(role)
                     .permission(permission)
                     .createdBy(authenticationService.getCurrentLoggedInUserUsername())
