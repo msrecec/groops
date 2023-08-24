@@ -75,6 +75,7 @@ CREATE TABLE "role_permission" (
 CREATE TABLE "group" (
     "id" SERIAL,
     "name" TEXT NOT NULL,
+    "profile_picture_key" TEXT DEFAULT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,

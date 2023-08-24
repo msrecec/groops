@@ -27,6 +27,8 @@ public class Group extends BaseEntity {
     private Long id;
     @Column(name = "name")
     private String name;
+    @Column(name = "profile_picture_key")
+    private String profilePictureKey;
     @ManyToMany(targetEntity = User.class, mappedBy = "groups")
     private List<User> users;
     @OneToMany(targetEntity = GroupMessage.class, mappedBy = "group")

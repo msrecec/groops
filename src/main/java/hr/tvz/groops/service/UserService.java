@@ -20,6 +20,7 @@ import hr.tvz.groops.model.enums.VerificationTypeEnum;
 import hr.tvz.groops.repository.PendingVerificationRepository;
 import hr.tvz.groops.repository.UserRepository;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
+import hr.tvz.groops.service.s3.S3Service;
 import hr.tvz.groops.service.token.AppJWTService;
 import hr.tvz.groops.service.verification.VerificationPublisherService;
 import hr.tvz.groops.util.QueryBuilderUtil;
@@ -36,6 +37,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -55,6 +57,7 @@ public class UserService implements Searchable {
     private final UserRepository userRepository;
     private final PendingVerificationRepository pendingVerificationRepository;
     private final VerificationPublisherService verificationPublisherService;
+    private final S3Service s3service;
     private final AuthenticationService authenticationService;
     private final AppJWTService appJWTService;
     @PersistenceContext
@@ -66,6 +69,7 @@ public class UserService implements Searchable {
                        UserRepository userRepository,
                        PendingVerificationRepository pendingVerificationRepository,
                        VerificationPublisherService verificationPublisherService,
+                       S3Service s3service,
                        AuthenticationService authenticationService,
                        AppJWTService appJWTService,
                        EntityManager entityManager) {
@@ -74,6 +78,7 @@ public class UserService implements Searchable {
         this.userRepository = userRepository;
         this.pendingVerificationRepository = pendingVerificationRepository;
         this.verificationPublisherService = verificationPublisherService;
+        this.s3service = s3service;
         this.authenticationService = authenticationService;
         this.appJWTService = appJWTService;
         this.entityManager = entityManager;
@@ -99,6 +104,19 @@ public class UserService implements Searchable {
         user = userRepository.save(user);
         verificationPublisherService.verifyEmailCreate(user, now);
 
+        return modelMapper.map(user, UserDto.class);
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public UserDto uploadProfilePicture(Long id, MultipartFile file) {
+        Instant now = now();
+        User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
+        String profilePictureKey = s3service.generateUserProfilePictureKey(id, file);
+        user.setProfilePictureKey(profilePictureKey);
+        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
+        user.setModifiedTs(now);
+        user = userRepository.save(user);
+        s3service.uploadDocumentFull(profilePictureKey, file);
         return modelMapper.map(user, UserDto.class);
     }
 
