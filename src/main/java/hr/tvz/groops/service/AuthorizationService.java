@@ -51,6 +51,8 @@ public class AuthorizationService implements Searchable {
         this.authenticationService = authenticationService;
     }
 
+    // todo add group image
+
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
     public void hasGroupRole(User user, Group group, RoleEnum roleEnum) {
         Instant now = now();
