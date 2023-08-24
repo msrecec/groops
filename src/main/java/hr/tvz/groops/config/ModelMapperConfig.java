@@ -24,7 +24,7 @@ public class ModelMapperConfig {
     }
 
     @Bean("modelMapper")
-    ModelMapper getMapper() {
+    ModelMapper getModelMapper() {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         addTypeMappingForUser(modelMapper);
