@@ -45,7 +45,7 @@ public class UserController extends ControllerBase {
     }
 
     @PostMapping("/{id}/upload-profile")
-    UserDto uploadProfilePicture(@PathVariable("id") Long id, @RequestBody MultipartFile file) {
+    UserDto uploadProfilePicture(@PathVariable("id") Long id, @RequestParam("file") MultipartFile file) {
         return userService.uploadProfilePicture(id, file);
     }
 
