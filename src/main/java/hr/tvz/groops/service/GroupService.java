@@ -9,6 +9,8 @@ import hr.tvz.groops.dto.response.GroupDto;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.enums.RoleEnum;
+import hr.tvz.groops.model.pk.GroupRequestId;
+import hr.tvz.groops.model.pk.UserGroupRoleId;
 import hr.tvz.groops.repository.*;
 import hr.tvz.groops.util.QueryBuilderUtil;
 import org.modelmapper.ModelMapper;
@@ -86,7 +88,11 @@ public class GroupService implements Searchable {
         userGroup = userGroupRepository.saveAndFlush(userGroup);
 
         Role adminRole = authorizationService.getOrCreateAdminRole(now);
+        UserGroupRoleId userGroupRoleId = new UserGroupRoleId();
+        userGroupRoleId.setUserGroupId(userGroup.getId());
+        userGroupRoleId.setRoleId(adminRole.getId());
         UserGroupRole userGroupRole = UserGroupRole.builder()
+                .userGroupRoleId(userGroupRoleId)
                 .userGroup(userGroup)
                 .role(adminRole)
                 .createdBy(authenticationService.getCurrentLoggedInUserUsername())
@@ -134,19 +140,25 @@ public class GroupService implements Searchable {
                 .createdBy(authenticationService.getCurrentLoggedInUserUsername())
                 .build();
 
+        Role role;
         switch (roleEnum) {
             case ROLE_LURKER:
-                userGroupRole.setRole(authorizationService.getOrCreateLurkerRole(now));
+                role = authorizationService.getOrCreateLurkerRole(now);
                 break;
             case ROLE_USER:
-                userGroupRole.setRole(authorizationService.getOrCreateUserRole(now));
+                role = authorizationService.getOrCreateUserRole(now);
                 break;
             case ROLE_ADMIN:
-                userGroupRole.setRole(authorizationService.getOrCreateAdminRole(now));
+                role = authorizationService.getOrCreateAdminRole(now);
                 break;
             default:
                 throw new InternalServerException("Role not supported");
         }
+
+        userGroupRole.setRole(role);
+        UserGroupRoleId userGroupRoleId = new UserGroupRoleId();
+        userGroupRoleId.setUserGroupId(userGroup.getId());
+        userGroupRoleId.setRoleId(role.getId());
         userGroupRoleRepository.saveAndFlush(userGroupRole);
     }
 
@@ -169,7 +181,11 @@ public class GroupService implements Searchable {
         if (userGroupRepository.existsByUserAndGroup(user, group)) {
             throw new IllegalArgumentException("Can't request to join group you are already a part of");
         }
+        GroupRequestId groupRequestId = new GroupRequestId();
+        groupRequestId.setGroupId(group.getId());
+        groupRequestId.setUserId(user.getId());
         GroupRequest groupRequest = GroupRequest.builder()
+                .groupRequestId(groupRequestId)
                 .user(user)
                 .group(group)
                 .createdBy(authenticationService.getCurrentLoggedInUserUsername())
@@ -233,9 +249,13 @@ public class GroupService implements Searchable {
         UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
         List<UserGroupRole> userGroupRoles = userGroupRoleRepository.findByUserGroup(userGroup);
         userGroupRoleRepository.deleteAll(userGroupRoles);
+        Role role = authorizationService.getOrCreateByRoleEnum(roleEnum, now);
+        UserGroupRoleId userGroupRoleId = new UserGroupRoleId();
+        userGroupRoleId.setUserGroupId(userGroup.getId());
+        userGroupRoleId.setRoleId(role.getId());
         UserGroupRole newUserGroupRole = UserGroupRole.builder()
                 .userGroup(userGroup)
-                .role(authorizationService.getOrCreateByRoleEnum(roleEnum, now))
+                .role(role)
                 .createdBy(authenticationService.getCurrentLoggedInUserUsername())
                 .createdTs(now)
                 .build();

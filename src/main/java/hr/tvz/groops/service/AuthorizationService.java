@@ -6,6 +6,7 @@ import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.enums.PermissionEnum;
 import hr.tvz.groops.model.enums.RoleEnum;
+import hr.tvz.groops.model.pk.RolePermissionId;
 import hr.tvz.groops.repository.RolePermissionRepository;
 import hr.tvz.groops.repository.RoleRepository;
 import hr.tvz.groops.repository.UserGroupRepository;
@@ -157,6 +158,9 @@ public class AuthorizationService implements Searchable {
     private void addPermissionsToRole(PermissionEnum[] permissionEnums, Role role, Instant now) {
         for (PermissionEnum permissionEnum : permissionEnums) {
             Permission permission = permissionService.getOrCreatePermission(permissionEnum, now);
+            RolePermissionId rolePermissionId = new RolePermissionId();
+            rolePermissionId.setRoleId(role.getId());
+            rolePermissionId.setPermissionId(permission.getId());
             RolePermission writeRolePermission = RolePermission.builder()
                     .role(role)
                     .permission(permission)
