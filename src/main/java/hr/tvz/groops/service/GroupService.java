@@ -12,6 +12,7 @@ import hr.tvz.groops.model.enums.RoleEnum;
 import hr.tvz.groops.model.pk.GroupRequestId;
 import hr.tvz.groops.model.pk.UserGroupRoleId;
 import hr.tvz.groops.repository.*;
+import hr.tvz.groops.service.s3.S3Service;
 import hr.tvz.groops.util.QueryBuilderUtil;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.Instant;
 import java.util.List;
@@ -37,6 +39,7 @@ public class GroupService implements Searchable {
     private final GroupRequestRepository groupRequestRepository;
     private final UserRepository userRepository;
     private final UserGroupRoleRepository userGroupRoleRepository;
+    private final S3Service s3Service;
     private final AuthorizationService authorizationService;
     private final ModelMapper modelMapper;
 
@@ -44,9 +47,10 @@ public class GroupService implements Searchable {
     public GroupService(AuthenticationService authenticationService,
                         GroupRepository groupRepository,
                         UserGroupRepository userGroupRepository,
-                        GroupRequestRepository groupRequestRepository, UserRepository userRepository,
+                        GroupRequestRepository groupRequestRepository,
+                        UserRepository userRepository,
                         UserGroupRoleRepository userGroupRoleRepository,
-                        AuthorizationService authorizationService,
+                        S3Service s3Service, AuthorizationService authorizationService,
                         ModelMapper modelMapper) {
         this.authenticationService = authenticationService;
         this.groupRepository = groupRepository;
@@ -54,6 +58,7 @@ public class GroupService implements Searchable {
         this.groupRequestRepository = groupRequestRepository;
         this.userRepository = userRepository;
         this.userGroupRoleRepository = userGroupRoleRepository;
+        this.s3Service = s3Service;
         this.authorizationService = authorizationService;
         this.modelMapper = modelMapper;
     }
@@ -100,6 +105,22 @@ public class GroupService implements Searchable {
                 .build();
         userGroupRoleRepository.saveAndFlush(userGroupRole);
 
+        return modelMapper.map(group, GroupDto.class);
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public GroupDto uploadProfilePicture(Long id, MultipartFile file) {
+        logger.debug("Uploading profile picture for group with id: {}", id);
+        Instant now = now();
+        User currentUser = findUserEntityByIdLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserId(), userRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(id, groupRepository);
+        authorizationService.hasGroupRole(currentUser, group, RoleEnum.ROLE_ADMIN);
+        String profilePictureKey = s3Service.generateUserProfilePictureKey(id, file);
+        group.setProfilePictureKey(profilePictureKey);
+        group.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
+        group.setModifiedTs(now);
+        group = groupRepository.save(group);
+        s3Service.uploadDocumentFull(profilePictureKey, file);
         return modelMapper.map(group, GroupDto.class);
     }
 

@@ -1,6 +1,8 @@
 package hr.tvz.groops.config;
 
+import hr.tvz.groops.dto.response.GroupDto;
 import hr.tvz.groops.dto.response.UserDto;
+import hr.tvz.groops.model.Group;
 import hr.tvz.groops.model.User;
 import hr.tvz.groops.service.s3.S3Service;
 import org.modelmapper.AbstractConverter;
@@ -26,20 +28,31 @@ public class ModelMapperConfig {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         addTypeMappingForUser(modelMapper);
+        addTypeMappingForGroup(modelMapper);
         return modelMapper;
     }
 
     private void addTypeMappingForUser(ModelMapper modelMapper) {
         TypeMap<User, UserDto> propertyMapper = modelMapper.createTypeMap(User.class, UserDto.class);
-        AbstractConverter<String, String> converter = new AbstractConverter<>() {
+        propertyMapper.addMappings(m -> {
+            m.using(getProfilePictureConverter()).map(User::getProfilePictureKey, UserDto::setProfilePictureDownloadLink);
+        });
+    }
+
+    private void addTypeMappingForGroup(ModelMapper modelMapper) {
+        TypeMap<Group, GroupDto> propertyMapper = modelMapper.createTypeMap(Group.class, GroupDto.class);
+        propertyMapper.addMappings(m -> {
+            m.using(getProfilePictureConverter()).map(Group::getProfilePictureKey, GroupDto::setProfilePictureDownloadLink);
+        });
+    }
+
+    private AbstractConverter<String, String> getProfilePictureConverter() {
+        return new AbstractConverter<>() {
             @Override
             protected String convert(String source) {
                 return s3Service.generateDownloadLinkByObjectKey(source);
             }
         };
-        propertyMapper.addMappings(m -> {
-            m.using(converter).map(User::getProfilePictureKey, UserDto::setProfilePictureDownloadLink);
-        });
     }
 
 }

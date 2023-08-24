@@ -57,7 +57,7 @@ public class UserService implements Searchable {
     private final UserRepository userRepository;
     private final PendingVerificationRepository pendingVerificationRepository;
     private final VerificationPublisherService verificationPublisherService;
-    private final S3Service s3service;
+    private final S3Service s3Service;
     private final AuthenticationService authenticationService;
     private final AppJWTService appJWTService;
     @PersistenceContext
@@ -69,7 +69,7 @@ public class UserService implements Searchable {
                        UserRepository userRepository,
                        PendingVerificationRepository pendingVerificationRepository,
                        VerificationPublisherService verificationPublisherService,
-                       S3Service s3service,
+                       S3Service s3Service,
                        AuthenticationService authenticationService,
                        AppJWTService appJWTService,
                        EntityManager entityManager) {
@@ -78,7 +78,7 @@ public class UserService implements Searchable {
         this.userRepository = userRepository;
         this.pendingVerificationRepository = pendingVerificationRepository;
         this.verificationPublisherService = verificationPublisherService;
-        this.s3service = s3service;
+        this.s3Service = s3Service;
         this.authenticationService = authenticationService;
         this.appJWTService = appJWTService;
         this.entityManager = entityManager;
@@ -111,12 +111,12 @@ public class UserService implements Searchable {
     public UserDto uploadProfilePicture(Long id, MultipartFile file) {
         Instant now = now();
         User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
-        String profilePictureKey = s3service.generateUserProfilePictureKey(id, file);
+        String profilePictureKey = s3Service.generateUserProfilePictureKey(id, file);
         user.setProfilePictureKey(profilePictureKey);
         user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         user.setModifiedTs(now);
         user = userRepository.save(user);
-        s3service.uploadDocumentFull(profilePictureKey, file);
+        s3Service.uploadDocumentFull(profilePictureKey, file);
         return modelMapper.map(user, UserDto.class);
     }
 

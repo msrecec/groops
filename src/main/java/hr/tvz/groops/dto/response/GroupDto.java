@@ -14,5 +14,5 @@ import lombok.experimental.SuperBuilder;
 public class GroupDto {
     private Long id;
     private String name;
-    private String profilePictureKey;
+    private String profilePictureDownloadLink;
 }

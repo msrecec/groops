@@ -1,14 +1,18 @@
 package hr.tvz.groops.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import hr.tvz.groops.command.crud.GroupCommand;
 import hr.tvz.groops.command.crud.RoleCommand;
 import hr.tvz.groops.command.search.GroupSearchCommand;
 import hr.tvz.groops.dto.response.GroupDto;
+import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.service.GroupService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -17,10 +21,12 @@ import java.util.List;
 @RequestMapping("/groups")
 public class GroupController extends ControllerBase {
     private final GroupService groupService;
+    private final ObjectMapper objectMapper;
 
     @Autowired
-    public GroupController(GroupService groupService) {
+    public GroupController(GroupService groupService, ObjectMapper objectMapper) {
         this.groupService = groupService;
+        this.objectMapper = objectMapper;
     }
 
     @GetMapping("/{id}")
@@ -34,8 +40,18 @@ public class GroupController extends ControllerBase {
     }
 
     @PostMapping
-    GroupDto create(@RequestBody @Valid GroupCommand command) {
+    GroupDto create(@RequestBody @Valid GroupCommand command) throws JsonProcessingException {
         return groupService.create(command);
+    }
+//    @PostMapping
+//    GroupDto create(@RequestParam("command") String commandJSON, @RequestParam("file") MultipartFile file) throws JsonProcessingException {
+//        GroupCommand command = objectMapper.readValue(commandJSON, GroupCommand.class);
+//        return groupService.create(command);
+//    }
+
+    @PostMapping("/{id}/upload-profile")
+    GroupDto uploadProfilePicture(@PathVariable("id") Long id, @RequestParam("file") MultipartFile file) {
+        return groupService.uploadProfilePicture(id, file);
     }
 
     @PutMapping("/{id}")
