@@ -30,7 +30,9 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
             "/**/v3/api-docs",
             "/**/swagger-resources/**",
             "/**/swagger-ui/**",
-            "/**/version"
+            "/**/version",
+            "/**/login/**",
+            "/**/register/**"
     };
 
     private static final String ACTUATOR_PATTERN = "/**/actuator/**";
@@ -67,8 +69,6 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilterBefore(appJWTVerifier, PasswordChangeJWTVerifier.class)
                 .addFilterAfter(mdcFilter, AppJWTVerifier.class)
                 .authorizeRequests()
-                .antMatchers("/**/login/**")
-                .permitAll()
                 .antMatchers(AUTH_WHITELIST)
                 .permitAll()
                 .mvcMatchers(HttpMethod.POST, "/**/users/sessions")
