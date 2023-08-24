@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -41,6 +42,11 @@ public class UserController extends ControllerBase {
     @PostMapping("/register")
     UserDto registerUser(@RequestBody @Valid UserCreateCommand command) {
         return userService.register(command);
+    }
+
+    @PostMapping("/{id}/upload-profile")
+    UserDto uploadProfilePicture(@PathVariable("id") Long id, @RequestBody MultipartFile file) {
+        return userService.uploadProfilePicture(id, file);
     }
 
     @PutMapping("/{id}")
