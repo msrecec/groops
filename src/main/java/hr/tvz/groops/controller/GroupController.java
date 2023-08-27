@@ -3,11 +3,14 @@ package hr.tvz.groops.controller;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hr.tvz.groops.command.crud.GroupCommand;
+import hr.tvz.groops.command.crud.PostCommand;
 import hr.tvz.groops.command.crud.RoleCommand;
 import hr.tvz.groops.command.search.GroupSearchCommand;
+import hr.tvz.groops.command.search.PostSearchCommand;
 import hr.tvz.groops.dto.response.GroupDto;
-import hr.tvz.groops.dto.response.UserDto;
+import hr.tvz.groops.dto.response.PostDto;
 import hr.tvz.groops.service.GroupService;
+import hr.tvz.groops.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -16,16 +19,21 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/groups")
 public class GroupController extends ControllerBase {
     private final GroupService groupService;
+    private final PostService postService;
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public GroupController(GroupService groupService, ObjectMapper objectMapper) {
+    public GroupController(GroupService groupService,
+                           PostService postService,
+                           ObjectMapper objectMapper) {
         this.groupService = groupService;
+        this.postService = postService;
         this.objectMapper = objectMapper;
     }
 
@@ -43,11 +51,48 @@ public class GroupController extends ControllerBase {
     GroupDto create(@RequestBody @Valid GroupCommand command) throws JsonProcessingException {
         return groupService.create(command);
     }
-//    @PostMapping
-//    GroupDto create(@RequestParam("command") String commandJSON, @RequestParam("file") MultipartFile file) throws JsonProcessingException {
-//        GroupCommand command = objectMapper.readValue(commandJSON, GroupCommand.class);
-//        return groupService.create(command);
-//    }
+
+    @PostMapping("/{id}/post/media")
+    PostDto createPostWithMedia(@PathVariable("id") Long id, @RequestParam("command") String commandJSON, @RequestParam("file") MultipartFile file) throws JsonProcessingException {
+        PostCommand command = objectMapper.readValue(commandJSON, PostCommand.class);
+        return postService.create(command, id, file);
+    }
+
+    @PostMapping("/{id}/post")
+    PostDto createPostWithoutMedia(@PathVariable("id") Long id, @RequestBody @Valid PostCommand command) throws JsonProcessingException {
+        return postService.create(command, id);
+    }
+
+    @PostMapping("/{id}/post/{postId}/media")
+    PostDto updatePostWithMedia(@PathVariable("id") Long id, @PathVariable("postId") Long postId, @RequestParam("command") String commandJSON, @RequestParam("file") MultipartFile file) throws JsonProcessingException {
+        PostCommand command = objectMapper.readValue(commandJSON, PostCommand.class);
+        return postService.update(command, postId, file);
+    }
+
+    @PostMapping("/{id}/post/{postId}")
+    PostDto updatePostWithoutMedia(@PathVariable("id") Long id, @RequestParam("removeMedia") Optional<Boolean> removeMedia, @PathVariable("postId") Long postId, @RequestParam("command") PostCommand command) throws JsonProcessingException {
+        return postService.update(command, postId, removeMedia.orElse(false));
+    }
+
+    @DeleteMapping("/{id}/post/{postId}")
+    void deletePost(@PathVariable("id") Long id, @PathVariable("postId") Long postId) {
+        postService.delete(postId);
+    }
+
+    @DeleteMapping("/{id}/post/{postId}/like")
+    void likePost(@PathVariable("id") Long id, @PathVariable("postId") Long postId) {
+        postService.like(postId);
+    }
+
+    @DeleteMapping("/{id}/post/{postId}/unlike")
+    void unlikePost(@PathVariable("id") Long id, @PathVariable("postId") Long postId) {
+        postService.unlike(postId);
+    }
+
+    @PostMapping("/post/search")
+    Page<PostDto> searchPost(@RequestBody PostSearchCommand command) {
+        return postService.search(command, command.getPageable());
+    }
 
     @PostMapping("/{id}/upload-profile")
     GroupDto uploadProfilePicture(@PathVariable("id") Long id, @RequestParam("file") MultipartFile file) {

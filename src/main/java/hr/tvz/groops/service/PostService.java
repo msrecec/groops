@@ -2,13 +2,13 @@ package hr.tvz.groops.service;
 
 import com.querydsl.core.BooleanBuilder;
 import hr.tvz.groops.command.crud.PostCommand;
-import hr.tvz.groops.command.crud.PostUpdateCommand;
 import hr.tvz.groops.command.search.PostSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.PostDto;
 import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.enums.PermissionEnum;
+import hr.tvz.groops.model.pk.PostLikeId;
 import hr.tvz.groops.repository.GroupRepository;
 import hr.tvz.groops.repository.PostLikeRepository;
 import hr.tvz.groops.repository.PostRepository;
@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -74,7 +75,12 @@ public class PostService implements Searchable {
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public PostDto create(@NotNull PostCommand command, @NotNull Long groupId, @Nullable MultipartFile file) {
+    public PostDto create(@NotNull @Valid PostCommand command, @NotNull Long groupId) {
+        return create(command, groupId, null);
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public PostDto create(@NotNull @Valid PostCommand command, @NotNull Long groupId, @Nullable MultipartFile file) {
         logger.debug("Creating post for group id: {}", groupId);
         Instant now = now();
         Long currentUserId = authenticationService.getCurrentLoggedInUserId();
@@ -107,7 +113,17 @@ public class PostService implements Searchable {
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public PostDto update(@NotNull PostUpdateCommand command, @NotNull Long postId, @Nullable MultipartFile file) {
+    public PostDto update(@NotNull @Valid PostCommand command, @NotNull Long postId, @NotNull MultipartFile file) {
+        return update(command, postId, file, false);
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public PostDto update(@NotNull @Valid PostCommand command, @NotNull Long postId, @NotNull Boolean removeMedia) {
+        return update(command, postId, null, removeMedia);
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public PostDto update(@NotNull @Valid PostCommand command, @NotNull Long postId, @Nullable MultipartFile file, @NotNull Boolean removeMedia) {
         logger.debug("Updating post with id: {}", postId);
         Instant now = now();
         Long currentUserId = authenticationService.getCurrentLoggedInUserId();
@@ -125,7 +141,7 @@ public class PostService implements Searchable {
         post.setModifiedTs(now);
 
         if (file == null) {
-            if (!command.getRemoveMedia()) {
+            if (!removeMedia) {
                 post = postRepository.saveAndFlush(post);
                 return mapLikes(post, currentUser);
             }
@@ -138,7 +154,14 @@ public class PostService implements Searchable {
         }
 
         logger.debug("Uploading new media");
+        String oldMediaKey = post.getMediaKey();
+        String newMediaKey = s3Service.generatePostPictureKey(post.getId(), file);
+        post.setMediaKey(newMediaKey);
         post = postRepository.saveAndFlush(post);
+        if (oldMediaKey != null) {
+            logger.debug("Deleting existing media with key: {}", oldMediaKey);
+            s3Service.deleteByKey(oldMediaKey);
+        }
         s3Service.uploadDocumentFull(post.getMediaKey(), file);
         return mapLikes(post, currentUser);
     }
@@ -191,7 +214,11 @@ public class PostService implements Searchable {
         Group group = post.getGroup();
         authorizationService.hasGroupPermission(currentUser, group, PermissionEnum.LIKE_POST);
 
+        PostLikeId postLikeId = new PostLikeId();
+        postLikeId.setPostId(post.getId());
+        postLikeId.setUserId(currentUser.getId());
         PostLike postLike = PostLike.builder()
+                .postLikeId(postLikeId)
                 .post(post)
                 .user(currentUser)
                 .createdBy(authenticationService.getCurrentLoggedInUserUsername())

@@ -117,12 +117,17 @@ public class GroupService implements Searchable {
         User currentUser = findUserEntityByIdLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserId(), userRepository);
         Group group = findGroupByIdLockByPessimisticWrite(id, groupRepository);
         authorizationService.hasGroupRole(currentUser, group, RoleEnum.ROLE_ADMIN);
-        String profilePictureKey = s3Service.generateUserProfilePictureKey(id, file);
-        group.setProfilePictureKey(profilePictureKey);
+        String oldProfilePictureKey = group.getProfilePictureKey();
+        String newProfilePictureKey = s3Service.generateUserProfilePictureKey(id, file);
+        group.setProfilePictureKey(newProfilePictureKey);
         group.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         group.setModifiedTs(now);
         group = groupRepository.save(group);
-        s3Service.uploadDocumentFull(profilePictureKey, file);
+        if (oldProfilePictureKey != null) {
+            logger.debug("Deleting old group profile picture key: {}", oldProfilePictureKey);
+            s3Service.deleteByKey(oldProfilePictureKey);
+        }
+        s3Service.uploadDocumentFull(group.getProfilePictureKey(), file);
         return modelMapper.map(group, GroupDto.class);
     }
 

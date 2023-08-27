@@ -11,7 +11,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @SuperBuilder
 @ToString
-public class GroupDto {
+public class GroupDto extends DtoBase {
     private Long id;
     private String name;
     private String profilePictureDownloadLink;

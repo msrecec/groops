@@ -60,7 +60,7 @@ public class ModelMapperConfig {
         return new AbstractConverter<>() {
             @Override
             protected String convert(String source) {
-                return s3Service.generateDownloadLinkByObjectKey(source);
+                return source != null ? s3Service.generateDownloadLinkByObjectKey(source) : null;
             }
         };
     }

@@ -1,6 +1,8 @@
 package hr.tvz.groops.model;
 
 import javax.persistence.*;
+
+import hr.tvz.groops.model.pk.PostLikeId;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,17 +15,15 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @NoArgsConstructor
 @SuperBuilder
-@ToString
 public class PostLike extends BaseEntity {
-    @SequenceGenerator(name = "post_like_id_seq", sequenceName = "post_like_id_seq", allocationSize = 1, schema = "public")
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "post_like_id_seq")
-    @Column(name = "id")
-    @Id
-    private Long id;
+    @EmbeddedId
+    private PostLikeId postLikeId;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "post_id", referencedColumnName = "id")
+    @MapsId(value = "postId")
     private Post post;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
+    @MapsId(value = "userId")
     private User user;
 }

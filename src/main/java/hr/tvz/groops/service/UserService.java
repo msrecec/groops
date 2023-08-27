@@ -112,12 +112,17 @@ public class UserService implements Searchable {
     public UserDto uploadProfilePicture(Long id, MultipartFile file) {
         Instant now = now();
         User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
-        String profilePictureKey = s3Service.generateUserProfilePictureKey(id, file);
-        user.setProfilePictureKey(profilePictureKey);
+        String oldProfilePictureKey = user.getProfilePictureKey();
+        String newProfilePictureKey = s3Service.generateUserProfilePictureKey(id, file);
+        user.setProfilePictureKey(newProfilePictureKey);
         user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         user.setModifiedTs(now);
         user = userRepository.save(user);
-        s3Service.uploadDocumentFull(profilePictureKey, file);
+        if (oldProfilePictureKey != null) {
+            logger.debug("Deleting old user profile picture key: {}", oldProfilePictureKey);
+            s3Service.deleteByKey(oldProfilePictureKey);
+        }
+        s3Service.uploadDocumentFull(user.getProfilePictureKey(), file);
         return modelMapper.map(user, UserDto.class);
     }
 
