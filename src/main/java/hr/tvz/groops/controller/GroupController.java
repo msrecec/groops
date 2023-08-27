@@ -111,12 +111,12 @@ public class GroupController extends ControllerBase {
     }
 
     @DeleteMapping("/post/{id}/comment/{commentId}")
-    void delete(@PathVariable("id") Long id, @PathVariable("commentId") Long commentId) {
+    void deleteComment(@PathVariable("id") Long id, @PathVariable("commentId") Long commentId) {
         commentService.delete(commentId);
     }
 
     @GetMapping("/post/{id}/comment")
-    List<CommentDto> findByPostId(@PathVariable("id") Long id) {
+    List<CommentDto> findCommentsByPostId(@PathVariable("id") Long id) {
         return commentService.findAllByPostId(id);
     }
 
