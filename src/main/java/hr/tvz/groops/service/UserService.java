@@ -366,11 +366,11 @@ public class UserService implements Searchable {
     }
 
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
-    public void sendFriendRequest(@NotNull Long userId) {
-        logger.debug("Sending friend request to user with id {}", userId);
+    public void sendFriendRequest(@NotNull Long recipientId) {
+        logger.debug("Sending friend request to user with id {}", recipientId);
         Long currentUserId = authenticationService.getCurrentLoggedInUserId();
         User currentUser = findUserEntityByIdLockByPessimisticWrite(currentUserId, userRepository);
-        User recipientUser = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
+        User recipientUser = findUserEntityByIdLockByPessimisticWrite(recipientId, userRepository);
 
         if (friendRepository.existsByFirstUserAndSecondUser(currentUser, recipientUser) ||
                 friendRepository.existsByFirstUserAndSecondUser(recipientUser, currentUser)) {

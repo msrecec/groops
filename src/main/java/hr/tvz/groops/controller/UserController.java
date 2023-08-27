@@ -2,6 +2,7 @@ package hr.tvz.groops.controller;
 
 import hr.tvz.groops.command.crud.*;
 import hr.tvz.groops.command.search.UserSearchCommand;
+import hr.tvz.groops.dto.response.FriendRequestDto;
 import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,6 +58,41 @@ public class UserController extends ControllerBase {
     @PostMapping("/login")
     void login(@RequestBody @Valid LoginCommand command, HttpServletResponse response) {
         userService.login(command.getUsername(), command.getPassword(), response);
+    }
+
+    @PostMapping("/friend-request/send/{recipientId}")
+    void sendFriendRequest(@PathVariable("recipientId") Long recipientId) {
+        userService.sendFriendRequest(recipientId);
+    }
+
+    @PostMapping("/friend-request/accept/{senderId}")
+    void acceptFriendRequest(@PathVariable("senderId") Long senderId) {
+        userService.acceptFriendRequest(senderId);
+    }
+
+    @DeleteMapping("/friend-request/reject/{senderId}")
+    void rejectFriendRequest(@PathVariable("senderId") Long senderId) {
+        userService.rejectFriendRequest(senderId);
+    }
+
+    @GetMapping("/friend-request/pending/received")
+    List<FriendRequestDto> findAllPendingReceivedFriendRequests() {
+        return userService.findAllPendingReceivedFriendRequests();
+    }
+
+    @GetMapping("/friend-request/pending/received/{senderId}")
+    FriendRequestDto findAllPendingReceivedFriendRequest(@PathVariable("senderId") Long senderId) {
+        return userService.findPendingReceivedFriendRequest(senderId);
+    }
+
+    @GetMapping("/friend-request/pending/sent")
+    List<FriendRequestDto> findAllPendingSentFriendRequests() {
+        return userService.findAllPendingSentFriendRequests();
+    }
+
+    @GetMapping("/friend-request/pending/sent/{recipientId}")
+    FriendRequestDto findAllPendingSentFriendRequest(@PathVariable("recipientId") Long recipientId) {
+        return userService.findPendingSentFriendRequest(recipientId);
     }
 
     @PutMapping("/{id}/change-mail")
