@@ -136,6 +136,8 @@ CREATE TABLE "friend_request" (
     FOREIGN KEY (recipient_id) REFERENCES "user"(id) ON DELETE CASCADE
 );
 
+CREATE UNIQUE INDEX friend_un_idx on "friend" ("sender_id", "recipient_id");
+
 CREATE TABLE "friend" (
     "id" SERIAL,
     "first_user_id" INTEGER NOT NULL,
@@ -150,6 +152,7 @@ CREATE TABLE "friend" (
 );
 
 CREATE UNIQUE INDEX friend_un_idx on "friend" ("first_user_id", "second_user_id");
+CREATE UNIQUE INDEX friend_un_idx on "friend" ("second_user_id", "first_user_id");
 
 CREATE TABLE "direct_message" (
     "id" SERIAL,

@@ -70,5 +70,9 @@ public interface Searchable {
         return postLikeRepository.findPostLikeByPostAndUser(post, user).orElseThrow(() -> new EntityNotFoundException(POST_LIKE_NOT_FOUND_BY_POST_AND_USER.getMessageComposed(post.getId(), user.getId())));
     }
 
+    default @NotNull FriendRequest findFriendRequestBySenderAndRecipient(User sender, User recipient, FriendRequestRepository friendRequestRepository) {
+        return friendRequestRepository.findBySenderAndRecipient(sender, recipient).orElseThrow(() -> new EntityNotFoundException(FRIEND_REQUEST_NOT_FOUND_BY_SENDER_AND_RECIPIENT.getMessageComposed(sender.getId(), recipient.getId())));
+    }
+
 
 }

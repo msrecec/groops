@@ -12,7 +12,8 @@ public enum CrudExceptionEnum {
     ROLE_PERMISSION_NOT_FOUND_BY_ROLE_ID_AND_PERMISSION_ID("Role permission not found by role id and permission id", "Role permission not found by role id: %d and permission id: %d"),
     USER_GROUP_NOT_FOUND_BY_USER_ID_AND_GROUP_ID("User group not found by user id and group id", "User group not found by user id: %d and group id: %d"),
     USER_GROUP_ROLE_NOT_FOUND_BY_USER_GROUP_AND_ROLE("User group not found by user group id and role id", "User group not found by user group id: %d and role id: %d"),
-    POST_LIKE_NOT_FOUND_BY_POST_AND_USER("User group not found by user group id and role id", "User group not found by user group id: %d and role id: %d");
+    POST_LIKE_NOT_FOUND_BY_POST_AND_USER("User group not found by user group id and role id", "User group not found by user group id: %d and role id: %d"),
+    FRIEND_REQUEST_NOT_FOUND_BY_SENDER_AND_RECIPIENT("Friend request not found by sender and recipient", "Friend request not found by sender with id: %d and recipient with id: %d");
 
     private final String message;
     private final String parametrizedMessage;

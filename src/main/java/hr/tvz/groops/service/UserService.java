@@ -6,6 +6,7 @@ import hr.tvz.groops.command.crud.UserUpdateCommand;
 import hr.tvz.groops.command.search.UserSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
+import hr.tvz.groops.dto.response.FriendRequestDto;
 import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.event.notification.verification.MailChangeVerificationEvent;
 import hr.tvz.groops.event.notification.verification.MailCreateVerificationEvent;
@@ -13,10 +14,11 @@ import hr.tvz.groops.event.notification.verification.PasswordChangeVerificationE
 import hr.tvz.groops.event.notification.verification.VerificationEvent;
 import hr.tvz.groops.exception.ExceptionEnum;
 import hr.tvz.groops.exception.InternalServerException;
-import hr.tvz.groops.model.PendingVerification;
-import hr.tvz.groops.model.QUser;
-import hr.tvz.groops.model.User;
+import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.enums.VerificationTypeEnum;
+import hr.tvz.groops.model.pk.FriendRequestId;
+import hr.tvz.groops.repository.FriendRepository;
+import hr.tvz.groops.repository.FriendRequestRepository;
 import hr.tvz.groops.repository.PendingVerificationRepository;
 import hr.tvz.groops.repository.UserRepository;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
@@ -56,6 +58,8 @@ public class UserService implements Searchable {
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final FriendRepository friendRepository;
+    private final FriendRequestRepository friendRequestRepository;
     private final PendingVerificationRepository pendingVerificationRepository;
     private final VerificationPublisherService verificationPublisherService;
     private final S3Service s3Service;
@@ -68,6 +72,8 @@ public class UserService implements Searchable {
     public UserService(ModelMapper modelMapper,
                        PasswordEncoder passwordEncoder,
                        UserRepository userRepository,
+                       FriendRepository friendRepository,
+                       FriendRequestRepository friendRequestRepository,
                        PendingVerificationRepository pendingVerificationRepository,
                        VerificationPublisherService verificationPublisherService,
                        S3Service s3Service,
@@ -77,6 +83,8 @@ public class UserService implements Searchable {
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
+        this.friendRepository = friendRepository;
+        this.friendRequestRepository = friendRequestRepository;
         this.pendingVerificationRepository = pendingVerificationRepository;
         this.verificationPublisherService = verificationPublisherService;
         this.s3Service = s3Service;
@@ -357,5 +365,96 @@ public class UserService implements Searchable {
         userRepository.delete(user);
     }
 
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
+    public void sendFriendRequest(@NotNull Long userId) {
+        logger.debug("Sending friend request to user with id {}", userId);
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User currentUser = findUserEntityByIdLockByPessimisticWrite(currentUserId, userRepository);
+        User recipientUser = findUserEntityByIdLockByPessimisticWrite(userId, userRepository);
 
+        if (friendRepository.existsByFirstUserAndSecondUser(currentUser, recipientUser) ||
+                friendRepository.existsByFirstUserAndSecondUser(recipientUser, currentUser)) {
+            throw new IllegalArgumentException("You are already friends");
+        }
+
+        FriendRequestId friendRequestId = new FriendRequestId();
+        friendRequestId.setSenderId(currentUser.getId());
+        friendRequestId.setRecipientId(recipientUser.getId());
+        FriendRequest friendRequest = FriendRequest.builder()
+                .friendRequestId(friendRequestId)
+                .sender(currentUser)
+                .recipient(recipientUser)
+                .build();
+        friendRequestRepository.save(friendRequest);
+    }
+
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
+    public void acceptFriendRequest(@NotNull Long senderUserId) {
+        logger.debug("Accepting a friend request by sender user: {}", senderUserId);
+        Instant now = now();
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User currentUser = findUserEntityByIdLockByPessimisticWrite(currentUserId, userRepository);
+        User senderUser = findUserEntityByIdLockByPessimisticWrite(senderUserId, userRepository);
+        FriendRequest friendRequest = findFriendRequestBySenderAndRecipient(senderUser, currentUser, friendRequestRepository);
+        if (friendRepository.existsByFirstUserAndSecondUser(currentUser, senderUser) ||
+                friendRepository.existsByFirstUserAndSecondUser(senderUser, currentUser)) {
+            logger.debug("Users are already friends, deleting request...");
+            friendRequestRepository.delete(friendRequest);
+            return;
+        }
+        Friend friend = Friend.builder()
+                .firstUser(senderUser)
+                .secondUser(currentUser)
+                .createdBy(authenticationService.getCurrentLoggedInUserUsername())
+                .createdTs(now)
+                .build();
+        friendRepository.save(friend);
+        friendRequestRepository.delete(friendRequest);
+    }
+
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
+    public void rejectFriendRequest(@NotNull Long senderUserId) {
+        logger.debug("Rejecting a friend request by sender user: {}", senderUserId);
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User currentUser = findUserEntityById(currentUserId, userRepository);
+        User senderUser = findUserEntityById(senderUserId, userRepository);
+        FriendRequest friendRequest = findFriendRequestBySenderAndRecipient(senderUser, currentUser, friendRequestRepository);
+        friendRequestRepository.delete(friendRequest);
+    }
+
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
+    public List<FriendRequestDto> findAllPendingReceivedFriendRequests() {
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User currentUser = findUserEntityById(currentUserId, userRepository);
+        return friendRequestRepository.findAllByRecipient(currentUser).stream()
+                .map(friendRequest -> modelMapper.map(friendRequest, FriendRequestDto.class))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
+    public List<FriendRequestDto> findAllPendingSentFriendRequests() {
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User currentUser = findUserEntityById(currentUserId, userRepository);
+        return friendRequestRepository.findAllBySender(currentUser).stream()
+                .map(friendRequest -> modelMapper.map(friendRequest, FriendRequestDto.class))
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
+    public FriendRequestDto findPendingReceivedFriendRequest(Long senderId) {
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User currentUser = findUserEntityById(currentUserId, userRepository);
+        User senderUser = findUserEntityById(senderId, userRepository);
+        FriendRequest friendRequest = findFriendRequestBySenderAndRecipient(senderUser, currentUser, friendRequestRepository);
+        return modelMapper.map(friendRequest, FriendRequestDto.class);
+    }
+
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
+    public FriendRequestDto findPendingSentFriendRequest(Long recipientId) {
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User currentUser = findUserEntityById(currentUserId, userRepository);
+        User recipientUser = findUserEntityById(recipientId, userRepository);
+        FriendRequest friendRequest = findFriendRequestBySenderAndRecipient(currentUser, recipientUser, friendRequestRepository);
+        return modelMapper.map(friendRequest, FriendRequestDto.class);
+    }
 }
