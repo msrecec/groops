@@ -100,13 +100,13 @@ public class UserController extends ControllerBase {
         return userService.findPendingSentFriendRequest(recipientId);
     }
 
-    @PutMapping("/{id}/change-mail")
-    void updateUserMail(@RequestBody @Valid EmailUpdateCommand command, @PathVariable("id") Long id) {
-        userService.changeMail(id, command.getEmail());
+    @PutMapping("/change-mail")
+    void updateUserMail(@RequestBody @Valid EmailUpdateCommand command) {
+        userService.changeMail(command.getEmail());
     }
 
-    @PutMapping("/{id}/change-password")
-    void updateUserPassword(@RequestBody @Valid PasswordUpdateCommand command, @PathVariable("id") Long id) {
+    @PutMapping("/change-password")
+    void updateUserPassword(@RequestBody @Valid PasswordUpdateCommand command) {
         userService.changePassword(id, command.getPassword());
     }
 

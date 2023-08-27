@@ -185,10 +185,11 @@ public class UserService implements Searchable {
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public void changePassword(@NotNull Long id, @NotNull String password) {
+    public void changePassword(@NotNull String password) {
         logger.debug("Confirming user password change...");
         Instant now = now();
-        User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User user = findUserEntityByIdLockByPessimisticWrite(currentUserId, userRepository);
 
         SecurityUtil.validatePassword(password);
         if (passwordEncoder.matches(password, user.getPasswordHash())) {
@@ -208,10 +209,11 @@ public class UserService implements Searchable {
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public void changeMail(@NotNull Long id, @NotNull String email) {
+    public void changeMail(@NotNull String email) {
         logger.debug("Confirming user mail change...");
         Instant now = now();
-        User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User user = findUserEntityByIdLockByPessimisticWrite(currentUserId, userRepository);
 
         if (email.compareTo(user.getEmail()) == 0) {
             throw new IllegalArgumentException("Email must be different than the current one");
