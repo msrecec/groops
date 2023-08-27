@@ -107,7 +107,7 @@ public class UserController extends ControllerBase {
 
     @PutMapping("/change-password")
     void updateUserPassword(@RequestBody @Valid PasswordUpdateCommand command) {
-        userService.changePassword(id, command.getPassword());
+        userService.changePassword(command.getPassword());
     }
 
     @PostMapping("/search")
