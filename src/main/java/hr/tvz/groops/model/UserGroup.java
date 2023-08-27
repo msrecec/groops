@@ -35,4 +35,6 @@ public class UserGroup extends BaseEntity {
             inverseJoinColumns = {@JoinColumn(name = "role_id")}
     )
     private List<Role> roles;
+    @OneToMany(targetEntity = UserGroupRole.class, mappedBy = "userGroup")
+    private List<UserGroupRole> userGroupRoles;
 }

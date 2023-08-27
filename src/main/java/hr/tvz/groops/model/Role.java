@@ -38,4 +38,6 @@ public class Role extends BaseEntity {
     private List<Permission> permissions;
     @ManyToMany(targetEntity = UserGroup.class, mappedBy = "roles")
     private List<UserGroup> userGroups;
+    @OneToMany(targetEntity = RolePermission.class, mappedBy = "role")
+    private List<RolePermission> rolePermissions;
 }

@@ -11,14 +11,9 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @SuperBuilder
 @ToString
-public class PostDto extends DtoBase {
+public class CommentDto extends DtoBase {
     private Long id;
-    private String mediaKey;
     private String text;
     private UserDto user;
-    private GroupDto group;
-    private String mediaDownloadLink;
-    private Integer likeCount = 0;
-    private Boolean youLike = false;
-    private Integer commentCount;
+    private PostDto post;
 }

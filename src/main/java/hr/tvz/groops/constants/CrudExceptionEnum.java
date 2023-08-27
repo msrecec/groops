@@ -2,6 +2,7 @@ package hr.tvz.groops.constants;
 
 public enum CrudExceptionEnum {
     USER_NOT_FOUND_BY_ID("User not found by id", "User not found by id: %d"),
+    COMMENT_NOT_FOUND_BY_ID("Comment not found by id", "Comment not found by id: %d"),
     GROUP_NOT_FOUND_BY_ID("Group not found by id", "Group not found by id: %d"),
     GROUP_REQUEST_NOT_FOUND_BY_GROUP_AND_USER("Group request not found by group and user", "Group request not found by group with id: %d and user with id: %d"),
     USER_NOT_FOUND_BY_USERNAME("User not found by username", "User not found by username: %s"),

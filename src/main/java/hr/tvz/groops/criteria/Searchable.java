@@ -31,6 +31,11 @@ public interface Searchable {
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_BY_ID.getMessageComposed(id)));
     }
 
+    default @NotNull Comment findCommentEntityById(@NotNull Long id, @NotNull CommentRepository commentRepository) {
+        return commentRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(COMMENT_NOT_FOUND_BY_ID.getMessageComposed(id)));
+    }
+
     default @NotNull User findUserEntityByUsernameLockByPessimisticWrite(@NotNull String username, @NotNull UserRepository userRepository) {
         return userRepository.findByUsernameLockByPessimisticWrite(username)
                 .orElseThrow(() -> new EntityNotFoundException(USER_NOT_FOUND_BY_USERNAME.getMessageComposed(username)));

@@ -9,10 +9,7 @@ import hr.tvz.groops.dto.response.PostDto;
 import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.enums.PermissionEnum;
 import hr.tvz.groops.model.pk.PostLikeId;
-import hr.tvz.groops.repository.GroupRepository;
-import hr.tvz.groops.repository.PostLikeRepository;
-import hr.tvz.groops.repository.PostRepository;
-import hr.tvz.groops.repository.UserRepository;
+import hr.tvz.groops.repository.*;
 import hr.tvz.groops.service.s3.S3Service;
 import hr.tvz.groops.service.security.AuthenticationService;
 import hr.tvz.groops.service.security.AuthorizationService;
@@ -47,6 +44,7 @@ public class PostService implements Searchable {
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
     private final PostLikeRepository postLikeRepository;
+    private final CommentRepository commentRepository;
     private final ModelMapper modelMapper;
 
     @Autowired
@@ -57,6 +55,7 @@ public class PostService implements Searchable {
                        GroupRepository groupRepository,
                        UserRepository userRepository,
                        PostLikeRepository postLikeRepository,
+                       CommentRepository commentRepository,
                        ModelMapper modelMapper) {
         this.authenticationService = authenticationService;
         this.authorizationService = authorizationService;
@@ -65,13 +64,17 @@ public class PostService implements Searchable {
         this.groupRepository = groupRepository;
         this.userRepository = userRepository;
         this.postLikeRepository = postLikeRepository;
+        this.commentRepository = commentRepository;
         this.modelMapper = modelMapper;
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
     public PostDto findById(Long id) {
         User currentUser = findUserEntityById(authenticationService.getCurrentLoggedInUserId(), userRepository);
-        return mapLikes(findPostById(id, postRepository), currentUser);
+        Post post = findPostById(id, postRepository);
+        Group group = post.getGroup();
+        authorizationService.hasGroupPermission(currentUser, group, PermissionEnum.READ_COMMENT);
+        return mapLikes(post, currentUser);
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
@@ -170,8 +173,10 @@ public class PostService implements Searchable {
         PostDto postDto = modelMapper.map(post, PostDto.class);
         Integer likeCount = postLikeRepository.countAllByPost(post);
         Boolean youLike = postLikeRepository.existsByPostAndUser(post, user);
+        Integer commentCount = commentRepository.countAllByPost(post);
         postDto.setLikeCount(likeCount);
         postDto.setYouLike(youLike);
+        postDto.setCommentCount(commentCount);
         return postDto;
     }
 
@@ -192,6 +197,7 @@ public class PostService implements Searchable {
 
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
     public Page<PostDto> search(PostSearchCommand command, Pageable pageable) {
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
         QPost post = QPost.post;
         User currentUser = findUserEntityById(authenticationService.getCurrentLoggedInUserId(), userRepository);
         BooleanBuilder builder = new BooleanBuilder();
@@ -199,6 +205,7 @@ public class PostService implements Searchable {
         QueryBuilderUtil.like(builder, post.text, command.getText());
         QueryBuilderUtil.equals(builder, post.user.id, command.getUserId());
         QueryBuilderUtil.equals(builder, post.group.id, command.getGroupId());
+        QueryBuilderUtil.equals(builder, post.group.users.any().id, currentUserId);
 
         return postRepository.findAll(builder.getValue() != null ? builder.getValue() : builder, pageable)
                 .map(p -> mapLikes(p, currentUser));
