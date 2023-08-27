@@ -68,12 +68,22 @@ public abstract class JWTService implements TokenService {
 
     @Override
     public @Nullable String getTokenFromRequest(@NotNull HttpServletRequest httpServletRequest) {
+        if (isCookie(jwtConfig.getHeaderName())) {
+            if (hasCookies(jwtConfig.getCookieName(), httpServletRequest.getCookies())) {
+                return getCookieValueFromBase64(jwtConfig.getCookieName(), httpServletRequest.getCookies());
+            }
+            return null;
+        }
+
         String token = getTokenFromRequestHeader(httpServletRequest);
         if (token != null) {
             return token;
         }
-        String tokenB64 = getTokenFromRequestParameter(httpServletRequest);
-        return tokenB64 != null ? getFromBase64(tokenB64) : null;
+        if (hasParameter(httpServletRequest, jwtConfig.getParameterName())) {
+            String tokenB64 = getTokenFromRequestParameter(httpServletRequest);
+            return tokenB64 != null ? getFromBase64(tokenB64) : null;
+        }
+        return null;
     }
 
     @Nullable
@@ -84,6 +94,10 @@ public abstract class JWTService implements TokenService {
             }
         }
         return null;
+    }
+
+    private boolean isCookie(String header) {
+        return header.equals("Cookie");
     }
 
     protected boolean hasCookies(String cookieName, Cookie[] cookies) {

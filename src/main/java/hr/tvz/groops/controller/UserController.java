@@ -60,6 +60,11 @@ public class UserController extends ControllerBase {
         userService.login(command.getUsername(), command.getPassword(), response);
     }
 
+    @DeleteMapping("/logout")
+    void logout(HttpServletResponse response) {
+        userService.logout(response);
+    }
+
     @PostMapping("/friend-request/send/{recipientId}")
     void sendFriendRequest(@PathVariable("recipientId") Long recipientId) {
         userService.sendFriendRequest(recipientId);

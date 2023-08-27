@@ -24,6 +24,7 @@ import hr.tvz.groops.repository.UserRepository;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import hr.tvz.groops.service.s3.S3Service;
 import hr.tvz.groops.service.security.AuthenticationService;
+import hr.tvz.groops.service.security.CookieService;
 import hr.tvz.groops.service.token.AppJWTService;
 import hr.tvz.groops.service.verification.VerificationPublisherService;
 import hr.tvz.groops.util.QueryBuilderUtil;
@@ -65,6 +66,7 @@ public class UserService implements Searchable {
     private final S3Service s3Service;
     private final AuthenticationService authenticationService;
     private final AppJWTService appJWTService;
+    private final CookieService appCookieService;
     @PersistenceContext
     private final EntityManager entityManager;
 
@@ -79,6 +81,7 @@ public class UserService implements Searchable {
                        S3Service s3Service,
                        AuthenticationService authenticationService,
                        AppJWTService appJWTService,
+                       CookieService appCookieService,
                        EntityManager entityManager) {
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
@@ -90,6 +93,7 @@ public class UserService implements Searchable {
         this.s3Service = s3Service;
         this.authenticationService = authenticationService;
         this.appJWTService = appJWTService;
+        this.appCookieService = appCookieService;
         this.entityManager = entityManager;
     }
 
@@ -168,8 +172,16 @@ public class UserService implements Searchable {
         if (!exceptionMessages.isEmpty()) {
             throw new AccessDeniedException(String.join("\n", exceptionMessages));
         }
-        String token = appJWTService.generateToken(user.getId(), user.getUsername(), new ArrayList<>());
-        httpServletResponse.setHeader(appJWTService.getResponseHeader(), token);
+        String[] roles = new String[]{};
+        String tokenB64 = appJWTService.generateTokenBase64(user.getId(), user.getUsername(), roles);
+        appCookieService.setResponseCookie(httpServletResponse, tokenB64);
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public void logout(HttpServletResponse httpServletResponse) {
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User user = findUserEntityById(currentUserId, userRepository);
+        appCookieService.unsetResponseCookie(httpServletResponse);
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
