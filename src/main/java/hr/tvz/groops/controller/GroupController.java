@@ -2,13 +2,16 @@ package hr.tvz.groops.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import hr.tvz.groops.command.crud.CommentCommand;
 import hr.tvz.groops.command.crud.GroupCommand;
 import hr.tvz.groops.command.crud.PostCommand;
 import hr.tvz.groops.command.crud.RoleCommand;
 import hr.tvz.groops.command.search.GroupSearchCommand;
 import hr.tvz.groops.command.search.PostSearchCommand;
+import hr.tvz.groops.dto.response.CommentDto;
 import hr.tvz.groops.dto.response.GroupDto;
 import hr.tvz.groops.dto.response.PostDto;
+import hr.tvz.groops.service.CommentService;
 import hr.tvz.groops.service.GroupService;
 import hr.tvz.groops.service.PostService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,14 +29,17 @@ import java.util.Optional;
 public class GroupController extends ControllerBase {
     private final GroupService groupService;
     private final PostService postService;
+    private final CommentService commentService;
     private final ObjectMapper objectMapper;
 
     @Autowired
     public GroupController(GroupService groupService,
                            PostService postService,
+                           CommentService commentService,
                            ObjectMapper objectMapper) {
         this.groupService = groupService;
         this.postService = postService;
+        this.commentService = commentService;
         this.objectMapper = objectMapper;
     }
 
@@ -92,6 +98,26 @@ public class GroupController extends ControllerBase {
     @PostMapping("/post/search")
     Page<PostDto> searchPost(@RequestBody PostSearchCommand command) {
         return postService.search(command, command.getPageable());
+    }
+
+    @PostMapping("/post/{id}/comment")
+    CommentDto createComment(@PathVariable("id") Long id, @RequestBody @Valid CommentCommand command) {
+        return commentService.create(command, id);
+    }
+
+    @PutMapping("/post/{id}/comment/{commentId}")
+    CommentDto updateComment(@PathVariable("id") Long id, @PathVariable("commentId") Long commentId, @RequestBody @Valid CommentCommand command) {
+        return commentService.update(command, commentId);
+    }
+
+    @DeleteMapping("/post/{id}/comment/{commentId}")
+    void delete(@PathVariable("id") Long id, @PathVariable("commentId") Long commentId) {
+        commentService.delete(commentId);
+    }
+
+    @GetMapping("/post/{id}/comment")
+    List<CommentDto> findByPostId(@PathVariable("id") Long id) {
+        return commentService.findAllByPostId(id);
     }
 
     @PostMapping("/{id}/upload-profile")
