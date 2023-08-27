@@ -81,7 +81,7 @@ public class UserController extends ControllerBase {
     }
 
     @GetMapping("/friend-request/pending/received/{senderId}")
-    FriendRequestDto findAllPendingReceivedFriendRequest(@PathVariable("senderId") Long senderId) {
+    FriendRequestDto findPendingReceivedFriendRequest(@PathVariable("senderId") Long senderId) {
         return userService.findPendingReceivedFriendRequest(senderId);
     }
 
@@ -91,7 +91,7 @@ public class UserController extends ControllerBase {
     }
 
     @GetMapping("/friend-request/pending/sent/{recipientId}")
-    FriendRequestDto findAllPendingSentFriendRequest(@PathVariable("recipientId") Long recipientId) {
+    FriendRequestDto findPendingSentFriendRequest(@PathVariable("recipientId") Long recipientId) {
         return userService.findPendingSentFriendRequest(recipientId);
     }
 
