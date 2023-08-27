@@ -2,56 +2,93 @@ package hr.tvz.groops.service.security;
 
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
+import hr.tvz.groops.dto.response.GroupRoleDto;
+import hr.tvz.groops.dto.response.PermissionDto;
+import hr.tvz.groops.dto.response.RoleDto;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.enums.PermissionEnum;
 import hr.tvz.groops.model.enums.RoleEnum;
 import hr.tvz.groops.model.pk.RolePermissionId;
-import hr.tvz.groops.repository.RolePermissionRepository;
-import hr.tvz.groops.repository.RoleRepository;
-import hr.tvz.groops.repository.UserGroupRepository;
-import hr.tvz.groops.repository.UserGroupRoleRepository;
+import hr.tvz.groops.repository.*;
+import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static hr.tvz.groops.util.TimeUtils.now;
 
 @Service
 public class AuthorizationService implements Searchable {
     private static final Logger logger = LoggerFactory.getLogger(AuthorizationService.class);
+    private final ModelMapper modelMapper;
     private final RoleRepository roleRepository;
+    private final PermissionRepository permissionRepository;
     private final PermissionService permissionService;
     private final RolePermissionRepository rolePermissionRepository;
     private final UserGroupRepository userGroupRepository;
     private final UserGroupRoleRepository userGroupRoleRepository;
+    private final UserRepository userRepository;
+    private final GroupRepository groupRepository;
     private final AuthenticationService authenticationService;
 
     @Autowired
-    public AuthorizationService(RoleRepository roleRepository,
+    public AuthorizationService(ModelMapper modelMapper,
+                                RoleRepository roleRepository,
+                                PermissionRepository permissionRepository,
                                 PermissionService permissionService,
                                 RolePermissionRepository rolePermissionRepository,
                                 UserGroupRepository userGroupRepository,
                                 UserGroupRoleRepository userGroupRoleRepository,
+                                UserRepository userRepository,
+                                GroupRepository groupRepository,
                                 AuthenticationService authenticationService) {
+        this.modelMapper = modelMapper;
         this.roleRepository = roleRepository;
+        this.permissionRepository = permissionRepository;
         this.permissionService = permissionService;
         this.rolePermissionRepository = rolePermissionRepository;
         this.userGroupRepository = userGroupRepository;
         this.userGroupRoleRepository = userGroupRoleRepository;
+        this.userRepository = userRepository;
+        this.groupRepository = groupRepository;
         this.authenticationService = authenticationService;
     }
 
-    // todo add group image
+    @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
+    public GroupRoleDto findGroupRoles(Long groupId) {
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User currentUser = findUserEntityById(currentUserId, userRepository);
+        Group group = findGroupById(groupId, groupRepository);
+        UserGroup userGroup = findUserGroupByUserAndGroup(currentUser, group, userGroupRepository);
+        List<UserGroupRole> userGroupRoles = userGroupRoleRepository.findByUserGroup(userGroup);
+        List<RoleDto> roles = new ArrayList<>();
+        for (UserGroupRole userGroupRole : userGroupRoles) {
+            List<RolePermission> rolePermissions = rolePermissionRepository.findByRole(userGroupRole.getRole());
+            RoleDto role = new RoleDto();
+            role.setId(userGroupRole.getRole().getId());
+            role.setRole(userGroupRole.getRole().getRole());
+            List<Permission> permissions = rolePermissions.stream().map(RolePermission::getPermission).collect(Collectors.toList());
+            role.setPermissions(permissions.stream().map(p -> modelMapper.map(p, PermissionDto.class)).collect(Collectors.toList()));
+            roles.add(role);
+        }
+        return GroupRoleDto.builder()
+                .groupId(group.getId())
+                .roles(roles)
+                .build();
+    }
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
     public void hasGroupRole(User user, Group group, RoleEnum roleEnum) {
@@ -174,6 +211,7 @@ public class AuthorizationService implements Searchable {
         }
     }
 
+    @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
     public Role getOrCreateByRoleEnum(RoleEnum roleEnum, Instant now) {
         switch (roleEnum) {
             case ROLE_USER:

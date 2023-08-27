@@ -7,6 +7,8 @@ import lombok.Setter;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -15,4 +17,5 @@ import lombok.experimental.SuperBuilder;
 public class RoleDto extends DtoBase {
     private Long id;
     private RoleEnum role;
+    private List<PermissionDto> permissions;
 }

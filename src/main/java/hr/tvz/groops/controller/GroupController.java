@@ -10,10 +10,12 @@ import hr.tvz.groops.command.search.GroupSearchCommand;
 import hr.tvz.groops.command.search.PostSearchCommand;
 import hr.tvz.groops.dto.response.CommentDto;
 import hr.tvz.groops.dto.response.GroupDto;
+import hr.tvz.groops.dto.response.GroupRoleDto;
 import hr.tvz.groops.dto.response.PostDto;
 import hr.tvz.groops.service.CommentService;
 import hr.tvz.groops.service.GroupService;
 import hr.tvz.groops.service.PostService;
+import hr.tvz.groops.service.security.AuthorizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -27,16 +29,19 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/groups")
 public class GroupController extends ControllerBase {
+    private final AuthorizationService authorizationService;
     private final GroupService groupService;
     private final PostService postService;
     private final CommentService commentService;
     private final ObjectMapper objectMapper;
 
     @Autowired
-    public GroupController(GroupService groupService,
+    public GroupController(AuthorizationService authorizationService,
+                           GroupService groupService,
                            PostService postService,
                            CommentService commentService,
                            ObjectMapper objectMapper) {
+        this.authorizationService = authorizationService;
         this.groupService = groupService;
         this.postService = postService;
         this.commentService = commentService;
@@ -128,6 +133,11 @@ public class GroupController extends ControllerBase {
     @PutMapping("/{id}")
     GroupDto update(@PathVariable("id") Long id, @RequestBody @Valid GroupCommand command) {
         return groupService.update(id, command);
+    }
+
+    @GetMapping("/{id}/roles")
+    GroupRoleDto findAllRolesByGroupId(@PathVariable("id") Long id) {
+        return authorizationService.findGroupRoles(id);
     }
 
     @PutMapping("/{groupId}/request/user/{userId}")
