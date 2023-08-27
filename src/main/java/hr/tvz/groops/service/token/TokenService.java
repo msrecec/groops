@@ -1,5 +1,6 @@
 package hr.tvz.groops.service.token;
 
+import hr.tvz.groops.dto.response.JWTDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import org.jetbrains.annotations.NotNull;
@@ -9,6 +10,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
 
 public interface TokenService {
+
+    JWTDto getTokenBase64AndExpiration(@NotNull Long id, @NotNull String username, @NotNull String... roles);
 
     String generateTokenBase64(@NotNull Long id, @NotNull String username, @NotNull String... roles);
 

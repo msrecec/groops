@@ -3,6 +3,8 @@ package hr.tvz.groops.controller;
 import hr.tvz.groops.command.crud.*;
 import hr.tvz.groops.command.search.UserSearchCommand;
 import hr.tvz.groops.dto.response.FriendRequestDto;
+import hr.tvz.groops.dto.response.JWTDto;
+import hr.tvz.groops.dto.response.LoginDto;
 import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,8 +58,9 @@ public class UserController extends ControllerBase {
     }
 
     @PostMapping("/login")
-    void login(@RequestBody @Valid LoginCommand command, HttpServletResponse response) {
-        userService.login(command.getUsername(), command.getPassword(), response);
+    LoginDto login(@RequestBody @Valid LoginCommand command, HttpServletResponse response) {
+        LoginDto loginDto = userService.login(command.getUsername(), command.getPassword(), response);
+        return LoginDto.builder().exp(loginDto.getExp()).build();
     }
 
     @DeleteMapping("/logout")

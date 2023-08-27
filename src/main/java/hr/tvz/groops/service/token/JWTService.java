@@ -1,6 +1,7 @@
 package hr.tvz.groops.service.token;
 
 import hr.tvz.groops.constants.JWTConstants;
+import hr.tvz.groops.dto.response.JWTDto;
 import hr.tvz.groops.security.token.JwtConfig;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
@@ -30,6 +31,17 @@ public abstract class JWTService implements TokenService {
     @Override
     public String generateTokenBase64(@NotNull Long id, @NotNull String username, @NotNull String... roles) {
         return toBase64(getToken(id, username, new ArrayList<>(Arrays.asList(roles)), jwtConfig.getTokenExpirationAfterSeconds()));
+    }
+
+    @Override
+    public JWTDto getTokenBase64AndExpiration(@NotNull Long id, @NotNull String username, @NotNull String... roles) {
+        Long seconds = jwtConfig.getTokenExpirationAfterSeconds();
+        Instant exp = Instant.now().plusSeconds(seconds);
+        String token = generateTokenBase64(id, username, roles);
+        return JWTDto.builder()
+                .tokenB64(token)
+                .exp(exp)
+                .build();
     }
 
     @Override
