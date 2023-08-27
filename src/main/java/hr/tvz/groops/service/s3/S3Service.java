@@ -85,18 +85,27 @@ public class S3Service {
         }
     }
 
-    public  String generateGroupProfilePictureKey(Long id, MultipartFile file) {
+    public String generatePostPictureKey(Long id, MultipartFile file) {
         checkIfImage(file);
-        return generateKey(id, GROUP, IMAGE_TYPE, GROUP_PROFILE, file);
+        return generateKey(id, POST, IMAGE_TYPE, file);
+    }
+
+    public String generateGroupProfilePictureKey(Long id, MultipartFile file) {
+        checkIfImage(file);
+        return generateKey(id, GROUP, GROUP_PROFILE, IMAGE_TYPE, file);
     }
 
     public String generateUserProfilePictureKey(Long id, MultipartFile file) {
         checkIfImage(file);
-        return generateKey(id, USER, IMAGE_TYPE, USER_PROFILE, file);
+        return generateKey(id, USER, USER_PROFILE, IMAGE_TYPE, file);
+    }
+
+    private String generateKey(Long id, String prefix, String type, MultipartFile file) {
+        return generateKey(id, prefix, null, type, file);
     }
 
     private String generateKey(Long id, String prefix, String postfix, String type, MultipartFile file) {
-        return prefix + "/" + id + (postfix != null ? postfix : "/") + (type != null ? (type.trim() + "/") : "") + file.getOriginalFilename();
+        return prefix + "/" + id + (postfix != null ? "/" + postfix : "/") + (type != null ? (type.trim() + "/") : "") + file.getOriginalFilename();
     }
 
     private void checkPostfix(@Nullable String postfix) {

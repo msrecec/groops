@@ -2,7 +2,7 @@ package hr.tvz.groops.security.filter;
 
 import hr.tvz.groops.model.User;
 import hr.tvz.groops.repository.UserRepository;
-import hr.tvz.groops.service.AuthenticationService;
+import hr.tvz.groops.service.security.AuthenticationService;
 import hr.tvz.groops.service.token.JWTService;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;

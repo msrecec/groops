@@ -1,6 +1,6 @@
 package hr.tvz.groops.security.filter;
 
-import hr.tvz.groops.service.MDCService;
+import hr.tvz.groops.service.logging.MDCService;
 import hr.tvz.groops.util.SecurityUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;

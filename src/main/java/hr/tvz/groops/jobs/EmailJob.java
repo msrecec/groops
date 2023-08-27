@@ -6,7 +6,7 @@ import hr.tvz.groops.jobs.annotation.JobSecurityContext;
 import hr.tvz.groops.model.enums.MailStatusEnum;
 import hr.tvz.groops.service.mail.MailCreatorService;
 import hr.tvz.groops.service.mail.MailJobService;
-import hr.tvz.groops.service.MDCService;
+import hr.tvz.groops.service.logging.MDCService;
 import org.jetbrains.annotations.NotNull;
 import org.quartz.DisallowConcurrentExecution;
 import org.quartz.JobExecutionContext;

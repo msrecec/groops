@@ -1,8 +1,10 @@
 package hr.tvz.groops.config;
 
 import hr.tvz.groops.dto.response.GroupDto;
+import hr.tvz.groops.dto.response.PostDto;
 import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.model.Group;
+import hr.tvz.groops.model.Post;
 import hr.tvz.groops.model.User;
 import hr.tvz.groops.service.s3.S3Service;
 import org.modelmapper.AbstractConverter;
@@ -29,6 +31,7 @@ public class ModelMapperConfig {
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         addTypeMappingForUser(modelMapper);
         addTypeMappingForGroup(modelMapper);
+        addTypeMappingForPost(modelMapper);
         return modelMapper;
     }
 
@@ -43,6 +46,13 @@ public class ModelMapperConfig {
         TypeMap<Group, GroupDto> propertyMapper = modelMapper.createTypeMap(Group.class, GroupDto.class);
         propertyMapper.addMappings(m -> {
             m.using(getProfilePictureConverter()).map(Group::getProfilePictureKey, GroupDto::setProfilePictureDownloadLink);
+        });
+    }
+
+    private void addTypeMappingForPost(ModelMapper modelMapper) {
+        TypeMap<Post, PostDto> propertyMapper = modelMapper.createTypeMap(Post.class, PostDto.class);
+        propertyMapper.addMappings(m -> {
+            m.using(getProfilePictureConverter()).map(Post::getMediaKey, PostDto::setMediaDownloadLink);
         });
     }
 

@@ -8,7 +8,7 @@ import hr.tvz.groops.model.PendingVerification;
 import hr.tvz.groops.model.User;
 import hr.tvz.groops.model.enums.VerificationTypeEnum;
 import hr.tvz.groops.repository.PendingVerificationRepository;
-import hr.tvz.groops.service.AuthenticationService;
+import hr.tvz.groops.service.security.AuthenticationService;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

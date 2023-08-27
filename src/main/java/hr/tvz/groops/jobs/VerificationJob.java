@@ -3,7 +3,7 @@ package hr.tvz.groops.jobs;
 import hr.tvz.groops.event.notification.verification.VerificationEvent;
 import hr.tvz.groops.exception.ExceptionEnum;
 import hr.tvz.groops.jobs.annotation.JobSecurityContext;
-import hr.tvz.groops.service.MDCService;
+import hr.tvz.groops.service.logging.MDCService;
 import hr.tvz.groops.service.UserService;
 import hr.tvz.groops.service.verification.VerificationVisitorService;
 import org.jetbrains.annotations.NotNull;

@@ -1,4 +1,4 @@
-package hr.tvz.groops.service;
+package hr.tvz.groops.service.url;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

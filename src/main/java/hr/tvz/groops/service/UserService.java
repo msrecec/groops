@@ -21,6 +21,7 @@ import hr.tvz.groops.repository.PendingVerificationRepository;
 import hr.tvz.groops.repository.UserRepository;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import hr.tvz.groops.service.s3.S3Service;
+import hr.tvz.groops.service.security.AuthenticationService;
 import hr.tvz.groops.service.token.AppJWTService;
 import hr.tvz.groops.service.verification.VerificationPublisherService;
 import hr.tvz.groops.util.QueryBuilderUtil;

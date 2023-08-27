@@ -1,4 +1,4 @@
-package hr.tvz.groops.service;
+package hr.tvz.groops.service.security;
 
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;

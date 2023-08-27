@@ -1,7 +1,7 @@
 package hr.tvz.groops.controller;
 
 import hr.tvz.groops.security.constants.RoleConstants;
-import hr.tvz.groops.service.URLService;
+import hr.tvz.groops.service.url.URLService;
 import hr.tvz.groops.service.UserService;
 import hr.tvz.groops.service.token.MailChangeJWTService;
 import hr.tvz.groops.service.token.MailCreateJWTService;

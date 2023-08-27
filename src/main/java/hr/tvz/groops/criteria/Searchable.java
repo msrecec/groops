@@ -9,6 +9,10 @@ import javax.persistence.EntityNotFoundException;
 import static hr.tvz.groops.constants.CrudExceptionEnum.*;
 
 public interface Searchable {
+
+    default @NotNull Post findPostById(@NotNull Long id, @NotNull PostRepository postRepository) {
+        return postRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(POST_NOT_FOUND_BY_ID.getMessageComposed(id)));
+    }
     default @NotNull Role findRoleEntityById(@NotNull Long id, @NotNull RoleRepository roleRepository) {
         return roleRepository.findById(id).orElseThrow(() -> new EntityNotFoundException(ROLE_NOT_FOUND_BY_ID.getMessageComposed(id)));
     }
@@ -56,4 +60,10 @@ public interface Searchable {
     default @NotNull UserGroupRole findUserGroupRoleByUserGroupAndRole(UserGroup userGroup, Role role, UserGroupRoleRepository userGroupRoleRepository) {
         return userGroupRoleRepository.findByUserGroupAndRole(userGroup, role).orElseThrow(() -> new EntityNotFoundException(USER_GROUP_ROLE_NOT_FOUND_BY_USER_GROUP_AND_ROLE.getMessageComposed(userGroup.getId(), role.getId())));
     }
+
+    default @NotNull PostLike findPostLikeByPostAndUser(Post post, User user, PostLikeRepository postLikeRepository) {
+        return postLikeRepository.findPostLikeByPostAndUser(post, user).orElseThrow(() -> new EntityNotFoundException(POST_LIKE_NOT_FOUND_BY_POST_AND_USER.getMessageComposed(post.getId(), user.getId())));
+    }
+
+
 }

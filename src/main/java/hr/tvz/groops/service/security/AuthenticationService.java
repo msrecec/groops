@@ -1,4 +1,4 @@
-package hr.tvz.groops.service;
+package hr.tvz.groops.service.security;
 
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import hr.tvz.groops.util.SecurityUtil;

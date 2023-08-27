@@ -25,7 +25,7 @@ public abstract class PageableSearchCommand {
     public Pageable getPageable() {
 
         if (sort == null) {
-            Sort.Order sortOrder = new Sort.Order(Sort.Direction.fromString("ASC"), "id").nullsNative();
+            Sort.Order sortOrder = new Sort.Order(Sort.Direction.fromString("DESC"), "id").nullsNative();
             return PageRequest.of(
                     page,
                     limit,
@@ -36,7 +36,7 @@ public abstract class PageableSearchCommand {
         List<Sort.Order> sortOrders = sort.stream()
                 .map(so ->
                         new Sort.Order(Sort.Direction.fromString(so.direction != null ?
-                                so.direction.toString() : "ASC"), so.property != null ?
+                                so.direction.toString() : "DESC"), so.property != null ?
                                 so.property : "id").ignoreCase().nullsNative()).collect(Collectors.toList()
                 );
         return PageRequest.of(page, limit, Sort.by(sortOrders));
