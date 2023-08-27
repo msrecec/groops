@@ -137,7 +137,7 @@ public abstract class ControllerBase {
     @ResponseBody
     public ErrorDto accessDeniedException(AccessDeniedException ex) {
         logger.error(ExceptionEnum.ACCESS_DENIED_EXCEPTION.getFullMessage(), ex);
-        return new ErrorDto(false, ExceptionEnum.ACCESS_DENIED_EXCEPTION.getFullMessage());
+        return new ErrorDto(false, ex.getMessage());
     }
 
     @ExceptionHandler(UnauthorizedException.class)
@@ -145,7 +145,7 @@ public abstract class ControllerBase {
     @ResponseBody
     public ErrorDto unauthorizedException(UnauthorizedException ex) {
         logger.error(ExceptionEnum.UNAUTHORIZED_EXCEPTION.getFullMessage(), ex);
-        return new ErrorDto(false, ex.getMessage());
+        return new ErrorDto(false, ex.getMessage() != null && !ex.getMessage().isBlank() ? ex.getMessage() : ExceptionEnum.UNAUTHORIZED_EXCEPTION.getShortMessage());
     }
 
     @ExceptionHandler(Exception.class)
