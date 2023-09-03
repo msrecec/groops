@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 public class Error409Dto extends ErrorDto {
     private String constraint;
 
-    public Error409Dto(Boolean success, String constraint, String message) {
-        super(success, message);
+    public Error409Dto(Boolean success, String constraint, String message, Integer status) {
+        super(success, message, status);
         this.constraint = constraint;
     }
 }

@@ -14,8 +14,8 @@ import lombok.experimental.SuperBuilder;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class ExternalServiceErrorDto extends ErrorDto {
 
-    public ExternalServiceErrorDto(Boolean success, String message, String serviceResponse) {
-        super(success, message);
+    public ExternalServiceErrorDto(Boolean success, String message, String serviceResponse, Integer status) {
+        super(success, message, status);
         this.serviceResponse = serviceResponse;
     }
 

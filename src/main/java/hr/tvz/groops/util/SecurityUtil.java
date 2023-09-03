@@ -80,8 +80,21 @@ public class SecurityUtil {
      * @return
      */
     public static void validatePassword(String password) {
-        boolean isValid = true;
         List<String> exceptionMessages = new ArrayList<>();
+        boolean isValid = isValidHandler(password, exceptionMessages);
+        if (isValid) {
+            return;
+        }
+        logger.debug(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getFullMessage());
+        throw new IllegalArgumentException(String.join("\n", exceptionMessages));
+    }
+
+    public static boolean isValid(String password, List<String> exceptionMessages) {
+        return isValidHandler(password, exceptionMessages);
+    }
+
+    private static boolean isValidHandler(String password, List<String> exceptionMessages) {
+        boolean isValid = true;
         if (password.length() > 15 || password.length() < 8) {
             exceptionMessages.add("Password must be less than 20 and more than 8 characters in length.");
             isValid = false;
@@ -106,11 +119,7 @@ public class SecurityUtil {
             exceptionMessages.add("Password must have at least one special character among @#$%!");
             isValid = false;
         }
-        if (isValid) {
-            return;
-        }
-        logger.debug(ExceptionEnum.INVALID_PASSWORD_EXCEPTION.getFullMessage());
-        throw new IllegalArgumentException(String.join("\n", exceptionMessages));
+        return isValid;
     }
 
     public static @NotNull Set<SimpleGrantedAuthority> getRoles(Collection<String> roles) {

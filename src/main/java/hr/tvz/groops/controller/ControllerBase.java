@@ -48,6 +48,7 @@ public abstract class ControllerBase {
                         .success(false)
                         .message(ExceptionEnum.S3_EXCEPTION.getShortMessage())
                         .cause(ex.getMessage())
+                        .status(ex.getStatusCode())
                         .build());
     }
 
@@ -56,7 +57,7 @@ public abstract class ControllerBase {
     @ResponseBody
     public ErrorDto entityNotFoundException(EntityNotFoundException ex) {
         logger.error(ExceptionEnum.ENTITY_NOT_FOUND_EXCEPTION.getFullMessage(), ex);
-        return new ErrorDto(false, ex.getMessage());
+        return new ErrorDto(false, ex.getMessage(), HttpStatus.NOT_FOUND.value());
     }
 
     @ExceptionHandler(LockAcquisitionException.class)
@@ -68,6 +69,7 @@ public abstract class ControllerBase {
                 .success(false)
                 .cause(ex.getMessage())
                 .message(ExceptionEnum.LOCK_ACQUISITION_EXCEPTION.getShortMessage())
+                .status(HttpStatus.PRECONDITION_FAILED.value())
                 .build();
     }
 
@@ -76,7 +78,7 @@ public abstract class ControllerBase {
     @ResponseBody
     public ErrorDto illegalArgumentException(IllegalArgumentException ex) {
         logger.error(ExceptionEnum.ILLEGAL_ARGUMENT_EXCEPTION.getFullMessage(), ex);
-        return new ErrorDto(false, ex.getMessage());
+        return new ErrorDto(false, ex.getMessage(), HttpStatus.BAD_REQUEST.value());
     }
 
     @ExceptionHandler(RuntimeException.class)
@@ -88,6 +90,7 @@ public abstract class ControllerBase {
                 .success(false)
                 .cause(ex.getMessage())
                 .message(ExceptionEnum.RUNTIME_EXCEPTION.getShortMessage())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .build();
     }
 
@@ -100,6 +103,7 @@ public abstract class ControllerBase {
                         .success(false)
                         .cause(ex.getCause().getMessage())
                         .message(ex.getClientMessage())
+                        .status(ex.getHttpStatus().value())
                         .build());
     }
 
@@ -112,6 +116,7 @@ public abstract class ControllerBase {
                         .success(false)
                         .message(ex.getClientMessage())
                         .serviceResponse(ex.getResponseBody())
+                        .status(ex.getHttpStatus().value())
                         .build());
     }
 
@@ -120,7 +125,7 @@ public abstract class ControllerBase {
     @ResponseBody
     public ErrorDto emptyResultDataAccessException(EmptyResultDataAccessException ex) {
         logger.error(ExceptionEnum.EMPTY_RESULT_DATA_ACCESS_EXCEPTION.getFullMessage(), ex);
-        return new ErrorDto(false, ex.getMessage());
+        return new ErrorDto(false, ex.getMessage(), HttpStatus.NOT_FOUND.value());
     }
 
     @ExceptionHandler(BindException.class)
@@ -129,7 +134,7 @@ public abstract class ControllerBase {
     public ErrorDto validationException(BindException ex) {
         logger.error(ExceptionEnum.BIND_EXCEPTION.getFullMessage(), ex);
         String message = ex.getBindingResult().getFieldErrors().stream().map(DefaultMessageSourceResolvable::getDefaultMessage).collect(Collectors.joining("; "));
-        return new ErrorDto(false, message);
+        return new ErrorDto(false, message, HttpStatus.BAD_REQUEST.value());
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -137,7 +142,7 @@ public abstract class ControllerBase {
     @ResponseBody
     public ErrorDto accessDeniedException(AccessDeniedException ex) {
         logger.error(ExceptionEnum.ACCESS_DENIED_EXCEPTION.getFullMessage(), ex);
-        return new ErrorDto(false, ex.getMessage());
+        return new ErrorDto(false, ex.getMessage(), HttpStatus.FORBIDDEN.value());
     }
 
     @ExceptionHandler(UnauthorizedException.class)
@@ -145,7 +150,7 @@ public abstract class ControllerBase {
     @ResponseBody
     public ErrorDto unauthorizedException(UnauthorizedException ex) {
         logger.error(ExceptionEnum.UNAUTHORIZED_EXCEPTION.getFullMessage(), ex);
-        return new ErrorDto(false, ex.getMessage() != null && !ex.getMessage().isBlank() ? ex.getMessage() : ExceptionEnum.UNAUTHORIZED_EXCEPTION.getShortMessage());
+        return new ErrorDto(false, ex.getMessage() != null && !ex.getMessage().isBlank() ? ex.getMessage() : ExceptionEnum.UNAUTHORIZED_EXCEPTION.getShortMessage(), HttpStatus.UNAUTHORIZED.value());
     }
 
     @ExceptionHandler(Exception.class)
@@ -157,6 +162,7 @@ public abstract class ControllerBase {
                 .success(false)
                 .cause(ex.getMessage())
                 .message(ExceptionEnum.EXCEPTION.getShortMessage())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
                 .build();
     }
 
@@ -169,7 +175,7 @@ public abstract class ControllerBase {
         if (ex.getCause() instanceof ConstraintViolationException) {
             return new ResponseEntity<>(constraintViolationException((ConstraintViolationException) ex.getCause()), HttpStatus.CONFLICT);
         }
-        return new ResponseEntity<>(new ErrorDto(false, message), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ErrorDto(false, message, HttpStatus.BAD_REQUEST.value()), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
@@ -187,7 +193,7 @@ public abstract class ControllerBase {
             defaultMessage = ex.getMessage();
         }
         String message = serverErrorMessage != null ? serverErrorMessage.getMessage() : defaultMessage != null ? defaultMessage : ExceptionEnum.CONSTRAINT_VIOLATION_EXCEPTION.getShortMessage();
-        return new Error409Dto(false, ex.getConstraintName(), message);
+        return new Error409Dto(false, ex.getConstraintName(), message, HttpStatus.CONFLICT.value());
     }
 
     @ExceptionHandler(JpaSystemException.class)
@@ -195,7 +201,7 @@ public abstract class ControllerBase {
     @ResponseBody
     public ErrorDto jpaSystemException(JpaSystemException ex) {
         logger.error(ExceptionEnum.JPA_SYSTEM_EXCEPTION.getFullMessage(), ex);
-        return new ErrorDto(false, ex.getMessage());
+        return new ErrorDto(false, ex.getMessage(), HttpStatus.UNPROCESSABLE_ENTITY.value());
     }
 
     @ExceptionHandler(TransactionSystemException.class)
@@ -212,6 +218,6 @@ public abstract class ControllerBase {
                     ).collect(Collectors.toList()).toString();
             message = constraint;
         }
-        return new Error409Dto(false, constraint, message);
+        return new Error409Dto(false, constraint, message, HttpStatus.CONFLICT.value());
     }
 }

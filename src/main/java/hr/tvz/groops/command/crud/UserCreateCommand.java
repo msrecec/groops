@@ -1,5 +1,6 @@
 package hr.tvz.groops.command.crud;
 
+import hr.tvz.groops.command.validator.CustomPasswordValidator;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
@@ -16,6 +17,6 @@ public class UserCreateCommand extends UserCommand {
     @NotBlank(message = "email is required")
     @Email(message = "format must be a valid email")
     private String email;
-    @NotBlank(message = "password is required")
+    @CustomPasswordValidator
     private String password;
 }
