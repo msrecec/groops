@@ -12,7 +12,7 @@ import javax.validation.constraints.NotBlank;
 @NoArgsConstructor
 @ToString
 public class LoginCommand {
-    @NotBlank(message = "password is required")
+    @NotBlank(message = "username is required")
     private String username;
     @NotBlank(message = "password is required")
     private String password;
