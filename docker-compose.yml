@@ -12,6 +12,16 @@ services:
       POSTGRES_DB: groops
     ports:
       - "5432:5432"
+  nginx:
+    image: nginx:1.25.2-alpine
+    restart: unless-stopped
+    container_name: nginx
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./nginx-conf/nginx.conf:/etc/nginx/nginx.conf
+    network_mode: "host"
+
 volumes:
   pgdata:
     name: groops-pgdata
