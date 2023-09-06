@@ -50,9 +50,7 @@ public class AuthenticationService {
 
     @NotNull
     public GroopsUserDataToken getCurrentLoggedInUser() {
-//        return SecurityUtil.getCurrentLoggedInUser();
-        Set<String> rolesAndPermissions = new HashSet<>();
-        return new GroopsUserDataToken(-1L, "test", null, getRoles(rolesAndPermissions));
+        return  SecurityUtil.getCurrentLoggedInUser();
     }
 
     private Set<SimpleGrantedAuthority> getRoles(Collection<String> roles) {
