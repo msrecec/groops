@@ -44,14 +44,14 @@ public class UserController extends ControllerBase {
         return userService.register(command);
     }
 
-    @PostMapping("/{id}/upload-profile")
-    UserDto uploadProfilePicture(@PathVariable("id") Long id, @RequestParam("file") MultipartFile file) {
-        return userService.uploadProfilePicture(id, file);
+    @PostMapping("/current/upload-profile")
+    UserDto uploadProfilePicture(@RequestParam("file") MultipartFile file) {
+        return userService.uploadProfilePicture(file);
     }
 
-    @PutMapping("/{id}")
-    UserDto updateUser(@RequestBody @Valid UserUpdateCommand command, @PathVariable("id") Long id) {
-        return userService.update(id, command);
+    @PutMapping("/current")
+    UserDto updateUser(@RequestBody @Valid UserUpdateCommand command) {
+        return userService.update(command);
     }
 
     @PostMapping("/friend-request/send/{recipientId}")

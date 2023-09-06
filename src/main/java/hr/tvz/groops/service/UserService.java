@@ -121,12 +121,13 @@ public class UserService implements Searchable {
         return modelMapper.map(user, UserDto.class);
     }
 
-    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public UserDto uploadProfilePicture(Long id, MultipartFile file) {
+    @Transactional(timeout = TimeoutConstants.LONG_TIMEOUT)
+    public UserDto uploadProfilePicture(MultipartFile file) {
         Instant now = now();
-        User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User user = findUserEntityByIdLockByPessimisticWrite(currentUserId, userRepository);
         String oldProfilePictureKey = user.getProfilePictureKey();
-        String newProfilePictureKey = s3Service.generateUserProfilePictureKey(id, file);
+        String newProfilePictureKey = s3Service.generateUserProfilePictureKey(currentUserId, file);
         user.setProfilePictureKey(newProfilePictureKey);
         user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         user.setModifiedTs(now);
@@ -135,15 +136,17 @@ public class UserService implements Searchable {
             logger.debug("Deleting old user profile picture key: {}", oldProfilePictureKey);
             s3Service.deleteByKey(oldProfilePictureKey);
         }
+        s3Service.deleteByKey(newProfilePictureKey);
         s3Service.uploadDocumentFull(user.getProfilePictureKey(), file);
         return modelMapper.map(user, UserDto.class);
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public UserDto update(Long id, @Valid UserUpdateCommand command) {
+    public UserDto update(@Valid UserUpdateCommand command) {
         logger.debug("Updating user...");
         Instant now = now();
-        User user = findUserEntityByIdLockByPessimisticWrite(id, userRepository);
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User user = findUserEntityByIdLockByPessimisticWrite(currentUserId, userRepository);
 
         modelMapper.map(command, user);
         user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
@@ -295,7 +298,7 @@ public class UserService implements Searchable {
     public UserDto getCurrent() {
         logger.debug("Fetching current user...");
         GroopsUserDataToken groopsUserDataToken = authenticationService.getCurrentLoggedInUser();
-        return modelMapper.map(findUserEntityByUsername(groopsUserDataToken.getUsername(), userRepository), UserDto.class);
+        return modelMapper.map(findUserEntityById(groopsUserDataToken.getUserId(), userRepository), UserDto.class);
     }
 
     public List<UserDto> findAll() {
@@ -368,7 +371,7 @@ public class UserService implements Searchable {
     public void deleteCurrent() {
         logger.debug("Deleting current user...");
         GroopsUserDataToken token = authenticationService.getCurrentLoggedInUser();
-        User user = findUserEntityByUsernameLockByPessimisticWrite(token.getUsername(), userRepository);
+        User user = findUserEntityByIdLockByPessimisticWrite(token.getUserId(), userRepository);
         userRepository.delete(user);
     }
 
