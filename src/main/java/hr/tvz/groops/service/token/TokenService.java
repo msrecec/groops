@@ -11,7 +11,7 @@ import java.util.Collection;
 
 public interface TokenService {
 
-    JWTDto getTokenBase64AndExpiration(@NotNull Long id, @NotNull String username, @NotNull String... roles);
+    JWTDto getToken(@NotNull Long id, @NotNull String username, @NotNull String... roles);
 
     String generateTokenBase64(@NotNull Long id, @NotNull String username, @NotNull String... roles);
 

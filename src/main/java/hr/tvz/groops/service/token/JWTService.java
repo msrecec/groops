@@ -34,13 +34,10 @@ public abstract class JWTService implements TokenService {
     }
 
     @Override
-    public JWTDto getTokenBase64AndExpiration(@NotNull Long id, @NotNull String username, @NotNull String... roles) {
-        Long seconds = jwtConfig.getTokenExpirationAfterSeconds();
-        Instant exp = Instant.now().plusSeconds(seconds);
-        String token = generateTokenBase64(id, username, roles);
+    public JWTDto getToken(@NotNull Long id, @NotNull String username, @NotNull String... roles) {
+        String token = getToken(id, username, new ArrayList<>(Arrays.asList(roles)), jwtConfig.getTokenExpirationAfterSeconds());
         return JWTDto.builder()
-                .tokenB64(token)
-                .exp(exp)
+                .token(token)
                 .build();
     }
 

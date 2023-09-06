@@ -3,8 +3,6 @@ package hr.tvz.groops.controller;
 import hr.tvz.groops.command.crud.*;
 import hr.tvz.groops.command.search.UserSearchCommand;
 import hr.tvz.groops.dto.response.FriendRequestDto;
-import hr.tvz.groops.dto.response.JWTDto;
-import hr.tvz.groops.dto.response.LoginDto;
 import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.util.List;
 
@@ -55,17 +52,6 @@ public class UserController extends ControllerBase {
     @PutMapping("/{id}")
     UserDto updateUser(@RequestBody @Valid UserUpdateCommand command, @PathVariable("id") Long id) {
         return userService.update(id, command);
-    }
-
-    @PostMapping("/login")
-    LoginDto login(@RequestBody @Valid LoginCommand command, HttpServletResponse response) {
-        LoginDto loginDto = userService.login(command.getUsername(), command.getPassword(), response);
-        return LoginDto.builder().exp(loginDto.getExp()).build();
-    }
-
-    @DeleteMapping("/logout")
-    void logout(HttpServletResponse response) {
-        userService.logout(response);
     }
 
     @PostMapping("/friend-request/send/{recipientId}")

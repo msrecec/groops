@@ -8,7 +8,6 @@ import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.FriendRequestDto;
 import hr.tvz.groops.dto.response.JWTDto;
-import hr.tvz.groops.dto.response.LoginDto;
 import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.event.notification.verification.MailChangeVerificationEvent;
 import hr.tvz.groops.event.notification.verification.MailCreateVerificationEvent;
@@ -154,7 +153,7 @@ public class UserService implements Searchable {
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public LoginDto login(@NotNull String username, @NotNull String password, HttpServletResponse httpServletResponse) {
+    public JWTDto login(@NotNull String username, @NotNull String password, HttpServletResponse httpServletResponse) {
         User user = userRepository.findByUsername(username).orElseThrow(() -> new IllegalArgumentException("Wrong username or password"));
         if (!passwordEncoder.matches(password, user.getPasswordHash())) {
             throw new IllegalArgumentException("Wrong username or password");
@@ -175,9 +174,7 @@ public class UserService implements Searchable {
             throw new AccessDeniedException(String.join("\n", exceptionMessages));
         }
         String[] roles = new String[]{};
-        JWTDto dto = appJWTService.getTokenBase64AndExpiration(user.getId(), user.getUsername(), roles);
-        appCookieService.setResponseCookie(httpServletResponse, dto.getTokenB64());
-        return dto;
+        return appJWTService.getToken(user.getId(), user.getUsername(), roles);
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)

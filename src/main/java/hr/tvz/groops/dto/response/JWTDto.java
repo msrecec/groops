@@ -7,8 +7,8 @@ import lombok.experimental.SuperBuilder;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
+@Builder
 @ToString
-public class JWTDto extends LoginDto {
-    private String tokenB64;
+public class JWTDto {
+    private String token;
 }
