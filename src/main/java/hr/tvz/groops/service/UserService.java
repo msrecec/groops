@@ -255,7 +255,7 @@ public class UserService implements Searchable {
         Optional<PendingVerification> pending = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.PASSWORD_FORGOT);
         pending.ifPresent(pendingVerificationRepository::delete);
         flushAndClear();
-        verificationPublisherService.verifyEmailChange(user, now);
+        verificationPublisherService.verifyPasswordForgot(user, now);
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)

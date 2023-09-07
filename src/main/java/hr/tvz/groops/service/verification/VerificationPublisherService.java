@@ -4,6 +4,7 @@ import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.event.notification.verification.MailChangeVerificationEvent;
 import hr.tvz.groops.event.notification.verification.MailCreateVerificationEvent;
 import hr.tvz.groops.event.notification.verification.PasswordChangeVerificationEvent;
+import hr.tvz.groops.event.notification.verification.PasswordForgotVerificationEvent;
 import hr.tvz.groops.model.PendingVerification;
 import hr.tvz.groops.model.User;
 import hr.tvz.groops.model.enums.VerificationTypeEnum;
@@ -130,6 +131,15 @@ public class VerificationPublisherService {
             @Override
             public void afterCommit() {
                 applicationEventPublisher.publishEvent(new PasswordChangeVerificationEvent(this, pendingVerificationId, userId));
+            }
+        });
+    }
+
+    private void sendPasswordForgotVerificationEventAfterSuccessfulCommit(@NotNull Long pendingVerificationId, @NotNull Long userId) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                applicationEventPublisher.publishEvent(new PasswordForgotVerificationEvent(this, pendingVerificationId, userId));
             }
         });
     }

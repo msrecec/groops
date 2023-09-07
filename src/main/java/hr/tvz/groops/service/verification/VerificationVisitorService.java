@@ -32,6 +32,7 @@ public class VerificationVisitorService implements Searchable {
     private final JWTService mailChangeJWTService;
     private final JWTService mailCreateJWTService;
     private final JWTService passwordChangeJWTService;
+    private final JWTService passwordForgotJWTService;
     private final MailCreatorService mailCreatorService;
     private final AuthenticationService authenticationService;
     private final TemplateService thymeleafTemplateService;
@@ -44,6 +45,7 @@ public class VerificationVisitorService implements Searchable {
     public VerificationVisitorService(JWTService mailChangeJWTService,
                                       JWTService mailCreateJWTService,
                                       JWTService passwordChangeJWTService,
+                                      JWTService passwordForgotJWTService,
                                       MailCreatorService mailCreatorService,
                                       AuthenticationService authenticationService,
                                       TemplateService thymeleafTemplateService,
@@ -54,6 +56,7 @@ public class VerificationVisitorService implements Searchable {
         this.mailChangeJWTService = mailChangeJWTService;
         this.mailCreateJWTService = mailCreateJWTService;
         this.passwordChangeJWTService = passwordChangeJWTService;
+        this.passwordForgotJWTService = passwordForgotJWTService;
         this.mailCreatorService = mailCreatorService;
         this.authenticationService = authenticationService;
         this.thymeleafTemplateService = thymeleafTemplateService;
@@ -90,12 +93,12 @@ public class VerificationVisitorService implements Searchable {
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void visitPasswordForgotVerification(PasswordForgotVerificationEvent passwordForgotVerificationEvent) {
         User recipient = findUserEntityById(passwordForgotVerificationEvent.getUserId(), userRepository);
-        String b64Token = mailChangeJWTService.generateTokenBase64(recipient.getId(), recipient.getUsername(), RoleConstants.ROLE_PASSWORD_FORGOT);
-        String parameter = mailChangeJWTService.getParameterName();
+        String b64Token = passwordForgotJWTService.generateTokenBase64(recipient.getId(), recipient.getUsername(), RoleConstants.ROLE_PASSWORD_FORGOT);
+        String parameter = passwordForgotJWTService.getParameterName();
         if (parameter == null) {
             throw new InternalServerException("Parameter must not be null");
         }
-        String baseURL = urlService.getFrontendBaseURL() + "password-forgot";
+        String baseURL = urlService.getFrontendBaseURL() + "password-forgot-change";
         finalizeMailCreation(baseURL, "Groops - password forgot verification", "password change", parameter, b64Token, recipient);
     }
 
