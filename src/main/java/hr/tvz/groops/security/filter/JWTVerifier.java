@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 public abstract class JWTVerifier extends OncePerRequestFilter {
     protected static final String invalidTokenErrorMessage = "Token %s cannot be trusted";
-    private final JWTService jwtService;
+    protected final JWTService jwtService;
 
     public JWTVerifier(JWTService jwtService) {
         this.jwtService = jwtService;

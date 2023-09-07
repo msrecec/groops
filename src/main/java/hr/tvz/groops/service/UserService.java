@@ -32,6 +32,8 @@ import hr.tvz.groops.service.verification.VerificationPublisherService;
 import hr.tvz.groops.util.QueryBuilderUtil;
 import hr.tvz.groops.util.SecurityUtil;
 import hr.tvz.groops.util.UploadUtil;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.modelmapper.ModelMapper;
@@ -174,7 +176,11 @@ public class UserService implements Searchable {
             throw new AccessDeniedException(String.join("\n", exceptionMessages));
         }
         String[] roles = new String[]{};
-        return appJWTService.getToken(user.getId(), user.getUsername(), roles);
+        JWTDto token = appJWTService.getToken(user.getId(), user.getUsername(), roles);
+        Jws<Claims> claims = appJWTService.getClaimsFromToken(token.getToken());
+        Integer iat = (Integer) claims.getBody().get("iat");
+        user.setTokenIssuedAt(iat);
+        return token;
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)

@@ -11,6 +11,7 @@ CREATE TABLE "user" (
     "description" TEXT DEFAULT NULL,
     "profile_picture_key" TEXT DEFAULT NULL,
     "verified" BOOLEAN NOT NULL DEFAULT FALSE,
+    "token_issued_at" INTEGER,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,

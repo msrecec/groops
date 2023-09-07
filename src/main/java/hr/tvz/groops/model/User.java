@@ -47,6 +47,8 @@ public class User extends BaseEntity {
     private String profilePictureKey;
     @Column(name = "verified")
     private Boolean verified;
+    @Column(name = "token_issued_at")
+    private Integer tokenIssuedAt;
     @OneToMany(targetEntity = GroupRequest.class, mappedBy = "user")
     private List<GroupRequest> groupRequests;
     @ManyToMany(targetEntity = Group.class)
