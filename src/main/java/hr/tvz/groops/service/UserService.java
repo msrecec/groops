@@ -1,6 +1,7 @@
 package hr.tvz.groops.service;
 
 import com.querydsl.core.BooleanBuilder;
+import hr.tvz.groops.command.crud.PasswordCommand;
 import hr.tvz.groops.command.crud.UserCreateCommand;
 import hr.tvz.groops.command.crud.UserUpdateCommand;
 import hr.tvz.groops.command.search.UserSearchCommand;
@@ -205,6 +206,50 @@ public class UserService implements Searchable {
         pending.ifPresent(pendingVerificationRepository::delete);
         flushAndClear();
         verificationPublisherService.verifyPasswordChange(user, now);
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public void passwordForgotConfirm(@NotNull PasswordCommand command) {
+        if (!command.getPassword1().equals(command.getPassword2())) {
+            throw new IllegalArgumentException("Passwords must match");
+        }
+        String password = command.getPassword1();
+        logger.debug("Confirming user password forgot...");
+        Instant now = now();
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User user = findUserEntityByIdLockByPessimisticWrite(currentUserId, userRepository);
+
+        SecurityUtil.validatePassword(password);
+        if (passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new IllegalArgumentException("New password must be different than the current one");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setVerified(true);
+        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
+        user.setModifiedTs(now);
+        user = userRepository.saveAndFlush(user);
+
+        Optional<PendingVerification> pending = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.PASSWORD_FORGOT);
+        pending.ifPresent(pendingVerificationRepository::delete);
+        flushAndClear();
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public void passwordForgot(@NotNull String username) {
+        logger.debug("Confirming user password forgot...");
+        Instant now = now();
+        User user = findUserEntityByUsernameLockByPessimisticWrite(username, userRepository);
+
+        user.setVerified(false);
+        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
+        user.setModifiedTs(now);
+        user = userRepository.saveAndFlush(user);
+
+        Optional<PendingVerification> pending = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.PASSWORD_FORGOT);
+        pending.ifPresent(pendingVerificationRepository::delete);
+        flushAndClear();
+        verificationPublisherService.verifyEmailChange(user, now);
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)

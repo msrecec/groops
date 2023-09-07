@@ -6,6 +6,7 @@ import hr.tvz.groops.event.mail.MailEvent;
 import hr.tvz.groops.event.notification.verification.MailChangeVerificationEvent;
 import hr.tvz.groops.event.notification.verification.MailVerificationEvent;
 import hr.tvz.groops.event.notification.verification.PasswordChangeVerificationEvent;
+import hr.tvz.groops.event.notification.verification.PasswordForgotVerificationEvent;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.MailMessage;
 import hr.tvz.groops.model.User;
@@ -84,6 +85,18 @@ public class VerificationVisitorService implements Searchable {
         }
         String baseURL = urlService.getApplicationBaseURL() + "templates/mail/change";
         finalizeMailCreation(baseURL, "Groops - mail change verification", "mail change", parameter, b64Token, recipient);
+    }
+
+    @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
+    public void visitPasswordForgotVerification(PasswordForgotVerificationEvent passwordForgotVerificationEvent) {
+        User recipient = findUserEntityById(passwordForgotVerificationEvent.getUserId(), userRepository);
+        String b64Token = mailChangeJWTService.generateTokenBase64(recipient.getId(), recipient.getUsername(), RoleConstants.ROLE_PASSWORD_FORGOT);
+        String parameter = mailChangeJWTService.getParameterName();
+        if (parameter == null) {
+            throw new InternalServerException("Parameter must not be null");
+        }
+        String baseURL = urlService.getApplicationBaseURL() + "templates/password/forgot";
+        finalizeMailCreation(baseURL, "Groops - password forgot verification", "password change", parameter, b64Token, recipient);
     }
 
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)

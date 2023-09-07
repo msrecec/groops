@@ -5,11 +5,13 @@ import hr.tvz.groops.command.crud.*;
 import hr.tvz.groops.command.search.UserSearchCommand;
 import hr.tvz.groops.dto.response.FriendRequestDto;
 import hr.tvz.groops.dto.response.UserDto;
+import hr.tvz.groops.security.constants.RoleConstants;
 import hr.tvz.groops.service.UserService;
 import hr.tvz.groops.service.ValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -105,9 +107,9 @@ public class UserController extends ControllerBase {
         userService.changeMail(command.getEmail());
     }
 
-    @PutMapping("/change-password")
-    void updateUserPassword(@RequestBody @Valid PasswordUpdateCommand command) {
-        userService.changePassword(command.getPassword());
+    @PostMapping("/forgot-password")
+    void forgotUserPassword(@RequestParam(name = "username") String username) {
+        userService.passwordForgot(username);
     }
 
     @PostMapping("/search")

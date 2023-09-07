@@ -1,5 +1,6 @@
 package hr.tvz.groops.controller;
 
+import hr.tvz.groops.command.crud.PasswordCommand;
 import hr.tvz.groops.security.constants.RoleConstants;
 import hr.tvz.groops.service.url.URLService;
 import hr.tvz.groops.service.UserService;
@@ -9,12 +10,11 @@ import hr.tvz.groops.service.token.PasswordChangeJWTService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 @RestController
 @RequestMapping("/templates")
@@ -59,6 +59,10 @@ public class TemplateController extends ControllerBase {
         return "confirmed password change";
     }
 
-    // todo add password reset
+    @PostMapping("/forgot-password/confirm")
+    @PreAuthorize("hasAuthority('" + RoleConstants.ROLE_PASSWORD_FORGOT + "')")
+    void forgotUserPasswordConfirm(@RequestBody @Valid PasswordCommand command) {
+        userService.passwordForgotConfirm(command);
+    }
 
 }

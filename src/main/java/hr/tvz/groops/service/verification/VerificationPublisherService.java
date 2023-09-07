@@ -75,6 +75,26 @@ public class VerificationPublisherService {
     }
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
+    public void verifyPasswordForgot(@NotNull User user, @NotNull Instant now) {
+        logger.debug("Generating pending verification from mail change and sending mail...");
+        VerificationTypeEnum verificationType = VerificationTypeEnum.PASSWORD_FORGOT;
+        Optional<PendingVerification> existingPendingVerification = pendingVerificationRepository.findByUserAndVerificationType(user, verificationType);
+        if (existingPendingVerification.isPresent()) {
+            logger.debug("Deleting existing pending verification...");
+            pendingVerificationRepository.delete(existingPendingVerification.get());
+        }
+        String currentUser = authenticationService.getCurrentLoggedInUserUsername();
+        PendingVerification pendingVerification = PendingVerification.builder()
+                .verificationType(verificationType)
+                .user(user)
+                .createdBy(currentUser)
+                .createdTs(now)
+                .build();
+        pendingVerification = pendingVerificationRepository.saveAndFlush(pendingVerification);
+        sendEmailChangeVerificationEventAfterSuccessfulCommit(pendingVerification.getId(), pendingVerification.getUser().getId());
+    }
+
+    @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
     public void verifyPasswordChange(@NotNull User user, @NotNull Instant now) {
         logger.debug("Sending password change event...");
         PendingVerification pendingVerification = PendingVerification.builder()
