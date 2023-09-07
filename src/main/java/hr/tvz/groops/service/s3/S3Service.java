@@ -76,9 +76,6 @@ public class S3Service {
     public PutObjectResult uploadDocumentFull(String key, MultipartFile file) {
         try (InputStream inputStream = file.getInputStream()) {
             ObjectMetadata metadata = getMetadataByFile(file);
-            if (s3client.doesObjectExist(bucket, key)) {
-                throw new S3Exception(S3_OBJECT_EXISTS.getFullMessage(), HttpStatus.CONFLICT, S3_OBJECT_EXISTS.getShortMessage());
-            }
             return s3client.putObject(bucket, key, inputStream, metadata);
         } catch (IOException e) {
             throw new InternalServerException(ExceptionEnum.IO_EXCEPTION.getFullMessage(), e);

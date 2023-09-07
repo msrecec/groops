@@ -30,7 +30,9 @@ import hr.tvz.groops.service.token.AppJWTService;
 import hr.tvz.groops.service.verification.VerificationPublisherService;
 import hr.tvz.groops.util.QueryBuilderUtil;
 import hr.tvz.groops.util.SecurityUtil;
+import hr.tvz.groops.util.UploadUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,6 +43,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -98,7 +101,7 @@ public class UserService implements Searchable {
         this.entityManager = entityManager;
     }
 
-    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    @Transactional(timeout = TimeoutConstants.LONG_TIMEOUT)
     public UserDto register(@Valid UserCreateCommand command) {
         logger.debug("Creating user...");
         Instant now = now();
@@ -121,28 +124,8 @@ public class UserService implements Searchable {
         return modelMapper.map(user, UserDto.class);
     }
 
-    @Transactional(timeout = TimeoutConstants.LONG_TIMEOUT)
-    public UserDto uploadProfilePicture(MultipartFile file) {
-        Instant now = now();
-        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
-        User user = findUserEntityByIdLockByPessimisticWrite(currentUserId, userRepository);
-        String oldProfilePictureKey = user.getProfilePictureKey();
-        String newProfilePictureKey = s3Service.generateUserProfilePictureKey(currentUserId, file);
-        user.setProfilePictureKey(newProfilePictureKey);
-        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
-        user.setModifiedTs(now);
-        user = userRepository.save(user);
-        if (oldProfilePictureKey != null) {
-            logger.debug("Deleting old user profile picture key: {}", oldProfilePictureKey);
-            s3Service.deleteByKey(oldProfilePictureKey);
-        }
-        s3Service.deleteByKey(newProfilePictureKey);
-        s3Service.uploadDocumentFull(user.getProfilePictureKey(), file);
-        return modelMapper.map(user, UserDto.class);
-    }
-
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public UserDto update(@Valid UserUpdateCommand command) {
+    public UserDto update(@Valid UserUpdateCommand command, @Nullable MultipartFile file) {
         logger.debug("Updating user...");
         Instant now = now();
         Long currentUserId = authenticationService.getCurrentLoggedInUserId();
@@ -152,7 +135,20 @@ public class UserService implements Searchable {
         user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         user.setModifiedTs(now);
 
+        if (file != null) {
+            uploadProfilePicture(user, file);
+        }
+        user = userRepository.save(user);
+
         return modelMapper.map(userRepository.save(user), UserDto.class);
+    }
+
+    @Transactional(timeout = TimeoutConstants.LONG_TIMEOUT, propagation = Propagation.MANDATORY)
+    public void uploadProfilePicture(@NotNull User user, @NotNull MultipartFile file) {
+        UploadUtil.checkIfImage(file);
+        String newProfilePictureKey = s3Service.generateUserProfilePictureKey(user.getId(), file);
+        user.setProfilePictureKey(newProfilePictureKey);
+        s3Service.uploadDocumentFull(user.getProfilePictureKey(), file);
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
