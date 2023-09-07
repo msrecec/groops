@@ -6,6 +6,7 @@ import hr.tvz.groops.command.search.PostSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.PostDto;
+import hr.tvz.groops.exception.UnauthorizedException;
 import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.enums.PermissionEnum;
 import hr.tvz.groops.model.pk.PostLikeId;
@@ -22,7 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -134,7 +134,7 @@ public class PostService implements Searchable {
         Post post = findPostById(postId, postRepository);
 
         if (post.getUser().getId().compareTo(currentUser.getId()) != 0) {
-            throw new AccessDeniedException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         Group group = post.getGroup();
         authorizationService.hasGroupPermission(currentUser, group, PermissionEnum.WRITE_POST);
@@ -187,7 +187,7 @@ public class PostService implements Searchable {
         Post post = findPostById(postId, postRepository);
 
         if (post.getUser().getId().compareTo(currentUser.getId()) != 0) {
-            throw new AccessDeniedException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         authorizationService.hasGroupPermission(currentUser, post.getGroup(), PermissionEnum.WRITE_POST);
 
@@ -243,7 +243,7 @@ public class PostService implements Searchable {
         PostLike postLike = findPostLikeByPostAndUser(post, currentUser, postLikeRepository);
 
         if (!Objects.equals(currentUser.getId(), postLike.getUser().getId())) {
-            throw new AccessDeniedException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         authorizationService.hasGroupPermission(currentUser, post.getGroup(), PermissionEnum.LIKE_POST);
 

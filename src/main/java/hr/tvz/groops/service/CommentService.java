@@ -3,6 +3,7 @@ package hr.tvz.groops.service;
 import hr.tvz.groops.command.crud.CommentCommand;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.CommentDto;
+import hr.tvz.groops.exception.UnauthorizedException;
 import hr.tvz.groops.model.Comment;
 import hr.tvz.groops.model.Group;
 import hr.tvz.groops.model.Post;
@@ -18,7 +19,6 @@ import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -110,7 +110,7 @@ public class CommentService implements Searchable {
         Long currentUserId = authenticationService.getCurrentLoggedInUserId();
         User user = findUserEntityById(currentUserId, userRepository);
         if (comment.getUser().getId().compareTo(currentUserId) != 0) {
-            throw new AccessDeniedException("Unauthorized");
+            throw new UnauthorizedException("Unauthorized");
         }
         authorizationService.hasGroupPermission(user, comment.getPost().getGroup(), PermissionEnum.WRITE_COMMENT);
     }

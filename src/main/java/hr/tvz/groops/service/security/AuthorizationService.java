@@ -6,6 +6,7 @@ import hr.tvz.groops.dto.response.GroupRoleDto;
 import hr.tvz.groops.dto.response.PermissionDto;
 import hr.tvz.groops.dto.response.RoleDto;
 import hr.tvz.groops.exception.InternalServerException;
+import hr.tvz.groops.exception.UnauthorizedException;
 import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.enums.PermissionEnum;
 import hr.tvz.groops.model.enums.RoleEnum;
@@ -115,7 +116,7 @@ public class AuthorizationService implements Searchable {
                 }
             }
         }
-        throw new AccessDeniedException("Unauthorized");
+        throw new UnauthorizedException("Unauthorized");
     }
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
