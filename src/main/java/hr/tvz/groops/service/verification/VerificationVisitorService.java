@@ -71,7 +71,7 @@ public class VerificationVisitorService implements Searchable {
         if (parameter == null) {
             throw new InternalServerException("Parameter must not be null");
         }
-        String baseURL = urlService.getApplicationBaseURL() + "templates/mail/create";
+        String baseURL = urlService.getBackendBaseURL() + "templates/mail/create";
         finalizeMailCreation(baseURL, "Groops - mail verification", "mail", parameter, b64Token, recipient);
     }
 
@@ -83,7 +83,7 @@ public class VerificationVisitorService implements Searchable {
         if (parameter == null) {
             throw new InternalServerException("Parameter must not be null");
         }
-        String baseURL = urlService.getApplicationBaseURL() + "templates/mail/change";
+        String baseURL = urlService.getBackendBaseURL() + "templates/mail/change";
         finalizeMailCreation(baseURL, "Groops - mail change verification", "mail change", parameter, b64Token, recipient);
     }
 
@@ -95,7 +95,7 @@ public class VerificationVisitorService implements Searchable {
         if (parameter == null) {
             throw new InternalServerException("Parameter must not be null");
         }
-        String baseURL = urlService.getApplicationBaseURL() + "templates/password/forgot";
+        String baseURL = urlService.getFrontendBaseURL() + "password-forgot";
         finalizeMailCreation(baseURL, "Groops - password forgot verification", "password change", parameter, b64Token, recipient);
     }
 
@@ -107,7 +107,7 @@ public class VerificationVisitorService implements Searchable {
         if (parameter == null) {
             throw new InternalServerException("Parameter must not be null");
         }
-        String baseURL = urlService.getApplicationBaseURL() + "templates/password/change";
+        String baseURL = urlService.getBackendBaseURL() + "templates/password/change";
         finalizeMailCreation(baseURL, "Groops - password verification", "password change", parameter, b64Token, recipient);
     }
 

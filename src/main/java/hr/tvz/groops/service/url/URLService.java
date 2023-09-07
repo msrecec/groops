@@ -1,5 +1,6 @@
 package hr.tvz.groops.service.url;
 
+import hr.tvz.groops.exception.InternalServerException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
@@ -17,27 +18,30 @@ public class URLService {
     private final Environment environment;
     private final String contextPath;
     private final String hostnameBase;
-    private final String serverPort;
 
     @Autowired
     public URLService(Environment environment,
                           @Value("${server.servlet.contextPath}") String contextPath,
-                          @Value("${groops.hostname.base.default}") String hostnameBase,
-                          @Value("${server.port}") String serverPort) {
+                          @Value("${groops.hostname.base.default}") String hostnameBase) {
         this.environment = environment;
         this.contextPath = contextPath;
         this.hostnameBase = hostnameBase;
-        this.serverPort = serverPort;
     }
 
-    public @NotNull String getApplicationBaseURL() {
+    public @NotNull String getBackendBaseURL() {
+        return getBaseURL(false);
+    }
+
+    public String getFrontendBaseURL() {
+        return getBaseURL(true);
+    }
+
+    public String getBaseURL(boolean frontend) {
         String protocol = isProd() ? "https://" : "http://";
-        if (isProd()) {
-            return protocol + hostnameBase + contextPath.replaceFirst("/", "");
-        } else if (isDev()) {
-            return protocol + "localhost:" + serverPort + contextPath;
+        if (isProd() || isDev()) {
+            return !frontend ? protocol + hostnameBase + contextPath.replaceFirst("/", "") : protocol + hostnameBase;
         }
-        return protocol + "localhost:" + serverPort + contextPath;
+        throw new InternalServerException("Invalid profile");
     }
 
     private boolean isProd() {
