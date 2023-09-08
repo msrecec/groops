@@ -18,8 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
 import javax.persistence.EntityNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.net.URL;
 import java.util.Date;
 import java.util.stream.Collectors;
@@ -82,6 +81,26 @@ public class S3Service {
         }
     }
 
+    public PutObjectResult uploadDocumentFull(String key, MultipartFile file, ByteArrayOutputStream os) {
+        try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            ObjectMetadata metadata = getMetadataByFile(file);
+            try (PipedInputStream in = new PipedInputStream()) {
+                new Thread(() -> {
+                    try (final PipedOutputStream out = new PipedOutputStream(in)) {
+                        os.writeTo(out);
+                    } catch (IOException e) {
+                        throw new InternalServerException("something went wrong", e);
+                    }
+                }).start();
+                return s3client.putObject(bucket, key, in, metadata);
+            } catch (IOException e) {
+                throw new InternalServerException("something went wrong", e);
+            }
+        } catch (IOException e) {
+            throw new InternalServerException(ExceptionEnum.IO_EXCEPTION.getFullMessage(), e);
+        }
+    }
+
     public String generatePostPictureKey(Long id, MultipartFile file) {
         checkIfImage(file);
         return generateKey(id, POST, IMAGE_TYPE, file);
@@ -122,7 +141,7 @@ public class S3Service {
 
     private ObjectMetadata getMetadataByFile(MultipartFile file) {
         ObjectMetadata metadata = new ObjectMetadata();
-        metadata.setContentLength(file.getSize());
+//        metadata.setContentLength(file.getSize());
         metadata.setContentType(file.getContentType());
         return metadata;
     }
