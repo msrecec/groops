@@ -83,8 +83,8 @@ public class S3Service {
     public void uploadImageAndThumbnailCompressed(String imageKey, String thumbnailKey, MultipartFile file) {
         try (ByteArrayOutputStream baosImgCompressed = new ByteArrayOutputStream()) {
             Thumbnails.of(file.getInputStream())
-                    .scale(0.8)
-                    .outputQuality(0.2)
+                    .scale(0.5)
+                    .outputQuality(0.5)
                     .toOutputStream(baosImgCompressed);
             ObjectMetadata metadata = getMetadataByFileNoContentLength(file);
             try (ByteArrayInputStream baisImgTmp = new ByteArrayInputStream(baosImgCompressed.toByteArray());
