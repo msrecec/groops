@@ -4,9 +4,6 @@ import hr.tvz.groops.command.crud.PasswordCommand;
 import hr.tvz.groops.security.constants.RoleConstants;
 import hr.tvz.groops.service.url.URLService;
 import hr.tvz.groops.service.UserService;
-import hr.tvz.groops.service.token.MailChangeJWTService;
-import hr.tvz.groops.service.token.MailCreateJWTService;
-import hr.tvz.groops.service.token.PasswordChangeJWTService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -61,11 +58,8 @@ public class TemplateController extends ControllerBase {
 
     @PostMapping("/forgot-password/confirm")
     @PreAuthorize("hasAuthority('" + RoleConstants.ROLE_PASSWORD_FORGOT + "')")
-    ResponseEntity<?> forgotUserPasswordConfirm(@RequestBody @Valid PasswordCommand command, HttpServletResponse response) throws IOException {
-        userService.passwordForgotConfirm(command);
-        String url = urlService.getFrontendBaseURL() + "password-forgot-confirmation";
-        response.sendRedirect(url);
-        return ResponseEntity.created(URI.create(url)).build();
+    void forgotUserPasswordConfirm(@RequestBody @Valid PasswordCommand command, HttpServletResponse response) throws IOException {
+        userService.confirmPasswordForgot(command);
     }
 
 }

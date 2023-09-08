@@ -10,10 +10,7 @@ import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.FriendRequestDto;
 import hr.tvz.groops.dto.response.JWTDto;
 import hr.tvz.groops.dto.response.UserDto;
-import hr.tvz.groops.event.notification.verification.MailChangeVerificationEvent;
-import hr.tvz.groops.event.notification.verification.MailCreateVerificationEvent;
-import hr.tvz.groops.event.notification.verification.PasswordChangeVerificationEvent;
-import hr.tvz.groops.event.notification.verification.VerificationEvent;
+import hr.tvz.groops.event.notification.verification.*;
 import hr.tvz.groops.exception.ExceptionEnum;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.*;
@@ -215,39 +212,11 @@ public class UserService implements Searchable {
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public void passwordForgotConfirm(@NotNull PasswordCommand command) {
-        if (!command.getPassword1().equals(command.getPassword2())) {
-            throw new IllegalArgumentException("Passwords must match");
-        }
-        String password = command.getPassword1();
-        logger.debug("Confirming user password forgot...");
-        Instant now = now();
-        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
-        User user = findUserEntityByIdLockByPessimisticWrite(currentUserId, userRepository);
-
-        SecurityUtil.validatePassword(password);
-        if (passwordEncoder.matches(password, user.getPasswordHash())) {
-            throw new IllegalArgumentException("New password must be different than the current one");
-        }
-
-        user.setPasswordHash(passwordEncoder.encode(password));
-        user.setVerified(true);
-        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
-        user.setModifiedTs(now);
-        user = userRepository.saveAndFlush(user);
-
-        Optional<PendingVerification> pending = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.PASSWORD_FORGOT);
-        pending.ifPresent(pendingVerificationRepository::delete);
-        flushAndClear();
-    }
-
-    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
     public void passwordForgot(@NotNull String username) {
         logger.debug("Confirming user password forgot...");
         Instant now = now();
         User user = findUserEntityByUsernameLockByPessimisticWrite(username, userRepository);
 
-        user.setVerified(false);
         user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         user.setModifiedTs(now);
         user = userRepository.saveAndFlush(user);
@@ -287,6 +256,35 @@ public class UserService implements Searchable {
         confirmationHandler(VerificationTypeEnum.MAIL_CREATE, "User has already confirmed email");
     }
 
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public void confirmPasswordForgot(@NotNull PasswordCommand command) {
+        logger.debug("Confirming user password forgot...");
+        Instant now = now();
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User user = findUserEntityByIdLockByPessimisticWrite(currentUserId, userRepository);
+        Optional<PendingVerification> pendingVerification = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.PASSWORD_FORGOT);
+        if (pendingVerification.isEmpty()) {
+            throw new IllegalArgumentException("user already verified password forgot");
+        }
+        if (!command.getPassword1().equals(command.getPassword2())) {
+            throw new IllegalArgumentException("Passwords must match");
+        }
+        String password = command.getPassword1();
+
+        SecurityUtil.validatePassword(password);
+        if (passwordEncoder.matches(password, user.getPasswordHash())) {
+            throw new IllegalArgumentException("New password must be different than the current one");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(password));
+        user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
+        user.setModifiedTs(now);
+        user = userRepository.saveAndFlush(user);
+
+        Optional<PendingVerification> pending = pendingVerificationRepository.findByUserAndVerificationType(user, VerificationTypeEnum.PASSWORD_FORGOT);
+        pending.ifPresent(pendingVerificationRepository::delete);
+        flushAndClear();
+    }
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
     public void confirmEmailChange() {
         logger.debug("Confirming user mail change...");
@@ -383,6 +381,9 @@ public class UserService implements Searchable {
                     break;
                 case MAIL_CHANGE:
                     verificationEvents.add(new MailChangeVerificationEvent(this, pendingVerification.getId(), pendingVerification.getUser().getId()));
+                    break;
+                case PASSWORD_FORGOT:
+                    verificationEvents.add(new PasswordForgotVerificationEvent(this, pendingVerification.getId(), pendingVerification.getUser().getId()));
                     break;
                 default:
                     throw new InternalServerException("Non supported verification type", new Throwable());

@@ -92,7 +92,7 @@ public class VerificationPublisherService {
                 .createdTs(now)
                 .build();
         pendingVerification = pendingVerificationRepository.saveAndFlush(pendingVerification);
-        sendEmailChangeVerificationEventAfterSuccessfulCommit(pendingVerification.getId(), pendingVerification.getUser().getId());
+        sendPasswordForgotVerificationEventAfterSuccessfulCommit(pendingVerification.getId(), pendingVerification.getUser().getId());
     }
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)

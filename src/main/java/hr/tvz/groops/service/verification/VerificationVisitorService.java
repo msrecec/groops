@@ -99,7 +99,7 @@ public class VerificationVisitorService implements Searchable {
             throw new InternalServerException("Parameter must not be null");
         }
         String baseURL = urlService.getFrontendBaseURL() + "password-forgot-change";
-        finalizeMailCreation(baseURL, "Groops - password forgot verification", "password change", parameter, b64Token, recipient);
+        finalizeMailCreation(baseURL, "Groops - password forgot verification", "password forgot", parameter, b64Token, recipient);
     }
 
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
