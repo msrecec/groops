@@ -28,7 +28,8 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
             "/**/swagger-resources/**",
             "/**/swagger-ui/**",
             "/**/version",
-            "/**/login/**",
+            "/**/authentication/login",
+            "/**/authentication/logout",
             "/**/register/**",
             "/**/users/forgot-password"
     };

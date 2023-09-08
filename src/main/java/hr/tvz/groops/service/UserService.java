@@ -188,9 +188,10 @@ public class UserService implements Searchable {
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
     public void logout(HttpServletResponse httpServletResponse) {
-        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
-        User user = findUserEntityById(currentUserId, userRepository);
-        appCookieService.unsetResponseCookie(httpServletResponse);
+        logger.debug("Logging out...");
+//        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+//        User user = findUserEntityById(currentUserId, userRepository);
+//        appCookieService.unsetResponseCookie(httpServletResponse);
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)

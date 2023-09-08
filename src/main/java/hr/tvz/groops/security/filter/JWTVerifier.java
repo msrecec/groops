@@ -35,6 +35,10 @@ public abstract class JWTVerifier extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain filterChain) throws ServletException, IOException {
+        if (request.getRequestURI().contains("authentication/login") || request.getRequestURI().contains("authentication/logout")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
         String requestToken = jwtService.getTokenFromRequest(request);
         if (Strings.isNullOrEmpty(requestToken) || jwtService.requestTokenHasInvalidFormat(requestToken)) {
             filterChain.doFilter(request, response);
