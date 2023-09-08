@@ -107,12 +107,16 @@ public class UserService implements Searchable {
         Instant now = now();
 
         User user = modelMapper.map(command, User.class);
-        user.setPasswordHash(passwordEncoder.encode(command.getPassword()));
+        if (!command.getPassword1().equals(command.getPassword2())) {
+            throw new IllegalArgumentException("Passwords must match");
+        }
+        String password = command.getPassword1();
+        user.setPasswordHash(passwordEncoder.encode(password));
         user.setVerified(false);
         user.setCreatedTs(now);
         user.setCreatedBy(authenticationService.getCurrentLoggedInUserUsername());
 
-        SecurityUtil.validatePassword(command.getPassword());
+        SecurityUtil.validatePassword(password);
         if (user.getDateOfBirth().compareTo(new Date()) > 0) {
             logger.debug(ExceptionEnum.INVALID_DATE_OF_BIRTH_EXCEPTION.getFullMessage());
             throw new IllegalArgumentException(ExceptionEnum.INVALID_DATE_OF_BIRTH_EXCEPTION.getShortMessage());
@@ -285,6 +289,7 @@ public class UserService implements Searchable {
         pending.ifPresent(pendingVerificationRepository::delete);
         flushAndClear();
     }
+
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
     public void confirmEmailChange() {
         logger.debug("Confirming user mail change...");

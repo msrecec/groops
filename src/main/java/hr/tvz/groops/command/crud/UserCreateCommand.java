@@ -18,5 +18,9 @@ public class UserCreateCommand extends UserCommand {
     @Email(message = "format must be a valid email")
     private String email;
     @CustomPasswordValidator
-    private String password;
+    @NotBlank(message = "first password is required")
+    private String password1;
+    @CustomPasswordValidator
+    @NotBlank(message = "second password is required")
+    private String password2;
 }

@@ -12,7 +12,7 @@ public class CustomPasswordValidatorHandler implements ConstraintValidator<Custo
     @Override
     public boolean isValid(String password, ConstraintValidatorContext constraintValidatorContext) {
         if (password == null || password.isBlank()) {
-            constraintValidatorContext.buildConstraintViolationWithTemplate("password is required");
+            constraintValidatorContext.buildConstraintViolationWithTemplate("password is required *").addConstraintViolation();
             return false;
         }
         List<String> exceptionMessages = new ArrayList<>();
