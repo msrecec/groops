@@ -10,6 +10,7 @@ CREATE TABLE "user" (
     "date_of_birth" DATE NOT NULL,
     "description" TEXT DEFAULT NULL,
     "profile_picture_key" TEXT DEFAULT NULL,
+    "profile_picture_thumbnail_key" TEXT DEFAULT NULL,
     "verified" BOOLEAN NOT NULL DEFAULT FALSE,
     "token_issued_at" INTEGER,
     "created_by" CHARACTER VARYING(255) NOT NULL,

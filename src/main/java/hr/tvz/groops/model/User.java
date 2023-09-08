@@ -45,6 +45,8 @@ public class User extends BaseEntity {
     private String description;
     @Column(name = "profile_picture_key")
     private String profilePictureKey;
+    @Column(name = "profile_picture_thumbnail_key")
+    private String profilePictureThumbnailKey;
     @Column(name = "verified")
     private Boolean verified;
     @Column(name = "token_issued_at")

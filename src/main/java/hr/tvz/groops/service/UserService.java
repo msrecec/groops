@@ -1,6 +1,5 @@
 package hr.tvz.groops.service;
 
-import com.amazonaws.services.s3.internal.MultiFileOutputStream;
 import com.querydsl.core.BooleanBuilder;
 import hr.tvz.groops.command.crud.PasswordCommand;
 import hr.tvz.groops.command.crud.UserCreateCommand;
@@ -32,7 +31,6 @@ import hr.tvz.groops.util.SecurityUtil;
 import hr.tvz.groops.util.UploadUtil;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
-import net.coobird.thumbnailator.Thumbnails;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.modelmapper.ModelMapper;
@@ -53,10 +51,6 @@ import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -146,7 +140,7 @@ public class UserService implements Searchable {
         user.setModifiedTs(now);
 
         if (file != null) {
-            uploadProfilePicture(user, file);
+            uploadProfilePictureCompressed(user, file);
         }
         user = userRepository.save(user);
 
@@ -154,19 +148,13 @@ public class UserService implements Searchable {
     }
 
     @Transactional(timeout = TimeoutConstants.LONG_TIMEOUT, propagation = Propagation.MANDATORY)
-    public void uploadProfilePicture(@NotNull User user, @NotNull MultipartFile file) {
-        try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-            UploadUtil.checkIfImage(file);
-            Thumbnails.of(file.getInputStream())
-                    .scale(0.8)
-                    .outputQuality(0.1)
-                    .toOutputStream(outputStream);
-            String newProfilePictureKey = s3Service.generateUserProfilePictureKey(user.getId(), file);
-            user.setProfilePictureKey(newProfilePictureKey);
-            s3Service.uploadDocumentFull(user.getProfilePictureKey(), file, outputStream);
-        } catch (IOException ex) {
-            throw new IllegalArgumentException("Invalid image", ex);
-        }
+    public void uploadProfilePictureCompressed(@NotNull User user, @NotNull MultipartFile file) {
+        UploadUtil.checkIfImage(file);
+        String newProfilePictureKey = s3Service.generateUserProfilePictureKey(user.getId(), file);
+        String newProfilePictureThumbnailKey = s3Service.generateUserProfilePictureThumbnailKey(user.getId(), file);
+        user.setProfilePictureKey(newProfilePictureKey);
+        user.setProfilePictureThumbnailKey(newProfilePictureThumbnailKey);
+        s3Service.uploadImageAndThumbnailCompressed(user.getProfilePictureKey(), user.getProfilePictureThumbnailKey(), file);
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)

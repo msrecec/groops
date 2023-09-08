@@ -6,13 +6,13 @@ import hr.tvz.groops.dto.response.DocumentDto;
 import hr.tvz.groops.dto.response.DocumentSummaryDto;
 import hr.tvz.groops.exception.ExceptionEnum;
 import hr.tvz.groops.exception.InternalServerException;
-import hr.tvz.groops.exception.S3Exception;
 import hr.tvz.groops.util.DateUtil;
+import net.coobird.thumbnailator.Thumbnails;
+import net.coobird.thumbnailator.resizers.configurations.Dithering;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,7 +24,6 @@ import java.util.Date;
 import java.util.stream.Collectors;
 
 import static hr.tvz.groops.exception.CrudExceptionEnum.DOCUMENT_NOT_FOUND_ON_S3_BY_KEY_FOR_BUCKET;
-import static hr.tvz.groops.exception.ExceptionEnum.S3_OBJECT_EXISTS;
 
 @Service
 public class S3Service {
@@ -81,20 +80,48 @@ public class S3Service {
         }
     }
 
-    public PutObjectResult uploadDocumentFull(String key, MultipartFile file, ByteArrayOutputStream os) {
-        try(ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
-            ObjectMetadata metadata = getMetadataByFile(file);
-            try (PipedInputStream in = new PipedInputStream()) {
+    public void uploadImageAndThumbnailCompressed(String imageKey, String thumbnailKey, MultipartFile file) {
+        try (ByteArrayOutputStream baosImgCompressed = new ByteArrayOutputStream()) {
+            Thumbnails.of(file.getInputStream())
+                    .scale(0.8)
+                    .outputQuality(0.2)
+                    .toOutputStream(baosImgCompressed);
+            ObjectMetadata metadata = getMetadataByFileNoContentLength(file);
+            try (ByteArrayInputStream baisImgTmp = new ByteArrayInputStream(baosImgCompressed.toByteArray());
+                 ByteArrayOutputStream baosImgCompressedTmp = new ByteArrayOutputStream();
+                 PipedInputStream baisImgCompressedThumbCompressed = new PipedInputStream();
+                 ByteArrayOutputStream baosImgCompressedThumbCompressedTmp = new ByteArrayOutputStream();
+                 PipedInputStream baisImgCompressedTmp = new PipedInputStream();
+                 PipedInputStream baisImgCompressed = new PipedInputStream()) {
+                baisImgTmp.transferTo(baosImgCompressedTmp);
                 new Thread(() -> {
-                    try (final PipedOutputStream out = new PipedOutputStream(in)) {
-                        os.writeTo(out);
+                    try (final PipedOutputStream out = new PipedOutputStream(baisImgCompressed)) {
+                        baosImgCompressed.writeTo(out);
                     } catch (IOException e) {
                         throw new InternalServerException("something went wrong", e);
                     }
                 }).start();
-                return s3client.putObject(bucket, key, in, metadata);
-            } catch (IOException e) {
-                throw new InternalServerException("something went wrong", e);
+                new Thread(() -> {
+                    try (final PipedOutputStream out = new PipedOutputStream(baisImgCompressedTmp)) {
+                        baosImgCompressedTmp.writeTo(out);
+                    } catch (IOException e) {
+                        throw new InternalServerException("something went wrong", e);
+                    }
+                }).start();
+                Thumbnails.of(baisImgCompressedTmp)
+                        .scale(0.1)
+                        .outputQuality(0.1)
+                        .dithering(Dithering.ENABLE)
+                        .toOutputStream(baosImgCompressedThumbCompressedTmp);
+                new Thread(() -> {
+                    try (final PipedOutputStream out = new PipedOutputStream(baisImgCompressedThumbCompressed)) {
+                        baosImgCompressedThumbCompressedTmp.writeTo(out);
+                    } catch (IOException e) {
+                        throw new InternalServerException("something went wrong", e);
+                    }
+                }).start();
+                s3client.putObject(bucket, imageKey, baisImgCompressed, metadata);
+                s3client.putObject(bucket, thumbnailKey, baisImgCompressedThumbCompressed, metadata);
             }
         } catch (IOException e) {
             throw new InternalServerException(ExceptionEnum.IO_EXCEPTION.getFullMessage(), e);
@@ -114,6 +141,11 @@ public class S3Service {
     public String generateUserProfilePictureKey(Long id, MultipartFile file) {
         checkIfImage(file);
         return generateKey(id, USER, USER_PROFILE, IMAGE_TYPE, file);
+    }
+
+    public String generateUserProfilePictureThumbnailKey(Long id, MultipartFile file) {
+        checkIfImage(file);
+        return generateKey(id, USER, USER_PROFILE + "/thumbnail", IMAGE_TYPE, file);
     }
 
     private String generateKey(Long id, String prefix, String type, MultipartFile file) {
@@ -141,7 +173,13 @@ public class S3Service {
 
     private ObjectMetadata getMetadataByFile(MultipartFile file) {
         ObjectMetadata metadata = new ObjectMetadata();
-//        metadata.setContentLength(file.getSize());
+        metadata.setContentLength(file.getSize());
+        metadata.setContentType(file.getContentType());
+        return metadata;
+    }
+
+    private ObjectMetadata getMetadataByFileNoContentLength(MultipartFile file) {
+        ObjectMetadata metadata = new ObjectMetadata();
         metadata.setContentType(file.getContentType());
         return metadata;
     }
