@@ -40,6 +40,9 @@ public class ModelMapperConfig {
         propertyMapper.addMappings(m -> {
             m.using(getProfilePictureConverter()).map(User::getProfilePictureKey, UserDto::setProfilePictureDownloadLink);
         });
+        propertyMapper.addMappings(m -> {
+            m.using(getProfilePictureThumbnailConverter()).map(User::getProfilePictureThumbnailKey, UserDto::setProfilePictureThumbnailDownloadLink);
+        });
     }
 
     private void addTypeMappingForGroup(ModelMapper modelMapper) {
@@ -57,6 +60,15 @@ public class ModelMapperConfig {
     }
 
     private AbstractConverter<String, String> getProfilePictureConverter() {
+        return new AbstractConverter<>() {
+            @Override
+            protected String convert(String source) {
+                return source != null ? s3Service.generateDownloadLinkByObjectKey(source) : null;
+            }
+        };
+    }
+
+    private AbstractConverter<String, String> getProfilePictureThumbnailConverter() {
         return new AbstractConverter<>() {
             @Override
             protected String convert(String source) {
