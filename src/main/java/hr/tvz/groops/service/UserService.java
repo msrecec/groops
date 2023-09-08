@@ -194,11 +194,16 @@ public class UserService implements Searchable {
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public void changePassword(@NotNull String password) {
+    public void changePassword(@NotNull PasswordCommand command) {
         logger.debug("Confirming user password change...");
         Instant now = now();
         Long currentUserId = authenticationService.getCurrentLoggedInUserId();
         User user = findUserEntityByIdLockByPessimisticWrite(currentUserId, userRepository);
+
+        if (!command.getPassword1().equals(command.getPassword2())) {
+            throw new IllegalArgumentException("Passwords must match");
+        }
+        String password = command.getPassword1();
 
         SecurityUtil.validatePassword(password);
         if (passwordEncoder.matches(password, user.getPasswordHash())) {

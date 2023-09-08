@@ -108,8 +108,8 @@ public class UserController extends ControllerBase {
     }
 
     @PutMapping("/change-password")
-    void updateUserPassword(@RequestBody @Valid PasswordUpdateCommand command) {
-        userService.changePassword(command.getPassword());
+    void updateUserPassword(@RequestBody @Valid PasswordCommand command) {
+        userService.changePassword(command);
     }
 
     @PostMapping("/forgot-password")
