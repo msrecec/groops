@@ -81,51 +81,66 @@ public class S3Service {
     }
 
     public void uploadImageAndThumbnailCompressed(String imageKey, String thumbnailKey, MultipartFile file) {
-        try (ByteArrayOutputStream baosImgCompressed = new ByteArrayOutputStream()) {
-            Thumbnails.of(file.getInputStream())
+        try (ByteArrayOutputStream baosImgCompressed = new ByteArrayOutputStream();
+             ByteArrayOutputStream baosThumbnailCompressed = new ByteArrayOutputStream();
+             InputStream is = file.getInputStream()) {
+            Thumbnails.of(is)
                     .scale(0.5)
                     .outputQuality(0.5)
                     .toOutputStream(baosImgCompressed);
+            ByteArrayInputStream baisImgCompressed = new ByteArrayInputStream(baosImgCompressed.toByteArray());
+            ByteArrayInputStream baisImgCompressedTmp = new ByteArrayInputStream(baosImgCompressed.toByteArray());
+            Thumbnails.of(baisImgCompressedTmp)
+                    .scale(0.1)
+                    .outputQuality(0.1)
+                    .dithering(Dithering.ENABLE)
+                    .toOutputStream(baosThumbnailCompressed);
+            ByteArrayInputStream baisImgCompressedThumbCompressed = new ByteArrayInputStream(baosThumbnailCompressed.toByteArray());
             ObjectMetadata metadata = getMetadataByFileNoContentLength(file);
-            try (ByteArrayInputStream baisImgTmp = new ByteArrayInputStream(baosImgCompressed.toByteArray());
-                 ByteArrayOutputStream baosImgCompressedTmp = new ByteArrayOutputStream();
-                 PipedInputStream baisImgCompressedThumbCompressed = new PipedInputStream();
-                 ByteArrayOutputStream baosImgCompressedThumbCompressedTmp = new ByteArrayOutputStream();
-                 PipedInputStream baisImgCompressedTmp = new PipedInputStream();
-                 PipedInputStream baisImgCompressed = new PipedInputStream()) {
-                baisImgTmp.transferTo(baosImgCompressedTmp);
-                new Thread(() -> {
-                    try (final PipedOutputStream out = new PipedOutputStream(baisImgCompressed)) {
-                        baosImgCompressed.writeTo(out);
-                    } catch (IOException e) {
-                        throw new InternalServerException("something went wrong", e);
-                    }
-                }).start();
-                new Thread(() -> {
-                    try (final PipedOutputStream out = new PipedOutputStream(baisImgCompressedTmp)) {
-                        baosImgCompressedTmp.writeTo(out);
-                    } catch (IOException e) {
-                        throw new InternalServerException("something went wrong", e);
-                    }
-                }).start();
-                Thumbnails.of(baisImgCompressedTmp)
-                        .scale(0.1)
-                        .outputQuality(0.1)
-                        .dithering(Dithering.ENABLE)
-                        .toOutputStream(baosImgCompressedThumbCompressedTmp);
-                new Thread(() -> {
-                    try (final PipedOutputStream out = new PipedOutputStream(baisImgCompressedThumbCompressed)) {
-                        baosImgCompressedThumbCompressedTmp.writeTo(out);
-                    } catch (IOException e) {
-                        throw new InternalServerException("something went wrong", e);
-                    }
-                }).start();
-                s3client.putObject(bucket, imageKey, baisImgCompressed, metadata);
-                s3client.putObject(bucket, thumbnailKey, baisImgCompressedThumbCompressed, metadata);
-            }
-        } catch (IOException e) {
-            throw new InternalServerException(ExceptionEnum.IO_EXCEPTION.getFullMessage(), e);
+            s3client.putObject(bucket, imageKey, baisImgCompressed, metadata);
+            s3client.putObject(bucket, thumbnailKey, baisImgCompressedThumbCompressed, metadata);
+        } catch (IOException ex) {
+            throw new InternalServerException(ExceptionEnum.IO_EXCEPTION.getFullMessage(), ex);
         }
+//            try (ByteArrayInputStream baisImgTmp = new ByteArrayInputStream(baosImgCompressed.toByteArray());
+//                 ByteArrayOutputStream baosImgCompressedTmp = new ByteArrayOutputStream();
+//                 PipedInputStream baisImgCompressedThumbCompressed = new PipedInputStream();
+//                 ByteArrayOutputStream baosImgCompressedThumbCompressedTmp = new ByteArrayOutputStream();
+//                 PipedInputStream baisImgCompressedTmp = new PipedInputStream();
+//                 PipedInputStream baisImgCompressed = new PipedInputStream()) {
+//                baisImgTmp.transferTo(baosImgCompressedTmp);
+//                new Thread(() -> {
+//                    try (final PipedOutputStream out = new PipedOutputStream(baisImgCompressed)) {
+//                        baosImgCompressed.writeTo(out);
+//                    } catch (IOException e) {
+//                        throw new InternalServerException("something went wrong", e);
+//                    }
+//                }).start();
+//                new Thread(() -> {
+//                    try (final PipedOutputStream out = new PipedOutputStream(baisImgCompressedTmp)) {
+//                        baosImgCompressedTmp.writeTo(out);
+//                    } catch (IOException e) {
+//                        throw new InternalServerException("something went wrong", e);
+//                    }
+//                }).start();
+//                Thumbnails.of(baisImgCompressedTmp)
+//                        .scale(0.1)
+//                        .outputQuality(0.1)
+//                        .dithering(Dithering.ENABLE)
+//                        .toOutputStream(baosImgCompressedThumbCompressedTmp);
+//                new Thread(() -> {
+//                    try (final PipedOutputStream out = new PipedOutputStream(baisImgCompressedThumbCompressed)) {
+//                        baosImgCompressedThumbCompressedTmp.writeTo(out);
+//                    } catch (IOException e) {
+//                        throw new InternalServerException("something went wrong", e);
+//                    }
+//                }).start();
+//                s3client.putObject(bucket, imageKey, baisImgCompressed, metadata);
+//                s3client.putObject(bucket, thumbnailKey, baisImgCompressedThumbCompressed, metadata);
+//            }
+//        } catch (IOException e) {
+//            throw new InternalServerException(ExceptionEnum.IO_EXCEPTION.getFullMessage(), e);
+//        }
     }
 
     public String generatePostPictureKey(Long id, MultipartFile file) {
