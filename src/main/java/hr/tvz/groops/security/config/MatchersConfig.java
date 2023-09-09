@@ -20,6 +20,7 @@ public class MatchersConfig {
         matchers.add(new AndRequestMatcher(new AntPathRequestMatcher(MAIL_CREATE_TEMPLATE_URL)));
         matchers.add(new AndRequestMatcher(new AntPathRequestMatcher(PASSWORD_CHANGE_TEMPLATE_URL)));
         matchers.add(new AndRequestMatcher(new AntPathRequestMatcher(PASSWORD_FORGOT_TEMPLATE_URL)));
+        matchers.add(new AndRequestMatcher(new AntPathRequestMatcher(VERIFICATION_RESEND_URL)));
         return matchers;
     }
 }

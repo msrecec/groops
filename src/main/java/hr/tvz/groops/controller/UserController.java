@@ -8,6 +8,9 @@ import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.security.constants.RoleConstants;
 import hr.tvz.groops.service.UserService;
 import hr.tvz.groops.service.ValidationService;
+import hr.tvz.groops.service.token.VerificationJWTService;
+import hr.tvz.groops.service.token.VerificationResendJWTService;
+import hr.tvz.groops.service.token.VerificationResendService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
@@ -15,6 +18,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.*;
 import java.io.IOException;
 import java.util.List;
@@ -25,14 +29,17 @@ public class UserController extends ControllerBase {
     private final UserService userService;
     private final ValidationService validationService;
     private final ObjectMapper objectMapper;
+    private final VerificationResendService verificationResendService;
 
     @Autowired
     public UserController(UserService userService,
                           ValidationService validationService,
-                          ObjectMapper objectMapper) {
+                          ObjectMapper objectMapper,
+                          VerificationResendService verificationResendService) {
         this.userService = userService;
         this.validationService = validationService;
         this.objectMapper = objectMapper;
+        this.verificationResendService = verificationResendService;
     }
 
     @GetMapping
@@ -51,8 +58,10 @@ public class UserController extends ControllerBase {
     }
 
     @PostMapping("/register")
-    UserDto registerUser(@RequestBody @Valid UserCreateCommand command) {
-        return userService.register(command);
+    UserDto registerUser(@RequestBody @Valid UserCreateCommand command, HttpServletResponse response) {
+        UserDto userDto = userService.register(command);
+        verificationResendService.setResendTokenForUser(response);
+        return userDto;
     }
 
     @PostMapping("/current/upload-profile")
@@ -103,18 +112,27 @@ public class UserController extends ControllerBase {
     }
 
     @PutMapping("/change-mail")
-    void updateUserMail(@RequestBody @Valid EmailUpdateCommand command) {
+    void updateUserMail(@RequestBody @Valid EmailUpdateCommand command, HttpServletResponse response) {
         userService.changeMail(command.getEmail());
+        verificationResendService.setResendTokenForUser(response);
     }
 
     @PutMapping("/change-password")
-    void updateUserPassword(@RequestBody @Valid PasswordCommand command) {
+    void updateUserPassword(@RequestBody @Valid PasswordCommand command, HttpServletResponse response) {
         userService.changePassword(command);
+        verificationResendService.setResendTokenForUser(response);
     }
 
     @PostMapping("/forgot-password")
-    void forgotUserPassword(@RequestBody @Valid ForgotPasswordCommand command) {
+    void forgotUserPassword(@RequestBody @Valid ForgotPasswordCommand command, HttpServletResponse response) {
         userService.passwordForgot(command.getUsername());
+        verificationResendService.setResendTokenForUser(command.getUsername(), response);
+    }
+
+    @PostMapping("/resend-verification")
+    @PreAuthorize("hasAuthority('" + RoleConstants.ROLE_VERIFICATION_RESEND + "')")
+    void resendVerification() {
+        userService.resendVerification();
     }
 
     @PostMapping("/search")

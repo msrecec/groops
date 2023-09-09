@@ -25,6 +25,7 @@ import hr.tvz.groops.service.s3.S3Service;
 import hr.tvz.groops.service.security.AuthenticationService;
 import hr.tvz.groops.service.security.CookieService;
 import hr.tvz.groops.service.token.AppJWTService;
+import hr.tvz.groops.service.token.VerificationResendService;
 import hr.tvz.groops.service.verification.VerificationPublisherService;
 import hr.tvz.groops.util.QueryBuilderUtil;
 import hr.tvz.groops.util.SecurityUtil;
@@ -71,6 +72,7 @@ public class UserService implements Searchable {
     private final AuthenticationService authenticationService;
     private final AppJWTService appJWTService;
     private final CookieService appCookieService;
+    private final VerificationResendService verificationResendService;
     @PersistenceContext
     private final EntityManager entityManager;
 
@@ -86,7 +88,7 @@ public class UserService implements Searchable {
                        AuthenticationService authenticationService,
                        AppJWTService appJWTService,
                        CookieService appCookieService,
-                       EntityManager entityManager) {
+                       VerificationResendService verificationResendService, EntityManager entityManager) {
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
@@ -98,6 +100,7 @@ public class UserService implements Searchable {
         this.authenticationService = authenticationService;
         this.appJWTService = appJWTService;
         this.appCookieService = appCookieService;
+        this.verificationResendService = verificationResendService;
         this.entityManager = entityManager;
     }
 
@@ -170,9 +173,11 @@ public class UserService implements Searchable {
                 case MAIL_CREATE:
                 case MAIL_CHANGE:
                     exceptionMessages.add("You must verify email");
+                    verificationResendService.setResendTokenForUser(user.getUsername(), httpServletResponse);
                     break;
                 case PASSWORD_CHANGE:
                     exceptionMessages.add("You must verify password");
+                    verificationResendService.setResendTokenForUser(user.getUsername(), httpServletResponse);
             }
         }
         if (!exceptionMessages.isEmpty()) {
@@ -221,6 +226,18 @@ public class UserService implements Searchable {
         pending.ifPresent(pendingVerificationRepository::delete);
         flushAndClear();
         verificationPublisherService.verifyPasswordChange(user, now);
+    }
+
+    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
+    public void resendVerification() {
+        User user = findUserEntityByIdLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserId(), userRepository);
+        List<PendingVerification> verifications = pendingVerificationRepository.findByUser(user);
+        if (verifications.isEmpty()) {
+            return;
+        }
+        for (PendingVerification verification : verifications) {
+            verificationPublisherService.publishVerificationEvent(verification);
+        }
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)

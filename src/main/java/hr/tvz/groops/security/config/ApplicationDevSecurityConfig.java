@@ -40,6 +40,7 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
     private final MailChangeJWTVerifier mailChangeJWTVerifier;
     private final PasswordChangeJWTVerifier passwordChangeJWTVerifier;
     private final PasswordForgotJWTVerifier passwordForgotJWTVerifier;
+    private final VerificationResendJWTVerifier verificationResendJWTVerifier;
     private final MDCFilter mdcFilter;
     private final ForbiddenAuthenticationEntrypoint forbiddenAuthenticationEntrypoint;
 
@@ -49,6 +50,7 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
                                         MailChangeJWTVerifier mailChangeJWTVerifier,
                                         PasswordChangeJWTVerifier passwordChangeJWTVerifier,
                                         PasswordForgotJWTVerifier passwordForgotJWTVerifier,
+                                        VerificationResendJWTVerifier verificationResendJWTVerifier,
                                         MDCFilter mdcFilter,
                                         ForbiddenAuthenticationEntrypoint forbiddenAuthenticationEntrypoint) {
         this.appJWTVerifier = appJWTVerifier;
@@ -56,6 +58,7 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
         this.mailChangeJWTVerifier = mailChangeJWTVerifier;
         this.passwordChangeJWTVerifier = passwordChangeJWTVerifier;
         this.passwordForgotJWTVerifier = passwordForgotJWTVerifier;
+        this.verificationResendJWTVerifier = verificationResendJWTVerifier;
         this.mdcFilter = mdcFilter;
         this.forbiddenAuthenticationEntrypoint = forbiddenAuthenticationEntrypoint;
     }
@@ -74,6 +77,7 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
                 .addFilterBefore(mailChangeJWTVerifier, MailCreateJWTVerifier.class)
                 .addFilterBefore(passwordChangeJWTVerifier, MailChangeJWTVerifier.class)
                 .addFilterBefore(passwordForgotJWTVerifier, PasswordChangeJWTVerifier.class)
+                .addFilterBefore(verificationResendJWTVerifier, PasswordForgotJWTVerifier.class)
                 .addFilterBefore(appJWTVerifier, PasswordChangeJWTVerifier.class)
                 .addFilterAfter(mdcFilter, AppJWTVerifier.class)
                 .authorizeRequests()

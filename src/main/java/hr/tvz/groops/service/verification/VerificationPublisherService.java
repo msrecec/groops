@@ -1,10 +1,8 @@
 package hr.tvz.groops.service.verification;
 
 import hr.tvz.groops.constants.TimeoutConstants;
-import hr.tvz.groops.event.notification.verification.MailChangeVerificationEvent;
-import hr.tvz.groops.event.notification.verification.MailCreateVerificationEvent;
-import hr.tvz.groops.event.notification.verification.PasswordChangeVerificationEvent;
-import hr.tvz.groops.event.notification.verification.PasswordForgotVerificationEvent;
+import hr.tvz.groops.event.notification.verification.*;
+import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.PendingVerification;
 import hr.tvz.groops.model.User;
 import hr.tvz.groops.model.enums.VerificationTypeEnum;
@@ -106,6 +104,37 @@ public class VerificationPublisherService {
                 .build();
         pendingVerification = pendingVerificationRepository.saveAndFlush(pendingVerification);
         sendPasswordVerificationEventAfterSuccessfulCommit(pendingVerification.getId(), pendingVerification.getUser().getId());
+    }
+
+    @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
+    public void publishVerificationEvent(PendingVerification pendingVerification) {
+        VerificationEvent verificationEvent;
+        switch (pendingVerification.getVerificationType()) {
+            case MAIL_CHANGE:
+                verificationEvent = new MailChangeVerificationEvent(this, pendingVerification.getId(), pendingVerification.getUser().getId());
+                break;
+            case PASSWORD_CHANGE:
+                verificationEvent = new PasswordChangeVerificationEvent(this, pendingVerification.getId(), pendingVerification.getUser().getId());
+                break;
+            case MAIL_CREATE:
+                verificationEvent = new MailCreateVerificationEvent(this, pendingVerification.getId(), pendingVerification.getUser().getId());
+                break;
+            case PASSWORD_FORGOT:
+                verificationEvent = new PasswordForgotVerificationEvent(this, pendingVerification.getId(), pendingVerification.getUser().getId());
+                break;
+            default:
+                throw new InternalServerException("Unsupported verification type");
+        }
+        sendEmailForVerificationEventAfterSuccessfulCommit(verificationEvent);
+    }
+
+    private void sendEmailForVerificationEventAfterSuccessfulCommit(VerificationEvent event) {
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                applicationEventPublisher.publishEvent(event);
+            }
+        });
     }
 
     private void sendEmailCreateVerificationEventAfterSuccessfulCommit(@NotNull Long pendingVerificationId, @NotNull Long userId) {
