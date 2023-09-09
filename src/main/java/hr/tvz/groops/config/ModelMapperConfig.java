@@ -50,6 +50,9 @@ public class ModelMapperConfig {
         propertyMapper.addMappings(m -> {
             m.using(getProfilePictureConverter()).map(Group::getProfilePictureKey, GroupDto::setProfilePictureDownloadLink);
         });
+        propertyMapper.addMappings(m -> {
+            m.using(getProfilePictureConverter()).map(Group::getProfilePictureThumbnailKey, GroupDto::setProfilePictureThumbnailDownloadLink);
+        });
     }
 
     private void addTypeMappingForPost(ModelMapper modelMapper) {

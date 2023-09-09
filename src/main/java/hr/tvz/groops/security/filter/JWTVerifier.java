@@ -35,7 +35,9 @@ public abstract class JWTVerifier extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NotNull HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull FilterChain filterChain) throws ServletException, IOException {
-        if (request.getRequestURI().contains("authentication/login") || request.getRequestURI().contains("authentication/logout")) {
+        if (request.getRequestURI().contains("authentication/login") ||
+                request.getRequestURI().contains("authentication/logout") ||
+                request.getRequestURI().contains("users/register")) {
             filterChain.doFilter(request, response);
             return;
         }

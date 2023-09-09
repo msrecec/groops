@@ -15,4 +15,5 @@ public class GroupDto extends DtoBase {
     private Long id;
     private String name;
     private String profilePictureDownloadLink;
+    private String profilePictureThumbnailDownloadLink;
 }

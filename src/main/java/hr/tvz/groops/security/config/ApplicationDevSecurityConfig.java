@@ -30,7 +30,7 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
             "/**/version",
             "/**/authentication/login",
             "/**/authentication/logout",
-            "/**/register/**",
+            "/**/users/register",
             "/**/users/forgot-password"
     };
 
