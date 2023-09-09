@@ -15,6 +15,7 @@ import hr.tvz.groops.dto.response.PostDto;
 import hr.tvz.groops.service.CommentService;
 import hr.tvz.groops.service.GroupService;
 import hr.tvz.groops.service.PostService;
+import hr.tvz.groops.service.ValidationService;
 import hr.tvz.groops.service.security.AuthorizationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,6 +32,7 @@ import java.util.Optional;
 @RequestMapping("/groups")
 public class GroupController extends ControllerBase {
     private final AuthorizationService authorizationService;
+    private final ValidationService validationService;
     private final GroupService groupService;
     private final PostService postService;
     private final CommentService commentService;
@@ -37,11 +40,13 @@ public class GroupController extends ControllerBase {
 
     @Autowired
     public GroupController(AuthorizationService authorizationService,
+                           ValidationService validationService,
                            GroupService groupService,
                            PostService postService,
                            CommentService commentService,
                            ObjectMapper objectMapper) {
         this.authorizationService = authorizationService;
+        this.validationService = validationService;
         this.groupService = groupService;
         this.postService = postService;
         this.commentService = commentService;
@@ -59,8 +64,15 @@ public class GroupController extends ControllerBase {
     }
 
     @PostMapping
-    GroupDto create(@RequestBody @Valid GroupCommand command) throws JsonProcessingException {
-        return groupService.create(command);
+    GroupDto createWithoutProfilePic(@RequestBody @Valid GroupCommand command) throws JsonProcessingException {
+        return groupService.create(command, null);
+    }
+
+    @PostMapping("/profile-picture")
+    GroupDto createWithProfilePic(@RequestParam("file") MultipartFile file, @RequestParam("command") MultipartFile command) throws IOException {
+        GroupCommand groupCommand = objectMapper.readValue(command.getInputStream(), GroupCommand.class);
+        validationService.validate(groupCommand);
+        return groupService.create(groupCommand, file);
     }
 
     @PostMapping("/{id}/post/media")
@@ -123,11 +135,6 @@ public class GroupController extends ControllerBase {
     @GetMapping("/post/{id}/comment")
     List<CommentDto> findCommentsByPostId(@PathVariable("id") Long id) {
         return commentService.findAllByPostId(id);
-    }
-
-    @PostMapping("/{id}/upload-profile")
-    GroupDto uploadProfilePicture(@PathVariable("id") Long id, @RequestParam("file") MultipartFile file) {
-        return groupService.uploadProfilePicture(id, file);
     }
 
     @PutMapping("/{id}")

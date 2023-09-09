@@ -78,6 +78,7 @@ CREATE TABLE "group" (
     "id" SERIAL,
     "name" TEXT NOT NULL,
     "profile_picture_key" TEXT DEFAULT NULL,
+    "profile_picture_thumbnail_key" TEXT DEFAULT NULL,
     "created_by" CHARACTER VARYING(255) NOT NULL,
     "modified_by" CHARACTER VARYING(255),
     "created_ts" timestamp(0) with time zone NOT NULL,
@@ -189,6 +190,7 @@ CREATE TABLE "group_message" (
 CREATE TABLE "post" (
     "id" SERIAL,
     "media_key" TEXT,
+    "media_thumbnail_key" TEXT DEFAULT NULL,
     "text" TEXT,
     "user_id" INTEGER NOT NULL,
     "group_id" INTEGER NOT NULL,

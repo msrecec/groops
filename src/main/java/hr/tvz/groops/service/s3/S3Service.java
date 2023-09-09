@@ -163,6 +163,11 @@ public class S3Service {
         return generateKey(id, USER, USER_PROFILE + "/thumbnail", IMAGE_TYPE, file);
     }
 
+    public String generateGroupProfilePictureThumbnailKey(Long id, MultipartFile file) {
+        checkIfImage(file);
+        return generateKey(id, GROUP, GROUP_PROFILE + "/thumbnail", IMAGE_TYPE, file);
+    }
+
     private String generateKey(Long id, String prefix, String type, MultipartFile file) {
         return generateKey(id, prefix, null, type, file);
     }

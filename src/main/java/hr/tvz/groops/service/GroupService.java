@@ -16,6 +16,9 @@ import hr.tvz.groops.service.s3.S3Service;
 import hr.tvz.groops.service.security.AuthenticationService;
 import hr.tvz.groops.service.security.AuthorizationService;
 import hr.tvz.groops.util.QueryBuilderUtil;
+import hr.tvz.groops.util.UploadUtil;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.modelmapper.ModelMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -74,8 +78,8 @@ public class GroupService implements Searchable {
         return groupRepository.findAll().stream().map(g -> modelMapper.map(g, GroupDto.class)).collect(Collectors.toList());
     }
 
-    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
-    public GroupDto create(GroupCommand command) {
+    @Transactional(timeout = TimeoutConstants.LONG_TIMEOUT)
+    public GroupDto create(GroupCommand command, @Nullable MultipartFile file) {
         logger.debug("Creating group: {}", command.getName());
         Instant now = now();
         Group group = Group.builder()
@@ -107,28 +111,21 @@ public class GroupService implements Searchable {
                 .build();
         userGroupRoleRepository.saveAndFlush(userGroupRole);
 
+        if(file != null) {
+            uploadProfilePictureCompressed(group, file);
+        }
+
         return modelMapper.map(group, GroupDto.class);
     }
 
-    @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public GroupDto uploadProfilePicture(Long id, MultipartFile file) {
-        logger.debug("Uploading profile picture for group with id: {}", id);
-        Instant now = now();
-        User currentUser = findUserEntityByIdLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserId(), userRepository);
-        Group group = findGroupByIdLockByPessimisticWrite(id, groupRepository);
-        authorizationService.hasGroupRole(currentUser, group, RoleEnum.ROLE_ADMIN);
-        String oldProfilePictureKey = group.getProfilePictureKey();
-        String newProfilePictureKey = s3Service.generateUserProfilePictureKey(id, file);
+    @Transactional(timeout = TimeoutConstants.LONG_TIMEOUT, propagation = Propagation.MANDATORY)
+    public void uploadProfilePictureCompressed(@NotNull Group group, @NotNull MultipartFile file) {
+        UploadUtil.checkIfImage(file);
+        String newProfilePictureKey = s3Service.generateGroupProfilePictureKey(group.getId(), file);
+        String newProfilePictureThumbnailKey = s3Service.generateGroupProfilePictureThumbnailKey(group.getId(), file);
         group.setProfilePictureKey(newProfilePictureKey);
-        group.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
-        group.setModifiedTs(now);
-        group = groupRepository.save(group);
-        if (oldProfilePictureKey != null) {
-            logger.debug("Deleting old group profile picture key: {}", oldProfilePictureKey);
-            s3Service.deleteByKey(oldProfilePictureKey);
-        }
-        s3Service.uploadDocumentFull(group.getProfilePictureKey(), file);
-        return modelMapper.map(group, GroupDto.class);
+        group.setProfilePictureThumbnailKey(newProfilePictureThumbnailKey);
+        s3Service.uploadImageAndThumbnailCompressed(group.getProfilePictureKey(), group.getProfilePictureThumbnailKey(), file);
     }
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT)
