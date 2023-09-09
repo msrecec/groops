@@ -241,10 +241,15 @@ public class UserService implements Searchable {
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
-    public void passwordForgot(@NotNull String username) {
+    public boolean passwordForgot(@NotNull String username) {
         logger.debug("Confirming user password forgot...");
         Instant now = now();
-        User user = findUserEntityByUsernameLockByPessimisticWrite(username, userRepository);
+        Optional<User> userOpt = userRepository.findByUsernameLockByPessimisticWrite(username);
+        if (userOpt.isEmpty()) {
+            logger.debug("No user with username: {}", username);
+            return false;
+        }
+        User user = userOpt.get();
 
         user.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         user.setModifiedTs(now);
@@ -254,6 +259,7 @@ public class UserService implements Searchable {
         pending.ifPresent(pendingVerificationRepository::delete);
         flushAndClear();
         verificationPublisherService.verifyPasswordForgot(user, now);
+        return true;
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)

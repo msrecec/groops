@@ -80,6 +80,19 @@ public class GroupController extends ControllerBase {
         return groupService.create(groupCommand, file);
     }
 
+    @PutMapping("/{id}")
+    GroupDto updateWithoutProfilePic(@PathVariable("id") Long id, @RequestBody @Valid GroupCommand command) {
+        return groupService.update(id, command, null);
+    }
+
+
+    @PutMapping("/{id}/profile-picture")
+    GroupDto updateWithProfilePic(@PathVariable("id") Long id, @RequestParam("file") MultipartFile file, @RequestParam("command") MultipartFile command) throws IOException {
+        GroupCommand groupCommand = objectMapper.readValue(command.getInputStream(), GroupCommand.class);
+        validationService.validate(groupCommand);
+        return groupService.update(id, groupCommand, file);
+    }
+
     @PostMapping("/{id}/post/media")
     PostDto createPostWithMedia(@PathVariable("id") Long id, @RequestParam("command") String commandJSON, @RequestParam("file") MultipartFile file) throws JsonProcessingException {
         PostCommand command = objectMapper.readValue(commandJSON, PostCommand.class);
@@ -140,11 +153,6 @@ public class GroupController extends ControllerBase {
     @GetMapping("/post/{id}/comment")
     List<CommentDto> findCommentsByPostId(@PathVariable("id") Long id) {
         return commentService.findAllByPostId(id);
-    }
-
-    @PutMapping("/{id}")
-    GroupDto update(@PathVariable("id") Long id, @RequestBody @Valid GroupCommand command) {
-        return groupService.update(id, command);
     }
 
     @GetMapping("/{id}/roles")

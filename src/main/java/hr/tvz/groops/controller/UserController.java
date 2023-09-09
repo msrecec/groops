@@ -125,7 +125,9 @@ public class UserController extends ControllerBase {
 
     @PostMapping("/forgot-password")
     void forgotUserPassword(@RequestBody @Valid ForgotPasswordCommand command, HttpServletResponse response) {
-        userService.passwordForgot(command.getUsername());
+        if (!userService.passwordForgot(command.getUsername())) {
+            return;
+        }
         verificationResendService.setResendTokenForUser(command.getUsername(), response);
     }
 

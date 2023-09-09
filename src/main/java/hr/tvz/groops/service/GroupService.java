@@ -82,7 +82,7 @@ public class GroupService implements Searchable {
         Group group = findGroupById(groupId, groupRepository);
         UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
         List<UserGroupRole> userGroupRoles = userGroupRoleRepository.findByUserGroup(userGroup);
-        List<RoleDto> roles =  userGroupRoles.stream()
+        List<RoleDto> roles = userGroupRoles.stream()
                 .map(ugr -> modelMapper.map(ugr.getRole(), RoleDto.class))
                 .collect(Collectors.toList());
         return GroupRoleDto.builder()
@@ -129,7 +129,7 @@ public class GroupService implements Searchable {
                 .build();
         userGroupRoleRepository.saveAndFlush(userGroupRole);
 
-        if(file != null) {
+        if (file != null) {
             uploadProfilePictureCompressed(group, file);
         }
 
@@ -147,7 +147,7 @@ public class GroupService implements Searchable {
     }
 
     @Transactional(timeout = TimeoutConstants.LONG_TIMEOUT)
-    public GroupDto update(Long id, GroupCommand command) {
+    public GroupDto update(Long id, GroupCommand command, MultipartFile file) {
         logger.debug("Updating group with id: {}", id);
         Instant now = now();
         User currentUser = findUserEntityByIdLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserId(), userRepository);
@@ -156,6 +156,9 @@ public class GroupService implements Searchable {
         group.setName(command.getName());
         group.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         group.setModifiedTs(now);
+        if (file != null) {
+            uploadProfilePictureCompressed(group, file);
+        }
         return modelMapper.map(group, GroupDto.class);
     }
 
