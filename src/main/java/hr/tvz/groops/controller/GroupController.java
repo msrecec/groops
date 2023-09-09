@@ -58,6 +58,11 @@ public class GroupController extends ControllerBase {
         return groupService.findById(id);
     }
 
+    @GetMapping("/{id}/authorities")
+    GroupRoleDto findAuthoritiesByGroupId(@PathVariable("id") Long id) {
+        return groupService.findByGroupIdForCurrentUser(id);
+    }
+
     @GetMapping
     List<GroupDto> findAll() {
         return groupService.findAll();

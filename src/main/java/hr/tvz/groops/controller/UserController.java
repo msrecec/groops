@@ -113,8 +113,8 @@ public class UserController extends ControllerBase {
     }
 
     @PostMapping("/forgot-password")
-    void forgotUserPassword(@RequestParam(name = "username") String username) {
-        userService.passwordForgot(username);
+    void forgotUserPassword(@RequestBody @Valid ForgotPasswordCommand command) {
+        userService.passwordForgot(command.getUsername());
     }
 
     @PostMapping("/search")

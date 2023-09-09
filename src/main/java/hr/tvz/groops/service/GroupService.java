@@ -6,6 +6,8 @@ import hr.tvz.groops.command.search.GroupSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.GroupDto;
+import hr.tvz.groops.dto.response.GroupRoleDto;
+import hr.tvz.groops.dto.response.RoleDto;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.enums.RoleEnum;
@@ -26,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -71,6 +74,21 @@ public class GroupService implements Searchable {
 
     public GroupDto findById(Long id) {
         return modelMapper.map(findGroupById(id, groupRepository), GroupDto.class);
+    }
+
+    @Transactional(isolation = Isolation.REPEATABLE_READ, timeout = TimeoutConstants.SHORT_TIMEOUT)
+    public GroupRoleDto findByGroupIdForCurrentUser(Long groupId) {
+        User user = findUserEntityById(authenticationService.getCurrentLoggedInUserId(), userRepository);
+        Group group = findGroupById(groupId, groupRepository);
+        UserGroup userGroup = findUserGroupByUserAndGroup(user, group, userGroupRepository);
+        List<UserGroupRole> userGroupRoles = userGroupRoleRepository.findByUserGroup(userGroup);
+        List<RoleDto> roles =  userGroupRoles.stream()
+                .map(ugr -> modelMapper.map(ugr.getRole(), RoleDto.class))
+                .collect(Collectors.toList());
+        return GroupRoleDto.builder()
+                .groupId(groupId)
+                .roles(roles)
+                .build();
     }
 
     public List<GroupDto> findAll() {
@@ -128,7 +146,7 @@ public class GroupService implements Searchable {
         s3Service.uploadImageAndThumbnailCompressed(group.getProfilePictureKey(), group.getProfilePictureThumbnailKey(), file);
     }
 
-    @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT)
+    @Transactional(timeout = TimeoutConstants.LONG_TIMEOUT)
     public GroupDto update(Long id, GroupCommand command) {
         logger.debug("Updating group with id: {}", id);
         Instant now = now();
