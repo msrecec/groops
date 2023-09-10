@@ -2,7 +2,7 @@ package hr.tvz.groops.util;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.dsl.*;
-import hr.tvz.groops.command.search.BaseEntitySearchCommand;
+import hr.tvz.groops.command.searchPaginated.BaseEntitySearchCommand;
 import hr.tvz.groops.exception.ExceptionEnum;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.QBaseEntity;

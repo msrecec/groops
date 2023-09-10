@@ -4,7 +4,7 @@ import com.querydsl.core.BooleanBuilder;
 import hr.tvz.groops.command.crud.PasswordCommand;
 import hr.tvz.groops.command.crud.UserCreateCommand;
 import hr.tvz.groops.command.crud.UserUpdateCommand;
-import hr.tvz.groops.command.search.UserSearchCommand;
+import hr.tvz.groops.command.searchPaginated.UserPaginatedSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.FriendRequestDto;
@@ -387,7 +387,7 @@ public class UserService implements Searchable {
         return userRepository.findAll().stream().map(u -> modelMapper.map(u, UserDto.class)).collect(Collectors.toList());
     }
 
-    public Page<UserDto> search(UserSearchCommand command, Pageable pageable) {
+    public Page<UserDto> searchPaginated(UserPaginatedSearchCommand command, Pageable pageable) {
         QUser user = QUser.user;
         BooleanBuilder builder = new BooleanBuilder();
         QueryBuilderUtil.buildCreatedModifiedAndIdConditions(command, user._super, user.id, builder);

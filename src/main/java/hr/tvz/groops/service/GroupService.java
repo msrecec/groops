@@ -1,8 +1,13 @@
 package hr.tvz.groops.service;
 
+import com.blazebit.persistence.Criteria;
+import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.querydsl.BlazeJPAQuery;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.querydsl.core.BooleanBuilder;
 import hr.tvz.groops.command.crud.GroupCommand;
 import hr.tvz.groops.command.search.GroupSearchCommand;
+import hr.tvz.groops.command.searchPaginated.GroupPaginatedSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.GroupDto;
@@ -33,8 +38,12 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static hr.tvz.groops.util.TimeUtils.now;
@@ -51,6 +60,8 @@ public class GroupService implements Searchable {
     private final S3Service s3Service;
     private final AuthorizationService authorizationService;
     private final ModelMapper modelMapper;
+    @PersistenceContext
+    private final EntityManager entityManager;
 
     @Autowired
     public GroupService(AuthenticationService authenticationService,
@@ -59,8 +70,10 @@ public class GroupService implements Searchable {
                         GroupRequestRepository groupRequestRepository,
                         UserRepository userRepository,
                         UserGroupRoleRepository userGroupRoleRepository,
-                        S3Service s3Service, AuthorizationService authorizationService,
-                        ModelMapper modelMapper) {
+                        S3Service s3Service,
+                        AuthorizationService authorizationService,
+                        ModelMapper modelMapper,
+                        EntityManager entityManager) {
         this.authenticationService = authenticationService;
         this.groupRepository = groupRepository;
         this.userGroupRepository = userGroupRepository;
@@ -70,6 +83,7 @@ public class GroupService implements Searchable {
         this.s3Service = s3Service;
         this.authorizationService = authorizationService;
         this.modelMapper = modelMapper;
+        this.entityManager = entityManager;
     }
 
     public GroupDto findById(Long id) {
@@ -243,7 +257,7 @@ public class GroupService implements Searchable {
         groupRequestRepository.save(groupRequest);
     }
 
-    public Page<GroupDto> search(GroupSearchCommand command, Pageable pageable) {
+    public Page<GroupDto> searchPaginated(GroupPaginatedSearchCommand command, Pageable pageable) {
         QGroup group = QGroup.group;
         BooleanBuilder builder = new BooleanBuilder();
         QueryBuilderUtil.buildCreatedModifiedAndIdConditions(command, group._super, group.id, builder);
@@ -252,6 +266,45 @@ public class GroupService implements Searchable {
             QueryBuilderUtil.equals(builder, group.users.any().id, authenticationService.getCurrentLoggedInUserId());
         }
         return groupRepository.findAll(builder.getValue() != null ? builder.getValue() : builder, pageable).map(u -> modelMapper.map(u, GroupDto.class));
+    }
+
+    public List<GroupDto> search(GroupSearchCommand command) {
+        User currentUser = findUserEntityById(authenticationService.getCurrentLoggedInUserId(), userRepository);
+        boolean my = command.getMy() != null && command.getMy().get();
+        boolean name = command.getName() != null && command.getName().isPresent() && !command.getName().get().trim().isBlank();
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        CriteriaBuilderFactory cbf = config.createCriteriaBuilderFactory(entityManager.getEntityManagerFactory());
+        QGroup group = QGroup.group;
+        BooleanBuilder builder = new BooleanBuilder();
+        if (name) {
+            QueryBuilderUtil.like(builder, group.name, command.getName());
+        }
+        if (my) {
+            QueryBuilderUtil.equals(builder, group.users.any().id, authenticationService.getCurrentLoggedInUserId());
+        }
+        BlazeJPAQuery<Group> query = new BlazeJPAQuery<>(entityManager, cbf)
+                .select(group)
+                .from(group)
+                .where(builder);
+        List<Group> groups = query.fetch();
+        if (!my) {
+            return groups.stream().map(u -> {
+                GroupDto g = modelMapper.map(u, GroupDto.class);
+                g.setMy(true);
+                return g;
+            }).collect(Collectors.toList());
+        }
+        Set<Long> memberIds = new HashSet<>();
+        for (Group g : groups) {
+            if (userGroupRepository.existsByUserAndGroup(currentUser, g)) {
+                memberIds.add(g.getId());
+            }
+        }
+        return groups.stream().map(u -> {
+            GroupDto g = modelMapper.map(u, GroupDto.class);
+            g.setMy(memberIds.contains(g.getId()));
+            return g;
+        }).collect(Collectors.toList());
     }
 
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)

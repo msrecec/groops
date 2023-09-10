@@ -1,4 +1,4 @@
-package hr.tvz.groops.command.search;
+package hr.tvz.groops.command.searchPaginated;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -14,7 +14,7 @@ import java.util.Optional;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-public class UserSearchCommand extends BaseEntitySearchCommand {
+public class UserPaginatedSearchCommand extends BaseEntitySearchCommand {
     private Optional<String> username;
     private Optional<String> email;
     private Optional<String> firstName;

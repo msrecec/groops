@@ -2,14 +2,12 @@ package hr.tvz.groops.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import hr.tvz.groops.command.crud.*;
-import hr.tvz.groops.command.search.UserSearchCommand;
+import hr.tvz.groops.command.searchPaginated.UserPaginatedSearchCommand;
 import hr.tvz.groops.dto.response.FriendRequestDto;
 import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.security.constants.RoleConstants;
 import hr.tvz.groops.service.UserService;
 import hr.tvz.groops.service.ValidationService;
-import hr.tvz.groops.service.token.VerificationJWTService;
-import hr.tvz.groops.service.token.VerificationResendJWTService;
 import hr.tvz.groops.service.token.VerificationResendService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -137,9 +135,9 @@ public class UserController extends ControllerBase {
         userService.resendVerification();
     }
 
-    @PostMapping("/search")
-    Page<UserDto> searchUser(@RequestBody UserSearchCommand command) {
-        return userService.search(command, command.getPageable());
+    @PostMapping("/search-paginated")
+    Page<UserDto> searchUser(@RequestBody UserPaginatedSearchCommand command) {
+        return userService.searchPaginated(command, command.getPageable());
     }
 
     @DeleteMapping("/current")

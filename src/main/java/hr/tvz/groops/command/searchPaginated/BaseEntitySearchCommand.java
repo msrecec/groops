@@ -1,4 +1,4 @@
-package hr.tvz.groops.command.search;
+package hr.tvz.groops.command.searchPaginated;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

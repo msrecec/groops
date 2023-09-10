@@ -2,7 +2,7 @@ package hr.tvz.groops.service;
 
 import com.querydsl.core.BooleanBuilder;
 import hr.tvz.groops.command.crud.PostCommand;
-import hr.tvz.groops.command.search.PostSearchCommand;
+import hr.tvz.groops.command.searchPaginated.PostPaginatedSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.PostDto;
@@ -196,7 +196,7 @@ public class PostService implements Searchable {
     }
 
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
-    public Page<PostDto> search(PostSearchCommand command, Pageable pageable) {
+    public Page<PostDto> search(PostPaginatedSearchCommand command, Pageable pageable) {
         Long currentUserId = authenticationService.getCurrentLoggedInUserId();
         QPost post = QPost.post;
         User currentUser = findUserEntityById(authenticationService.getCurrentLoggedInUserId(), userRepository);

@@ -1,4 +1,4 @@
-package hr.tvz.groops.command.search;
+package hr.tvz.groops.command.searchPaginated;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,7 +13,7 @@ import java.util.Optional;
 @AllArgsConstructor
 @NoArgsConstructor
 @SuperBuilder
-public class PostSearchCommand extends BaseEntitySearchCommand {
+public class PostPaginatedSearchCommand extends BaseEntitySearchCommand {
     private Optional<String> text;
     private Optional<Long> groupId;
     private Optional<Long> userId;

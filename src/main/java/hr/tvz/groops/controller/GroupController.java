@@ -7,7 +7,8 @@ import hr.tvz.groops.command.crud.GroupCommand;
 import hr.tvz.groops.command.crud.PostCommand;
 import hr.tvz.groops.command.crud.RoleCommand;
 import hr.tvz.groops.command.search.GroupSearchCommand;
-import hr.tvz.groops.command.search.PostSearchCommand;
+import hr.tvz.groops.command.searchPaginated.GroupPaginatedSearchCommand;
+import hr.tvz.groops.command.searchPaginated.PostPaginatedSearchCommand;
 import hr.tvz.groops.dto.response.CommentDto;
 import hr.tvz.groops.dto.response.GroupDto;
 import hr.tvz.groops.dto.response.GroupRoleDto;
@@ -131,7 +132,7 @@ public class GroupController extends ControllerBase {
     }
 
     @PostMapping("/post/search")
-    Page<PostDto> searchPost(@RequestBody PostSearchCommand command) {
+    Page<PostDto> searchPost(@RequestBody PostPaginatedSearchCommand command) {
         return postService.search(command, command.getPageable());
     }
 
@@ -181,9 +182,14 @@ public class GroupController extends ControllerBase {
         groupService.sendGroupJoinRequest(groupId);
     }
 
+    @PostMapping("/search-paginated")
+    Page<GroupDto> searchGroupPaginated(@RequestBody GroupPaginatedSearchCommand command) {
+        return groupService.searchPaginated(command, command.getPageable());
+    }
+
     @PostMapping("/search")
-    Page<GroupDto> searchGroup(@RequestBody GroupSearchCommand command) {
-        return groupService.search(command, command.getPageable());
+    List<GroupDto> searchGroup(@RequestBody GroupSearchCommand command) {
+        return groupService.search(command);
     }
 
     @DeleteMapping("/{id}")
