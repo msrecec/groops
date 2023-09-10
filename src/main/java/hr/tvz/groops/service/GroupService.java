@@ -287,7 +287,7 @@ public class GroupService implements Searchable {
                 .from(group)
                 .where(builder);
         List<Group> groups = query.fetch();
-        if (!my) {
+        if (my) {
             return groups.stream().map(u -> {
                 GroupDto g = modelMapper.map(u, GroupDto.class);
                 g.setMy(true);
