@@ -17,7 +17,7 @@ import static hr.tvz.groops.constants.ProfileConstants.DEV;
 
 @Configuration
 @EnableWebSecurity
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 @Profile(DEV)
 public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
 
@@ -31,7 +31,8 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
             "/**/authentication/login",
             "/**/authentication/logout",
             "/**/users/register",
-            "/**/users/forgot-password"
+            "/**/users/forgot-password",
+            "/**/ws/**"
     };
 
     private static final String ACTUATOR_PATTERN = "/**/actuator/**";
@@ -67,8 +68,6 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .csrf()
-                .disable()
-                .cors()
                 .disable()
                 .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
