@@ -182,6 +182,11 @@ public class GroupController extends ControllerBase {
         groupService.sendGroupJoinRequest(groupId);
     }
 
+    @DeleteMapping("/{groupId}/request")
+    void cancelGroupJoinRequest(@PathVariable("groupId") Long groupId) {
+        groupService.cancelGroupJoinRequest(groupId);
+    }
+
     @PostMapping("/search-paginated")
     Page<GroupDto> searchGroupPaginated(@RequestBody GroupPaginatedSearchCommand command) {
         return groupService.searchPaginated(command, command.getPageable());

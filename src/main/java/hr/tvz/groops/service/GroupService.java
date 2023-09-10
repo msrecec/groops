@@ -257,6 +257,18 @@ public class GroupService implements Searchable {
         groupRequestRepository.save(groupRequest);
     }
 
+    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
+    public void cancelGroupJoinRequest(Long groupId) {
+        logger.debug("Canceling request from user with id: {} to join group with id: {}", authenticationService.getCurrentLoggedInUserId(), groupId);
+        User user = findUserEntityById(authenticationService.getCurrentLoggedInUserId(), userRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
+        if (userGroupRepository.existsByUserAndGroup(user, group)) {
+            throw new IllegalArgumentException("Can't request to join group you are already a part of");
+        }
+        GroupRequest groupRequest = findGroupRequestByGroupAndUser(group, user, groupRequestRepository);
+        groupRequestRepository.delete(groupRequest);
+    }
+
     public Page<GroupDto> searchPaginated(GroupPaginatedSearchCommand command, Pageable pageable) {
         QGroup group = QGroup.group;
         BooleanBuilder builder = new BooleanBuilder();
@@ -295,14 +307,19 @@ public class GroupService implements Searchable {
             }).collect(Collectors.toList());
         }
         Set<Long> memberIds = new HashSet<>();
+        Set<Long> sentJoinIds = new HashSet<>();
         for (Group g : groups) {
             if (userGroupRepository.existsByUserAndGroup(currentUser, g)) {
                 memberIds.add(g.getId());
+            }
+            if(groupRequestRepository.existsByGroupAndUser(g, currentUser)) {
+                sentJoinIds.add(g.getId());
             }
         }
         return groups.stream().map(u -> {
             GroupDto g = modelMapper.map(u, GroupDto.class);
             g.setMy(memberIds.contains(g.getId()));
+            g.setSentJoin(sentJoinIds.contains(g.getId()));
             return g;
         }).collect(Collectors.toList());
     }

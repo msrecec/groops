@@ -13,4 +13,5 @@ import java.util.Optional;
 @Repository
 public interface GroupRequestRepository extends JpaRepository<GroupRequest, GroupRequestId>, QuerydslPredicateExecutor<GroupRequest> {
     Optional<GroupRequest> findByGroupAndUser(Group group, User user);
+    Boolean existsByGroupAndUser(Group group, User user);
 }

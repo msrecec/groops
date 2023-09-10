@@ -17,4 +17,5 @@ public class GroupDto extends DtoBase {
     private String profilePictureDownloadLink;
     private String profilePictureThumbnailDownloadLink;
     private Boolean my;
+    private Boolean sentJoin;
 }
