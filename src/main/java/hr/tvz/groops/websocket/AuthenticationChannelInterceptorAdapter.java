@@ -76,8 +76,37 @@ public class AuthenticationChannelInterceptorAdapter implements ChannelIntercept
             throw new InternalServerException("Missing token prefix");
         }
         validate(token);
-        authenticate();
+        authenticate(accessor);
         return message;
+    }
+
+    private void authenticate(StompHeaderAccessor accessor) {
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        Optional<User> currentUser = userRepository.findById(currentUserId);
+        if (currentUser.isEmpty()) {
+            throw new AccessDeniedException("Unauthorized");
+        }
+        if (!currentUser.get().getVerified()) {
+            throw new AccessDeniedException("Unauthorized");
+        }
+        if (accessor.getCommand() != StompCommand.SUBSCRIBE) {
+            return;
+        }
+        if (accessor.getDestination() == null) {
+            throw new AccessDeniedException("Unauthorized");
+        }
+        String[] tokens = accessor.getDestination().split("/");
+        if (tokens.length != 6) {
+            throw new AccessDeniedException("Unauthorized");
+        }
+        String idToken = tokens[5];
+        if (idToken == null || idToken.isBlank()) {
+            throw new AccessDeniedException("Unauthorized");
+        }
+        Long id = Long.parseLong(idToken);
+        if (currentUser.get().getId().compareTo(id) != 0) {
+            throw new AccessDeniedException("Unauthorized");
+        }
     }
 
     private boolean isNotPermittedStompCommand(StompCommand command) {
@@ -85,11 +114,10 @@ public class AuthenticationChannelInterceptorAdapter implements ChannelIntercept
     }
 
     private boolean isNotAuthenticatedStompCommand(StompCommand command) {
-        return !(
-                command == StompCommand.CONNECT ||
-                command == StompCommand.SUBSCRIBE ||
-                command == StompCommand.MESSAGE ||
-                command == StompCommand.SEND);
+        return !(command == StompCommand.CONNECT ||
+                        command == StompCommand.SUBSCRIBE ||
+                        command == StompCommand.MESSAGE ||
+                        command == StompCommand.SEND);
     }
 
     private void validate(String token) {
@@ -107,17 +135,6 @@ public class AuthenticationChannelInterceptorAdapter implements ChannelIntercept
 
         } catch (JwtException e) {
             throw new IllegalStateException(String.format(invalidTokenErrorMessage, token));
-        }
-    }
-
-    private void authenticate() {
-        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
-        Optional<User> currentUser = userRepository.findById(currentUserId);
-        if (currentUser.isEmpty()) {
-            throw new AccessDeniedException("Unauthorized");
-        }
-        if (!currentUser.get().getVerified()) {
-            throw new AccessDeniedException("Unauthorized");
         }
     }
 
