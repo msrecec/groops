@@ -21,7 +21,7 @@ public interface UserGroupRoleRepository extends JpaRepository<UserGroupRole, Us
 
     boolean existsByUserGroupAndRole(UserGroup userGroup, Role role);
 
-    @Query(value = "SELECT COUNT(UGR) FROM UserGroupRole ugr " +
+    @Query(value = "SELECT COUNT(ugr) FROM UserGroupRole ugr " +
             "INNER JOIN ugr.userGroup ug " +
             "WHERE ug.group = :group AND ugr.role = :role")
     Integer countAllByGroupAndRole(@Param("group") Group group, @Param("role") Role role);
