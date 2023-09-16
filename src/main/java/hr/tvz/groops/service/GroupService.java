@@ -86,8 +86,15 @@ public class GroupService implements Searchable {
         this.entityManager = entityManager;
     }
 
+    @Transactional(isolation = Isolation.REPEATABLE_READ, timeout = TimeoutConstants.SHORT_TIMEOUT)
     public GroupDto findById(Long id) {
-        return modelMapper.map(findGroupById(id, groupRepository), GroupDto.class);
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User user = findUserEntityById(currentUserId, userRepository);
+        Group group = findGroupById(id, groupRepository);
+        boolean sentJoin = groupRequestRepository.existsByGroupAndUser(group, user);
+        GroupDto groupDto = modelMapper.map(group, GroupDto.class);
+        groupDto.setSentJoin(sentJoin);
+        return groupDto;
     }
 
     @Transactional(isolation = Isolation.REPEATABLE_READ, timeout = TimeoutConstants.SHORT_TIMEOUT)
@@ -312,7 +319,7 @@ public class GroupService implements Searchable {
             if (userGroupRepository.existsByUserAndGroup(currentUser, g)) {
                 memberIds.add(g.getId());
             }
-            if(groupRequestRepository.existsByGroupAndUser(g, currentUser)) {
+            if (groupRequestRepository.existsByGroupAndUser(g, currentUser)) {
                 sentJoinIds.add(g.getId());
             }
         }
