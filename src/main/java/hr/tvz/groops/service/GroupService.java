@@ -13,6 +13,7 @@ import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.GroupDto;
 import hr.tvz.groops.dto.response.GroupRoleDto;
 import hr.tvz.groops.dto.response.RoleDto;
+import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.enums.RoleEnum;
@@ -181,6 +182,16 @@ public class GroupService implements Searchable {
             uploadProfilePictureCompressed(group, file);
         }
         return modelMapper.map(group, GroupDto.class);
+    }
+
+    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
+    public List<UserDto> findRequestsForJoin(Long groupId) {
+        logger.debug("Finding join requests for group with id: {}", groupId);
+        User currentUser = findUserEntityByIdLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserId(), userRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
+        authorizationService.hasGroupRole(currentUser, group, RoleEnum.ROLE_ADMIN);
+        List<GroupRequest> groupRequests =  groupRequestRepository.findByGroup(group);
+        return groupRequests.stream().map(gr -> modelMapper.map(gr.getUser(), UserDto.class)).collect(Collectors.toList());
     }
 
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)

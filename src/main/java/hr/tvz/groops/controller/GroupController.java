@@ -9,10 +9,7 @@ import hr.tvz.groops.command.crud.RoleCommand;
 import hr.tvz.groops.command.search.GroupSearchCommand;
 import hr.tvz.groops.command.searchPaginated.GroupPaginatedSearchCommand;
 import hr.tvz.groops.command.searchPaginated.PostPaginatedSearchCommand;
-import hr.tvz.groops.dto.response.CommentDto;
-import hr.tvz.groops.dto.response.GroupDto;
-import hr.tvz.groops.dto.response.GroupRoleDto;
-import hr.tvz.groops.dto.response.PostDto;
+import hr.tvz.groops.dto.response.*;
 import hr.tvz.groops.service.CommentService;
 import hr.tvz.groops.service.GroupService;
 import hr.tvz.groops.service.PostService;
@@ -161,6 +158,11 @@ public class GroupController extends ControllerBase {
     @GetMapping("/{id}/roles")
     GroupRoleDto findAllRolesByGroupId(@PathVariable("id") Long id) {
         return authorizationService.findGroupRoles(id);
+    }
+
+    @GetMapping("/{id}/request")
+    List<UserDto> findAllRequestsByGroupId(@PathVariable("id") Long id) {
+        return groupService.findRequestsForJoin(id);
     }
 
     @PutMapping("/{groupId}/request/user/{userId}")
