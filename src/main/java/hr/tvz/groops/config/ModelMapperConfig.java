@@ -60,6 +60,9 @@ public class ModelMapperConfig {
         propertyMapper.addMappings(m -> {
             m.using(getProfilePictureConverter()).map(Post::getMediaKey, PostDto::setMediaDownloadLink);
         });
+        propertyMapper.addMappings(m -> {
+            m.using(getProfilePictureConverter()).map(Post::getMediaThumbnailKey, PostDto::setMediaThumbnailDownloadLink);
+        });
     }
 
     private AbstractConverter<String, String> getProfilePictureConverter() {

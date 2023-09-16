@@ -18,6 +18,7 @@ public class PostDto extends DtoBase {
     private UserDto user;
     private GroupDto group;
     private String mediaDownloadLink;
+    private String mediaThumbnailDownloadLink;
     private Integer likeCount = 0;
     private Boolean youLike = false;
     private Integer commentCount;

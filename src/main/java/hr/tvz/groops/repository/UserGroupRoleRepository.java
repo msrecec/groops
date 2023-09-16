@@ -1,9 +1,6 @@
 package hr.tvz.groops.repository;
 
-import hr.tvz.groops.model.Group;
-import hr.tvz.groops.model.Role;
-import hr.tvz.groops.model.UserGroup;
-import hr.tvz.groops.model.UserGroupRole;
+import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.pk.UserGroupRoleId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -20,6 +17,12 @@ public interface UserGroupRoleRepository extends JpaRepository<UserGroupRole, Us
     List<UserGroupRole> findByUserGroup(UserGroup userGroup);
 
     boolean existsByUserGroupAndRole(UserGroup userGroup, Role role);
+
+    @Query(value = "SELECT COUNT(ugr) FROM UserGroupRole ugr " +
+            "INNER JOIN ugr.userGroup ug " +
+            "INNER JOIN ug.user u " +
+            "WHERE u = :user AND ugr.role = :role")
+    Integer countAllByUserAndRole(@Param("user") User user, @Param("role") Role role);
 
     @Query(value = "SELECT COUNT(ugr) FROM UserGroupRole ugr " +
             "INNER JOIN ugr.userGroup ug " +

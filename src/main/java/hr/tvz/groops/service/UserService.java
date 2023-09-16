@@ -16,13 +16,11 @@ import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.*;
 import hr.tvz.groops.model.enums.VerificationTypeEnum;
 import hr.tvz.groops.model.pk.FriendRequestId;
-import hr.tvz.groops.repository.FriendRepository;
-import hr.tvz.groops.repository.FriendRequestRepository;
-import hr.tvz.groops.repository.PendingVerificationRepository;
-import hr.tvz.groops.repository.UserRepository;
+import hr.tvz.groops.repository.*;
 import hr.tvz.groops.security.authentication.GroopsUserDataToken;
 import hr.tvz.groops.service.s3.S3Service;
 import hr.tvz.groops.service.security.AuthenticationService;
+import hr.tvz.groops.service.security.AuthorizationService;
 import hr.tvz.groops.service.security.CookieService;
 import hr.tvz.groops.service.token.AppJWTService;
 import hr.tvz.groops.service.token.VerificationResendService;
@@ -70,8 +68,10 @@ public class UserService implements Searchable {
     private final VerificationPublisherService verificationPublisherService;
     private final S3Service s3Service;
     private final AuthenticationService authenticationService;
+    private final AuthorizationService authorizationService;
     private final AppJWTService appJWTService;
     private final CookieService appCookieService;
+    private final UserGroupRoleRepository userGroupRoleRepository;
     private final VerificationResendService verificationResendService;
     @PersistenceContext
     private final EntityManager entityManager;
@@ -86,9 +86,11 @@ public class UserService implements Searchable {
                        VerificationPublisherService verificationPublisherService,
                        S3Service s3Service,
                        AuthenticationService authenticationService,
-                       AppJWTService appJWTService,
+                       AuthorizationService authorizationService, AppJWTService appJWTService,
                        CookieService appCookieService,
-                       VerificationResendService verificationResendService, EntityManager entityManager) {
+                       UserGroupRoleRepository userGroupRoleRepository,
+                       VerificationResendService verificationResendService,
+                       EntityManager entityManager) {
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
@@ -98,8 +100,10 @@ public class UserService implements Searchable {
         this.verificationPublisherService = verificationPublisherService;
         this.s3Service = s3Service;
         this.authenticationService = authenticationService;
+        this.authorizationService = authorizationService;
         this.appJWTService = appJWTService;
         this.appCookieService = appCookieService;
+        this.userGroupRoleRepository = userGroupRoleRepository;
         this.verificationResendService = verificationResendService;
         this.entityManager = entityManager;
     }
@@ -454,8 +458,13 @@ public class UserService implements Searchable {
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT)
     public void deleteCurrent() {
         logger.debug("Deleting current user...");
+        Instant now = now();
         GroopsUserDataToken token = authenticationService.getCurrentLoggedInUser();
         User user = findUserEntityByIdLockByPessimisticWrite(token.getUserId(), userRepository);
+        Role adminRole = authorizationService.getOrCreateAdminRole(now);
+        if (userGroupRoleRepository.countAllByUserAndRole(user, adminRole) != 0) {
+            throw new IllegalArgumentException("Can't delete account, there are still groups where you are admin");
+        }
         userRepository.delete(user);
     }
 

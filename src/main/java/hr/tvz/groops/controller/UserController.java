@@ -146,10 +146,4 @@ public class UserController extends ControllerBase {
         userService.deleteCurrent();
     }
 
-    @DeleteMapping("/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    void deleteUserById(@PathVariable("id") Long id) {
-        userService.deleteById(id);
-    }
-
 }
