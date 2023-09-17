@@ -3,7 +3,7 @@ CREATE TABLE "notification" (
     "user_id" INTEGER NOT NULL,
     "message" TEXT NOT NULL,
     "entity_id" INTEGER NOT NULL,
-    "related_entity_id" INTEGER NOT NULL,
+    "related_entity_id" INTEGER,
     "entity_type" TEXT NOT NULL,
     "read" BOOLEAN NOT NULL DEFAULT FALSE,
     "created_by" CHARACTER VARYING(255) NOT NULL,

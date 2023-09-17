@@ -280,9 +280,9 @@ public class PostService implements Searchable {
         postLikeRepository.save(postLike);
         notificationService.sendNotificationToUser(post.getUser(),
                 "User " + currentUser.getUsername() + " liked your post in group " + group.getName(),
-                group.getId(),
-                EntityTypeEnum.GROUP_ACCEPT,
-                post.getId()
+                post.getId(),
+                EntityTypeEnum.LIKE,
+                group.getId()
         );
     }
 

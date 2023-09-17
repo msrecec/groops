@@ -17,6 +17,7 @@ public class NotificationDto extends DtoBase {
     private UserDto user;
     private String message;
     private Long entityId;
+    private Long relatedEntityId;
     private EntityTypeEnum entityType;
     private Boolean read;
 }

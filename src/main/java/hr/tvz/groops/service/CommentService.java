@@ -74,10 +74,10 @@ public class CommentService implements Searchable {
                 .createdTs(now)
                 .build();
         notificationService.sendNotificationToUser(post.getUser(),
-                "User " + user.getUsername() + " liked your post in group " + group.getName(),
-                group.getId(),
-                EntityTypeEnum.GROUP_ACCEPT,
-                post.getId()
+                "User " + user.getUsername() + " commented on your post in group " + group.getName(),
+                post.getId(),
+                EntityTypeEnum.COMMENT,
+                group.getId()
         );
         return modelMapper.map(commentRepository.saveAndFlush(comment), CommentDto.class);
     }

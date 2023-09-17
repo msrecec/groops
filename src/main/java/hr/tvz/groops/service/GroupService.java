@@ -261,7 +261,7 @@ public class GroupService implements Searchable {
         userGroupRole.setUserGroupRoleId(userGroupRoleId);
         userGroupRoleRepository.saveAndFlush(userGroupRole);
         notificationService.sendNotificationToUser(user,
-                "You have been added to group " + group.getName() + " with role " + role.getRole().name(),
+                "You have been added to group " + group.getName() + " with role " + role.getRole().name().replaceFirst("ROLE_", ""),
                 group.getId(),
                 EntityTypeEnum.GROUP_ACCEPT
         );

@@ -41,6 +41,7 @@ public class NotificationService {
                 .entityId(entityId)
                 .entityType(entityType)
                 .relatedEntityId(relatedEntityId)
+                .read(false)
                 .createdTs(now)
                 .createdBy(authenticationService.getCurrentLoggedInUserUsername())
                 .build();
