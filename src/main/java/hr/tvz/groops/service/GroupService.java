@@ -10,12 +10,10 @@ import hr.tvz.groops.command.search.GroupSearchCommand;
 import hr.tvz.groops.command.searchPaginated.GroupPaginatedSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
-import hr.tvz.groops.dto.response.GroupDto;
-import hr.tvz.groops.dto.response.GroupRoleDto;
-import hr.tvz.groops.dto.response.RoleDto;
-import hr.tvz.groops.dto.response.UserDto;
+import hr.tvz.groops.dto.response.*;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.*;
+import hr.tvz.groops.model.enums.PermissionEnum;
 import hr.tvz.groops.model.enums.RoleEnum;
 import hr.tvz.groops.model.pk.GroupRequestId;
 import hr.tvz.groops.model.pk.UserGroupRoleId;
@@ -190,8 +188,24 @@ public class GroupService implements Searchable {
         User currentUser = findUserEntityByIdLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserId(), userRepository);
         Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
         authorizationService.hasGroupRole(currentUser, group, RoleEnum.ROLE_ADMIN);
-        List<GroupRequest> groupRequests =  groupRequestRepository.findByGroup(group);
+        List<GroupRequest> groupRequests = groupRequestRepository.findByGroup(group);
         return groupRequests.stream().map(gr -> modelMapper.map(gr.getUser(), UserDto.class)).collect(Collectors.toList());
+    }
+
+    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
+    public List<UserRoleDto> findMembersByGroupId(Long groupId) {
+        logger.debug("Finding join requests for group with id: {}", groupId);
+        User currentUser = findUserEntityByIdLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserId(), userRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
+        authorizationService.hasGroupPermission(currentUser, group, PermissionEnum.READ_MEMBERS);
+        List<UserGroupRole> members = userGroupRoleRepository.findByGroup(group);
+        return members.stream().filter(ugr -> ugr.getUserGroup().getUser().getId().compareTo(currentUser.getId()) != 0).map(m -> {
+            User user = m.getUserGroup().getUser();
+            RoleEnum role = m.getRole().getRole();
+            UserRoleDto userRoleDto = modelMapper.map(user, UserRoleDto.class);
+            userRoleDto.setRole(role);
+            return userRoleDto;
+        }).collect(Collectors.toList());
     }
 
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)

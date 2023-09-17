@@ -11,5 +11,6 @@ public enum PermissionEnum {
     ADD_USER,
     CHANGE_ROLE,
     DELETE_GROUP,
-    REMOVE_USER
+    REMOVE_USER,
+    READ_MEMBERS
 }

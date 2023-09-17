@@ -162,7 +162,8 @@ public class AuthorizationService implements Searchable {
                     PermissionEnum.WRITE_POST,
                     PermissionEnum.LIKE_POST,
                     PermissionEnum.WRITE_GROUP_MESSAGE,
-                    PermissionEnum.READ_GROUP_MESSAGE
+                    PermissionEnum.READ_GROUP_MESSAGE,
+                    PermissionEnum.READ_MEMBERS
             };
             addPermissionsToRole(permissionEnums, role, now);
             return role;
@@ -187,7 +188,6 @@ public class AuthorizationService implements Searchable {
             PermissionEnum[] permissionEnums = new PermissionEnum[]{
                     PermissionEnum.READ_COMMENT,
                     PermissionEnum.READ_POST,
-                    PermissionEnum.WRITE_POST,
                     PermissionEnum.READ_GROUP_MESSAGE
             };
             addPermissionsToRole(permissionEnums, role, now);

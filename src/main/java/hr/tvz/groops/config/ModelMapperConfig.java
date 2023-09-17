@@ -3,6 +3,7 @@ package hr.tvz.groops.config;
 import hr.tvz.groops.dto.response.GroupDto;
 import hr.tvz.groops.dto.response.PostDto;
 import hr.tvz.groops.dto.response.UserDto;
+import hr.tvz.groops.dto.response.UserRoleDto;
 import hr.tvz.groops.model.Group;
 import hr.tvz.groops.model.Post;
 import hr.tvz.groops.model.User;
@@ -30,6 +31,7 @@ public class ModelMapperConfig {
         ModelMapper modelMapper = new ModelMapper();
         modelMapper.getConfiguration().setMatchingStrategy(MatchingStrategies.STRICT);
         addTypeMappingForUser(modelMapper);
+        addTypeMappingForUserRole(modelMapper);
         addTypeMappingForGroup(modelMapper);
         addTypeMappingForPost(modelMapper);
         return modelMapper;
@@ -42,6 +44,16 @@ public class ModelMapperConfig {
         });
         propertyMapper.addMappings(m -> {
             m.using(getProfilePictureThumbnailConverter()).map(User::getProfilePictureThumbnailKey, UserDto::setProfilePictureThumbnailDownloadLink);
+        });
+    }
+
+    private void addTypeMappingForUserRole(ModelMapper modelMapper) {
+        TypeMap<User, UserRoleDto> propertyMapper = modelMapper.createTypeMap(User.class, UserRoleDto.class);
+        propertyMapper.addMappings(m -> {
+            m.using(getProfilePictureConverter()).map(User::getProfilePictureKey, UserRoleDto::setProfilePictureDownloadLink);
+        });
+        propertyMapper.addMappings(m -> {
+            m.using(getProfilePictureThumbnailConverter()).map(User::getProfilePictureThumbnailKey, UserRoleDto::setProfilePictureThumbnailDownloadLink);
         });
     }
 

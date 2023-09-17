@@ -212,6 +212,11 @@ public class GroupController extends ControllerBase {
         groupService.kickUser(groupId, userId);
     }
 
+    @GetMapping("/{groupId}/members")
+    List<UserRoleDto> getMembersByGroupId(@PathVariable("groupId") Long groupId) {
+        return groupService.findMembersByGroupId(groupId);
+    }
+
     @PutMapping("/{groupId}/user/{userId}")
     void changeUserRole(@PathVariable("groupId") Long groupId,
                         @PathVariable("userId") Long userId,

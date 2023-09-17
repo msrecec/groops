@@ -15,6 +15,13 @@ import java.util.Optional;
 public interface UserGroupRoleRepository extends JpaRepository<UserGroupRole, UserGroupRoleId>, QuerydslPredicateExecutor<UserGroupRole> {
     Optional<UserGroupRole> findByUserGroupAndRole(UserGroup userGroup, Role role);
     List<UserGroupRole> findByUserGroup(UserGroup userGroup);
+    @Query(value = "SELECT ugr FROM UserGroupRole ugr " +
+            "INNER JOIN FETCH ugr.userGroup ug " +
+            "INNER JOIN FETCH ug.user ugu " +
+            "INNER JOIN FETCH ug.group ugg " +
+            "INNER JOIN FETCH ugr.role ugrr " +
+            "WHERE ugg = :group ")
+    List<UserGroupRole> findByGroup(@Param("group") Group group);
 
     boolean existsByUserGroupAndRole(UserGroup userGroup, Role role);
 
