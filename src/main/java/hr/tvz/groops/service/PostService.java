@@ -73,7 +73,7 @@ public class PostService implements Searchable {
         User currentUser = findUserEntityById(authenticationService.getCurrentLoggedInUserId(), userRepository);
         Post post = findPostById(id, postRepository);
         Group group = post.getGroup();
-        authorizationService.hasGroupPermission(currentUser, group, PermissionEnum.READ_COMMENT);
+        authorizationService.hasGroupPermission(currentUser, group, PermissionEnum.READ_POST);
         return mapLikes(post, currentUser);
     }
 
@@ -106,12 +106,14 @@ public class PostService implements Searchable {
         }
 
         String key = s3Service.generatePostPictureKey(post.getId(), file);
+        String thumbnailKey = s3Service.generatePostPictureThumbnailKey(post.getId(), file);
         post.setMediaKey(key);
+        post.setMediaThumbnailKey(thumbnailKey);
         post.setModifiedBy(authenticationService.getCurrentLoggedInUserUsername());
         post.setModifiedTs(now);
         post = postRepository.saveAndFlush(post);
 
-        s3Service.uploadDocumentFull(key, file);
+        s3Service.uploadImageAndThumbnailCompressed(key, thumbnailKey, file);
         return modelMapper.map(post, PostDto.class);
     }
 

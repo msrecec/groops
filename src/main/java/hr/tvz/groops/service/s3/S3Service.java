@@ -148,6 +148,11 @@ public class S3Service {
         return generateKey(id, POST, IMAGE_TYPE, file);
     }
 
+    public String generatePostPictureThumbnailKey(Long id, MultipartFile file) {
+        checkIfImage(file);
+        return generateKey(id, POST + "/thumbnail", IMAGE_TYPE, file);
+    }
+
     public String generateGroupProfilePictureKey(Long id, MultipartFile file) {
         checkIfImage(file);
         return generateKey(id, GROUP, GROUP_PROFILE, IMAGE_TYPE, file);

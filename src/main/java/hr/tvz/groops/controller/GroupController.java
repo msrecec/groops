@@ -104,6 +104,11 @@ public class GroupController extends ControllerBase {
         return postService.create(command, id);
     }
 
+    @GetMapping("/{id}/post/{postId}")
+    PostDto findPostById(@PathVariable("id") Long id, @PathVariable("postId") Long postId) throws JsonProcessingException {
+        return postService.findById(postId);
+    }
+
     @PostMapping("/{id}/post/{postId}/media")
     PostDto updatePostWithMedia(@PathVariable("id") Long id, @PathVariable("postId") Long postId, @RequestParam("command") String commandJSON, @RequestParam("file") MultipartFile file) throws JsonProcessingException {
         PostCommand command = objectMapper.readValue(commandJSON, PostCommand.class);
@@ -121,12 +126,12 @@ public class GroupController extends ControllerBase {
         postService.delete(postId);
     }
 
-    @DeleteMapping("/{id}/post/{postId}/like")
+    @PostMapping("/{id}/post/{postId}/like")
     void likePost(@PathVariable("id") Long id, @PathVariable("postId") Long postId) {
         postService.like(postId);
     }
 
-    @DeleteMapping("/{id}/post/{postId}/unlike")
+    @DeleteMapping("/{id}/post/{postId}/like")
     void unlikePost(@PathVariable("id") Long id, @PathVariable("postId") Long postId) {
         postService.unlike(postId);
     }
