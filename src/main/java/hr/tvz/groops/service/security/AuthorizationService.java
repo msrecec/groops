@@ -172,7 +172,7 @@ public class AuthorizationService implements Searchable {
 
     @Transactional(timeout = TimeoutConstants.TINY_TIMEOUT, propagation = Propagation.MANDATORY)
     public Role getOrCreateLurkerRole(Instant now) {
-        return roleRepository.findRoleByRole(RoleEnum.ROLE_USER).orElseGet(getLurkerRoleSupplier(now));
+        return roleRepository.findRoleByRole(RoleEnum.ROLE_LURKER).orElseGet(getLurkerRoleSupplier(now));
     }
 
     private Supplier<Role> getLurkerRoleSupplier(Instant now) {

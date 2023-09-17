@@ -10,6 +10,7 @@ import hr.tvz.groops.command.search.GroupSearchCommand;
 import hr.tvz.groops.command.searchPaginated.GroupPaginatedSearchCommand;
 import hr.tvz.groops.command.searchPaginated.PostPaginatedSearchCommand;
 import hr.tvz.groops.dto.response.*;
+import hr.tvz.groops.model.enums.RoleEnum;
 import hr.tvz.groops.service.CommentService;
 import hr.tvz.groops.service.GroupService;
 import hr.tvz.groops.service.PostService;
@@ -215,6 +216,11 @@ public class GroupController extends ControllerBase {
     @GetMapping("/{groupId}/members")
     List<UserRoleDto> getMembersByGroupId(@PathVariable("groupId") Long groupId) {
         return groupService.findMembersByGroupId(groupId);
+    }
+
+    @GetMapping("/{groupId}/currentUserRole")
+    RoleEnum getCurrentUserRoleByGroupId(@PathVariable("groupId") Long groupId) {
+        return groupService.getCurrentUserRoleByGroupId(groupId);
     }
 
     @PutMapping("/{groupId}/user/{userId}")

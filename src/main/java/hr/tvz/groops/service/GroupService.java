@@ -388,6 +388,18 @@ public class GroupService implements Searchable {
         userGroupRepository.delete(userGroup);
     }
 
+    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
+    public RoleEnum getCurrentUserRoleByGroupId(Long groupId) {
+        User currentUser = findUserEntityByIdLockByPessimisticWrite(authenticationService.getCurrentLoggedInUserId(), userRepository);
+        Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
+        UserGroup userGroup = findUserGroupByUserAndGroup(currentUser, group, userGroupRepository);
+        List<UserGroupRole> userGroupRoles = userGroupRoleRepository.findByUserGroup(userGroup);
+        if (userGroupRoles.isEmpty()) {
+            throw new IllegalArgumentException("User group role doesn't exist for current user");
+        }
+        return userGroupRoles.get(0).getRole().getRole();
+    }
+
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
     public void changeUserRole(Long groupId, Long userId, RoleEnum roleEnum) {
         logger.debug("Removing user with id: {} from group with id: {}", userId, groupId);
