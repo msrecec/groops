@@ -91,8 +91,8 @@ public class S3Service {
             ByteArrayInputStream baisImgCompressed = new ByteArrayInputStream(baosImgCompressed.toByteArray());
             ByteArrayInputStream baisImgCompressedTmp = new ByteArrayInputStream(baosImgCompressed.toByteArray());
             Thumbnails.of(baisImgCompressedTmp)
-                    .scale(0.1)
-                    .outputQuality(0.1)
+                    .scale(0.5)
+                    .outputQuality(0.5)
                     .dithering(Dithering.ENABLE)
                     .toOutputStream(baosThumbnailCompressed);
             ByteArrayInputStream baisImgCompressedThumbCompressed = new ByteArrayInputStream(baosThumbnailCompressed.toByteArray());

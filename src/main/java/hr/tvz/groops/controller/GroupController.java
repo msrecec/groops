@@ -7,6 +7,7 @@ import hr.tvz.groops.command.crud.GroupCommand;
 import hr.tvz.groops.command.crud.PostCommand;
 import hr.tvz.groops.command.crud.RoleCommand;
 import hr.tvz.groops.command.search.GroupSearchCommand;
+import hr.tvz.groops.command.search.PostSearchCommand;
 import hr.tvz.groops.command.searchPaginated.GroupPaginatedSearchCommand;
 import hr.tvz.groops.command.searchPaginated.PostPaginatedSearchCommand;
 import hr.tvz.groops.dto.response.*;
@@ -226,6 +227,11 @@ public class GroupController extends ControllerBase {
     @GetMapping("/{groupId}/currentUserRole")
     RoleEnum getCurrentUserRoleByGroupId(@PathVariable("groupId") Long groupId) {
         return groupService.getCurrentUserRoleByGroupId(groupId);
+    }
+
+    @PostMapping("/posts/search")
+    List<PostDto> searchPosts(@RequestBody PostSearchCommand command) {
+        return postService.findPosts(command);
     }
 
     @PutMapping("/{groupId}/user/{userId}")

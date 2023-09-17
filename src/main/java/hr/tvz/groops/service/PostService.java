@@ -1,7 +1,12 @@
 package hr.tvz.groops.service;
 
+import com.blazebit.persistence.Criteria;
+import com.blazebit.persistence.CriteriaBuilderFactory;
+import com.blazebit.persistence.querydsl.BlazeJPAQuery;
+import com.blazebit.persistence.spi.CriteriaBuilderConfiguration;
 import com.querydsl.core.BooleanBuilder;
 import hr.tvz.groops.command.crud.PostCommand;
+import hr.tvz.groops.command.search.PostSearchCommand;
 import hr.tvz.groops.command.searchPaginated.PostPaginatedSearchCommand;
 import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
@@ -28,9 +33,14 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import javax.validation.Valid;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static hr.tvz.groops.util.TimeUtils.now;
 
@@ -40,6 +50,8 @@ public class PostService implements Searchable {
     private final AuthenticationService authenticationService;
     private final AuthorizationService authorizationService;
     private final S3Service s3Service;
+    @PersistenceContext
+    private final EntityManager entityManager;
     private final PostRepository postRepository;
     private final GroupRepository groupRepository;
     private final UserRepository userRepository;
@@ -51,7 +63,7 @@ public class PostService implements Searchable {
     public PostService(AuthenticationService authenticationService,
                        AuthorizationService authorizationService,
                        S3Service s3Service,
-                       PostRepository postRepository,
+                       EntityManager entityManager, PostRepository postRepository,
                        GroupRepository groupRepository,
                        UserRepository userRepository,
                        PostLikeRepository postLikeRepository,
@@ -60,6 +72,7 @@ public class PostService implements Searchable {
         this.authenticationService = authenticationService;
         this.authorizationService = authorizationService;
         this.s3Service = s3Service;
+        this.entityManager = entityManager;
         this.postRepository = postRepository;
         this.groupRepository = groupRepository;
         this.userRepository = userRepository;
@@ -211,6 +224,34 @@ public class PostService implements Searchable {
 
         return postRepository.findAll(builder.getValue() != null ? builder.getValue() : builder, pageable)
                 .map(p -> mapLikes(p, currentUser));
+    }
+
+    public List<PostDto> findPosts(PostSearchCommand command) {
+        boolean my = command.getMy() != null && command.getMy().get();
+        CriteriaBuilderConfiguration config = Criteria.getDefault();
+        CriteriaBuilderFactory cbf = config.createCriteriaBuilderFactory(entityManager.getEntityManagerFactory());
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        QPost post = QPost.post;
+        QGroup group = QGroup.group;
+        QUserGroup userGroup = QUserGroup.userGroup;
+        BooleanBuilder builder = new BooleanBuilder();
+        if (my) {
+            QueryBuilderUtil.equals(builder, post.user.id, Optional.of(currentUserId));
+        }
+        QueryBuilderUtil.equals(builder, post.group.id, command.getGroupId());
+        BlazeJPAQuery<Post> query = new BlazeJPAQuery<>(entityManager, cbf)
+                .select(post)
+                .from(post)
+                .innerJoin(group)
+                .on(group.id.eq(post.group.id))
+                .innerJoin(userGroup)
+                .on(userGroup.group.id.eq(group.id))
+                .where(builder.and(userGroup.user.id.eq(currentUserId)))
+                .orderBy(post.id.desc());
+        List<Post> posts = query.fetch();
+        return posts.stream()
+                .map(p -> modelMapper.map(p, PostDto.class))
+                .collect(Collectors.toList());
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)
