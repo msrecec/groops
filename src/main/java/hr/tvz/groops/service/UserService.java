@@ -9,6 +9,7 @@ import hr.tvz.groops.constants.TimeoutConstants;
 import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.FriendRequestDto;
 import hr.tvz.groops.dto.response.JWTDto;
+import hr.tvz.groops.dto.response.NotificationDto;
 import hr.tvz.groops.dto.response.UserDto;
 import hr.tvz.groops.event.notification.verification.*;
 import hr.tvz.groops.exception.ExceptionEnum;
@@ -62,6 +63,7 @@ public class UserService implements Searchable {
     private final ModelMapper modelMapper;
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
+    private final NotificationRepository notificationRepository;
     private final FriendRepository friendRepository;
     private final FriendRequestRepository friendRequestRepository;
     private final PendingVerificationRepository pendingVerificationRepository;
@@ -80,7 +82,7 @@ public class UserService implements Searchable {
     public UserService(ModelMapper modelMapper,
                        PasswordEncoder passwordEncoder,
                        UserRepository userRepository,
-                       FriendRepository friendRepository,
+                       NotificationRepository notificationRepository, FriendRepository friendRepository,
                        FriendRequestRepository friendRequestRepository,
                        PendingVerificationRepository pendingVerificationRepository,
                        VerificationPublisherService verificationPublisherService,
@@ -94,6 +96,7 @@ public class UserService implements Searchable {
         this.modelMapper = modelMapper;
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
+        this.notificationRepository = notificationRepository;
         this.friendRepository = friendRepository;
         this.friendRequestRepository = friendRequestRepository;
         this.pendingVerificationRepository = pendingVerificationRepository;
@@ -405,6 +408,33 @@ public class UserService implements Searchable {
 
         return userRepository.findAll(builder.getValue() != null ? builder.getValue() : builder, pageable)
                 .map(u -> modelMapper.map(u, UserDto.class));
+    }
+
+    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
+    public List<NotificationDto> findAllNotificationsOfCurrentUser() {
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User user = findUserEntityById(currentUserId, userRepository);
+        List<Notification> notifications = notificationRepository.findAllByUserOrderByIdDesc(user);
+        List<NotificationDto> notificationDtos = notifications.stream()
+                .map(n -> modelMapper.map(n, NotificationDto.class))
+                .collect(Collectors.toList());
+
+        for (Notification notification : notifications) {
+            if (notification.getRead()) {
+                continue;
+            }
+            notification.setRead(true);
+            notificationRepository.save(notification);
+        }
+
+        return notificationDtos;
+    }
+
+    @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
+    public Integer getUnreadNotificationCount() {
+        Long currentUserId = authenticationService.getCurrentLoggedInUserId();
+        User user = findUserEntityById(currentUserId, userRepository);
+        return notificationRepository.countAllByUserOfUnread(user);
     }
 
     @Transactional(timeout = TimeoutConstants.DEFAULT_TIMEOUT, isolation = Isolation.REPEATABLE_READ)
