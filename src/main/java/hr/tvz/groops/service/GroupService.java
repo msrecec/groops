@@ -199,7 +199,7 @@ public class GroupService implements Searchable {
         Group group = findGroupByIdLockByPessimisticWrite(groupId, groupRepository);
         authorizationService.hasGroupPermission(currentUser, group, PermissionEnum.READ_MEMBERS);
         List<UserGroupRole> members = userGroupRoleRepository.findByGroup(group);
-        return members.stream().filter(ugr -> ugr.getUserGroup().getUser().getId().compareTo(currentUser.getId()) != 0).map(m -> {
+        return members.stream().map(m -> {
             User user = m.getUserGroup().getUser();
             RoleEnum role = m.getRole().getRole();
             UserRoleDto userRoleDto = modelMapper.map(user, UserRoleDto.class);
