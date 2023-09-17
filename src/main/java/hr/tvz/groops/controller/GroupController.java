@@ -93,10 +93,10 @@ public class GroupController extends ControllerBase {
     }
 
     @PostMapping("/{id}/post/media")
-    PostDto createPostWithMedia(@PathVariable("id") Long id, @RequestParam("command") String commandJSON, @RequestParam("file") MultipartFile file) throws JsonProcessingException {
-        PostCommand command = objectMapper.readValue(commandJSON, PostCommand.class);
+    PostDto createPostWithMedia(@PathVariable("id") Long id, @RequestParam("command") MultipartFile command, @RequestParam("file") MultipartFile file) throws IOException {
+        PostCommand postCommand = objectMapper.readValue(command.getInputStream(), PostCommand.class);
         validationService.validate(command);
-        return postService.create(command, id, file);
+        return postService.create(postCommand, id, file);
     }
 
     @PostMapping("/{id}/post")
