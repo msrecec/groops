@@ -13,6 +13,7 @@ import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.*;
 import hr.tvz.groops.exception.InternalServerException;
 import hr.tvz.groops.model.*;
+import hr.tvz.groops.model.enums.EntityTypeEnum;
 import hr.tvz.groops.model.enums.PermissionEnum;
 import hr.tvz.groops.model.enums.RoleEnum;
 import hr.tvz.groops.model.pk.GroupRequestId;
@@ -31,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
@@ -50,6 +52,7 @@ import static hr.tvz.groops.util.TimeUtils.now;
 @Service
 public class GroupService implements Searchable {
     private static final Logger logger = LoggerFactory.getLogger(GroupService.class);
+    private final SimpMessagingTemplate simpMessagingTemplate;
     private final AuthenticationService authenticationService;
     private final GroupRepository groupRepository;
     private final UserGroupRepository userGroupRepository;
@@ -58,12 +61,13 @@ public class GroupService implements Searchable {
     private final UserGroupRoleRepository userGroupRoleRepository;
     private final S3Service s3Service;
     private final AuthorizationService authorizationService;
+    private final NotificationService notificationService;
     private final ModelMapper modelMapper;
     @PersistenceContext
     private final EntityManager entityManager;
 
     @Autowired
-    public GroupService(AuthenticationService authenticationService,
+    public GroupService(SimpMessagingTemplate simpMessagingTemplate, AuthenticationService authenticationService,
                         GroupRepository groupRepository,
                         UserGroupRepository userGroupRepository,
                         GroupRequestRepository groupRequestRepository,
@@ -71,8 +75,9 @@ public class GroupService implements Searchable {
                         UserGroupRoleRepository userGroupRoleRepository,
                         S3Service s3Service,
                         AuthorizationService authorizationService,
-                        ModelMapper modelMapper,
+                        NotificationService notificationService, ModelMapper modelMapper,
                         EntityManager entityManager) {
+        this.simpMessagingTemplate = simpMessagingTemplate;
         this.authenticationService = authenticationService;
         this.groupRepository = groupRepository;
         this.userGroupRepository = userGroupRepository;
@@ -81,6 +86,7 @@ public class GroupService implements Searchable {
         this.userGroupRoleRepository = userGroupRoleRepository;
         this.s3Service = s3Service;
         this.authorizationService = authorizationService;
+        this.notificationService = notificationService;
         this.modelMapper = modelMapper;
         this.entityManager = entityManager;
     }
@@ -254,6 +260,11 @@ public class GroupService implements Searchable {
         userGroupRoleId.setRoleId(role.getId());
         userGroupRole.setUserGroupRoleId(userGroupRoleId);
         userGroupRoleRepository.saveAndFlush(userGroupRole);
+        notificationService.sendNotificationToUser(user,
+                "You have been added to group " + group.getName() + " with role " + role.getRole().name(),
+                group.getId(),
+                EntityTypeEnum.GROUP_ACCEPT
+        );
     }
 
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)
@@ -287,6 +298,14 @@ public class GroupService implements Searchable {
                 .createdTs(now)
                 .build();
         groupRequestRepository.save(groupRequest);
+        Set<User> admins = userGroupRepository.findUsersByGroupAndRole(group, RoleEnum.ROLE_ADMIN);
+        for (User admin : admins) {
+            notificationService.sendNotificationToUser(admin,
+                    "User " + user.getUsername() + " requested to join group " + group.getName(),
+                    group.getId(),
+                    EntityTypeEnum.GROUP_REQUEST
+            );
+        }
     }
 
     @Transactional(timeout = TimeoutConstants.SHORT_TIMEOUT)

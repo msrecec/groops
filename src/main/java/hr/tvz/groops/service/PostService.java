@@ -13,6 +13,7 @@ import hr.tvz.groops.criteria.Searchable;
 import hr.tvz.groops.dto.response.PostDto;
 import hr.tvz.groops.exception.UnauthorizedException;
 import hr.tvz.groops.model.*;
+import hr.tvz.groops.model.enums.EntityTypeEnum;
 import hr.tvz.groops.model.enums.PermissionEnum;
 import hr.tvz.groops.model.pk.PostLikeId;
 import hr.tvz.groops.repository.*;
@@ -57,6 +58,7 @@ public class PostService implements Searchable {
     private final UserRepository userRepository;
     private final PostLikeRepository postLikeRepository;
     private final CommentRepository commentRepository;
+    private final NotificationService notificationService;
     private final ModelMapper modelMapper;
 
     @Autowired
@@ -68,7 +70,7 @@ public class PostService implements Searchable {
                        UserRepository userRepository,
                        PostLikeRepository postLikeRepository,
                        CommentRepository commentRepository,
-                       ModelMapper modelMapper) {
+                       NotificationService notificationService, ModelMapper modelMapper) {
         this.authenticationService = authenticationService;
         this.authorizationService = authorizationService;
         this.s3Service = s3Service;
@@ -78,6 +80,7 @@ public class PostService implements Searchable {
         this.userRepository = userRepository;
         this.postLikeRepository = postLikeRepository;
         this.commentRepository = commentRepository;
+        this.notificationService = notificationService;
         this.modelMapper = modelMapper;
     }
 
@@ -275,6 +278,12 @@ public class PostService implements Searchable {
                 .createdTs(now)
                 .build();
         postLikeRepository.save(postLike);
+        notificationService.sendNotificationToUser(post.getUser(),
+                "User " + currentUser.getUsername() + " liked your post in group " + group.getName(),
+                group.getId(),
+                EntityTypeEnum.GROUP_ACCEPT,
+                post.getId()
+        );
     }
 
     @Transactional(timeout = hr.tvz.groops.constants.TimeoutConstants.TINY_TIMEOUT)

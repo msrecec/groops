@@ -31,6 +31,9 @@ public class Notification extends BaseEntity {
     @Column(name = "entity_id")
     private Long entityId;
 
+    @Column(name = "related_entity_id")
+    private Long relatedEntityId;
+
     @Column(name = "read")
     private Boolean read;
 

@@ -8,6 +8,7 @@ import hr.tvz.groops.model.Comment;
 import hr.tvz.groops.model.Group;
 import hr.tvz.groops.model.Post;
 import hr.tvz.groops.model.User;
+import hr.tvz.groops.model.enums.EntityTypeEnum;
 import hr.tvz.groops.model.enums.PermissionEnum;
 import hr.tvz.groops.repository.CommentRepository;
 import hr.tvz.groops.repository.PostRepository;
@@ -37,6 +38,7 @@ public class CommentService implements Searchable {
     private final AuthorizationService authorizationService;
     private final UserRepository userRepository;
     private final PostRepository postRepository;
+    private final NotificationService notificationService;
     private final CommentRepository commentRepository;
 
     @Autowired
@@ -45,12 +47,13 @@ public class CommentService implements Searchable {
                           AuthorizationService authorizationService,
                           UserRepository userRepository,
                           PostRepository postRepository,
-                          CommentRepository commentRepository) {
+                          NotificationService notificationService, CommentRepository commentRepository) {
         this.modelMapper = modelMapper;
         this.authenticationService = authenticationService;
         this.authorizationService = authorizationService;
         this.userRepository = userRepository;
         this.postRepository = postRepository;
+        this.notificationService = notificationService;
         this.commentRepository = commentRepository;
     }
 
@@ -70,6 +73,12 @@ public class CommentService implements Searchable {
                 .createdBy(authenticationService.getCurrentLoggedInUserUsername())
                 .createdTs(now)
                 .build();
+        notificationService.sendNotificationToUser(post.getUser(),
+                "User " + user.getUsername() + " liked your post in group " + group.getName(),
+                group.getId(),
+                EntityTypeEnum.GROUP_ACCEPT,
+                post.getId()
+        );
         return modelMapper.map(commentRepository.saveAndFlush(comment), CommentDto.class);
     }
 
