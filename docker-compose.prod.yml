@@ -1,11 +1,11 @@
 version: "3.8"
 
 services:
-  app:
+  groops-backend:
     image: groops-backend:${VERSION:-latest}
     container_name: groops-backend
     restart: always
-    entrypoint: "java -jar -Dspring.profiles.active=dev app.jar"
+    entrypoint: "java -jar -Dspring.profiles.active=prod app.jar"
     environment:
       _JAVA_OPTIONS: >
         -Xdebug
@@ -40,15 +40,18 @@ services:
     restart: unless-stopped
     container_name: nginx
     ports:
-      - "8080:8080"
+      - "443:443"
+#      - "80:80"
     volumes:
       - ./nginx-conf/prod/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx-conf/prod-test-cert/test.com.crt:/etc/nginx/ssl/test.com.crt
+      - ./nginx-conf/prod-test-cert/test.com.key:/etc/nginx/ssl/test.com.key
     networks:
       appnet:
         ipv4_address: 172.24.2.6
 networks:
   appnet:
-    name: zipato_network
+    name: groops_network
     driver: bridge
     ipam:
       driver: default
@@ -57,3 +60,5 @@ networks:
 volumes:
   pgdata:
     name: groops-pgdata
+  logs:
+    name: groops-logs
