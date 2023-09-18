@@ -15,7 +15,6 @@ import java.util.List;
 
 import static hr.tvz.groops.constants.ProfileConstants.DEV;
 
-@Profile(DEV)
 @Configuration
 @EnableWebSocketMessageBroker
 @Order(Ordered.HIGHEST_PRECEDENCE + 99)

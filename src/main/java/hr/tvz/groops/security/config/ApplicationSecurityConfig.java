@@ -4,7 +4,6 @@ import hr.tvz.groops.security.entrypoint.ForbiddenAuthenticationEntrypoint;
 import hr.tvz.groops.security.filter.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,13 +12,10 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
-import static hr.tvz.groops.constants.ProfileConstants.DEV;
-
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
-@Profile(DEV)
-public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
+public class ApplicationSecurityConfig extends WebSecurityConfigurerAdapter {
 
     private static final String[] AUTH_WHITELIST = {
             // -- swagger ui
@@ -46,14 +42,14 @@ public class ApplicationDevSecurityConfig extends WebSecurityConfigurerAdapter {
     private final ForbiddenAuthenticationEntrypoint forbiddenAuthenticationEntrypoint;
 
     @Autowired
-    public ApplicationDevSecurityConfig(AppJWTVerifier appJWTVerifier,
-                                        MailCreateJWTVerifier mailCreateJWTVerifier,
-                                        MailChangeJWTVerifier mailChangeJWTVerifier,
-                                        PasswordChangeJWTVerifier passwordChangeJWTVerifier,
-                                        PasswordForgotJWTVerifier passwordForgotJWTVerifier,
-                                        VerificationResendJWTVerifier verificationResendJWTVerifier,
-                                        MDCFilter mdcFilter,
-                                        ForbiddenAuthenticationEntrypoint forbiddenAuthenticationEntrypoint) {
+    public ApplicationSecurityConfig(AppJWTVerifier appJWTVerifier,
+                                     MailCreateJWTVerifier mailCreateJWTVerifier,
+                                     MailChangeJWTVerifier mailChangeJWTVerifier,
+                                     PasswordChangeJWTVerifier passwordChangeJWTVerifier,
+                                     PasswordForgotJWTVerifier passwordForgotJWTVerifier,
+                                     VerificationResendJWTVerifier verificationResendJWTVerifier,
+                                     MDCFilter mdcFilter,
+                                     ForbiddenAuthenticationEntrypoint forbiddenAuthenticationEntrypoint) {
         this.appJWTVerifier = appJWTVerifier;
         this.mailCreateJWTVerifier = mailCreateJWTVerifier;
         this.mailChangeJWTVerifier = mailChangeJWTVerifier;
